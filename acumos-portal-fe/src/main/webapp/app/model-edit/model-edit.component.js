@@ -104,7 +104,7 @@ angular
 						$scope.imageerror = false;
 						$scope.imagetypeerror = false;
 						$scope.docerror = false;
-						
+						$scope.flag = false;
 						if ($stateParams.solutionId) {
 							$scope.solutionId = $stateParams.solutionId;
 							localStorage.setItem('solutionId',
@@ -359,6 +359,21 @@ angular
 							$scope.getProtoFile();
 						}
 						
+						$scope.getPublishRequestDetail = function(){
+							var searchPublishRequestUrl = "api/publish/request/search/revision/" + $scope.revisionId ;
+							$http(
+									{
+										method : 'GET',
+										url : searchPublishRequestUrl
+									})
+									.then(
+											function successCallback(response) {
+												$scope.publishRequest = response.data.response_body;
+											},function errorCallback(response) {
+												//Do nothing
+										});
+						}
+						
 						$scope.loadData = function() {
 							$scope.apiUrl;
 							angular.element('.md-version-ddl1').hide();
@@ -456,6 +471,7 @@ angular
 													$scope.getPublicSolutionDocuments();
 													$scope.getCompanySolutionDocuments();
 													$scope.getAuthorList();
+													$scope.getPublishRequestDetail();
 												} else {
 													// alert("Error Fetching
 													// Data");
@@ -570,6 +586,7 @@ angular
 			    		
 					    	apiService.removeAuthor($scope.solutionId, $scope.revisionId, obj).then(function successCallback(response) {
 					    		$scope.AuthorsTag = response.data.response_body;
+					    		$scope.cancelAuthor();
 					    	},
 					    	function errorCallback(response) {
 					    		$scope.msg = "Error while removing Author";
@@ -591,8 +608,7 @@ angular
 						              	  return false;
 						                }
 						    
-						  $scope.setAuthor = function(){
-						    	//console.log($scope.AuthorsTag);
+						  $scope.setAuthor = function(){						    	
 						    	var vart = $scope.AddAuthor.$valid;
 						    	if($scope.AddAuthor.$valid) {
 						    		var obj = {
@@ -621,6 +637,42 @@ angular
 						    	});
 						    	}
 							}
+						  $scope.updateTag = function(tag)
+						  {
+							  $scope.selectedtagindex = $scope.AuthorsTag.indexOf(tag);							  
+							  $scope.flag = true;
+							  $scope.Author =[];
+							  $scope.Author.Name = tag.name;
+							  $scope.Author.cntinfo = tag.contact;
+							  $scope.updateName = tag.name;
+							  $scope.updateCntInfo = tag.contact;							  
+						  }
+						  
+						  $scope.updateAuthor = function(){							   							    
+						    	if($scope.AddAuthor.$valid) {	
+						    		//$scope.Author.Name;
+						    		//$scope.Author.cntinfo;
+						    		$scope.removeauthor = [];						    		
+						    		$scope.removeauthor.name = $scope.updateName;
+						    		$scope.removeauthor.contact = $scope.updateCntInfo;
+						    		$scope.deleteAuthor();
+						    		$scope.getAuthorList();
+						    		$scope.setAuthor();
+						    		
+						    		$scope.flag = false;
+								};						    		
+						    }
+							
+						  
+						  $scope.cancelAuthor = function(){
+							  	$scope.Author.Name = "";
+						    	$scope.Author.cntinfo= "";
+						    	$scope.AddAuthor.cntinfo.$touched = false;
+						    	$scope.AddAuthor.Name.$touched = false;
+						    	$scope.flag = false;
+						    	$scope.selectedtagindex = -1;
+						  }
+						  
 
 						$scope.updateSolution = function() {
 							if($scope.categoryname&&$scope.toolkitname)$scope.pToP = true;
@@ -2023,18 +2075,11 @@ angular
 							promise
 									.then(
 											function(response) {
-												if(response.error_code == "400"){
-													$scope.modelUploadError = true;
-													$scope.modelUploadErrorMsg = response.response_detail;
-													$rootScope.progressBar = 0;
-													$scope.showFileUpload = !$scope.showFileUpload;
-												} else {
-													$scope.modelUploadError = false;
-													$scope.supportingDocs.push(response.response_body);
-													$scope.showSolutionDocs = true;
-													$scope.showFileUpload = !$scope.showFileUpload;
-													$rootScope.progressBar = 0;
-												}
+												$scope.modelUploadError = false;
+												$scope.supportingDocs.push(response.response_body);
+												$scope.showSolutionDocs = true;
+												$scope.showFileUpload = !$scope.showFileUpload;
+												$rootScope.progressBar = 0;
 											})
 											.catch(function(error) {
 												$scope.modelUploadError = true;
@@ -2056,19 +2101,11 @@ angular
 							promise
 									.then(
 											function(response) {
-												if(response.error_code == "400"){
-													$scope.modelUploadErrorPublic = true;
-													$scope.modelUploadErrorMsgPublic = response.response_detail;
-													$rootScope.progressBar = 0;
-													$scope.showFileUpload = !$scope.showFileUpload;
-												} else {
-													$scope.modelUploadErrorPublic = false;
-													$scope.supportingPublicDocs.push(response.response_body);
-													$scope.showPublicSolutionDocs = true;
-													$rootScope.progressBar = 0;
-													$scope.showFileUpload = !$scope.showFileUpload;
-												}
-
+												$scope.modelUploadErrorPublic = false;
+												$scope.supportingPublicDocs.push(response.response_body);
+												$scope.showPublicSolutionDocs = true;
+												$rootScope.progressBar = 0;
+												$scope.showFileUpload = !$scope.showFileUpload;
 											})
 											.catch(function(error) {
 												$scope.modelUploadErrorPublic = true;
@@ -2759,6 +2796,32 @@ angular
 				    };
 				    $scope.enableDeployToCloud();
 				    
+				    
+				    $scope.showWithdrawRequestModal = function(){
+		        	  $mdDialog.show({
+		        		  contentElement: '#withdrawRequestModal',
+		        		  parent: angular.element(document.body),
+		        		  clickOutsideToClose: true
+		        	  });
+		        	  $scope.withdrawRequestForm.$setUntouched();
+		              $scope.withdrawRequestForm.$setPristine();
+		            }
+				    
+				    $scope.withdrawPublishRequest = function(){
+				    	var withdrawPublishRequestUrl = "api/publish/request/withdraw/" + $scope.publishRequest.publishRequestId ;
+						$http(
+								{
+									method : 'PUT',
+									url : withdrawPublishRequestUrl
+								})
+								.then(
+										function successCallback(response) {
+											$scope.publishRequest = response.data.response_body;
+											$mdDialog.cancel();
+										},function errorCallback(response) {
+											//Do nothing
+									});
+					}
 				    
 					}
 

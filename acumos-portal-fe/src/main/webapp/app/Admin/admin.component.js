@@ -176,6 +176,18 @@ angular.module('admin').filter('abs', function() {
 						function(error) {});
 			}
 			getRole();
+			
+			//API for get Roles
+			function getAllRole(){
+				apiService
+				.getAllRole()     //.getAllRole() //.getRoleCount()
+				.then(
+						function(response) {
+							$scope.allRoles = response.data.response_body;
+						},
+						function(error) {});
+			}
+			getAllRole();
 			//API for user count
 			function userDetailsFetch(){
 			apiService
@@ -1830,6 +1842,19 @@ angular.module('admin').filter('abs', function() {
   															config) {
   													});
   							}
+  						
+  					    //Search Data 
+  						$scope.searchData = function (searchValue) {  							
+  							var rolename=""; 
+				              angular.forEach(searchValue.userAssignedRolesList, function(userAssignedRolesList) {
+				            	  rolename = userAssignedRolesList.name;
+					             });
+					              
+  					        return (angular.lowercase(searchValue.username).indexOf(angular.lowercase($scope.search) || '') !== -1 ||
+  					                angular.lowercase(searchValue.emailId).indexOf(angular.lowercase($scope.search) || '') !== -1 ||
+  					                angular.lowercase(searchValue.status).indexOf(angular.lowercase($scope.search) || '') !== -1 ||
+  					                angular.lowercase(rolename).indexOf(angular.lowercase($scope.search) || '') !== -1);  					              					               
+  					    };
                       						
                     //Get Top Carousel For home screen
                     $scope.getCarouselConfig = function (){

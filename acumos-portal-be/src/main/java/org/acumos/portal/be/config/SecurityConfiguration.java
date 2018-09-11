@@ -104,6 +104,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
         .antMatchers(HttpMethod.GET, "/admin/version").permitAll()
         .antMatchers("/users/forgetPassword").permitAll()
         .antMatchers(HttpMethod.GET, "/cas/enabled").permitAll()
+        .antMatchers(HttpMethod.GET, "/admin/user/carouseConfig").permitAll()	
         .antMatchers(HttpMethod.GET, "/admin/signup/enabled").permitAll()
         .antMatchers(HttpMethod.GET, "/getProtoFile").permitAll()
         .antMatchers(HttpMethod.GET, "/solution/{solutionId}/revision/{revisionId}/authors").permitAll()
@@ -113,6 +114,12 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
         .antMatchers(HttpMethod.POST, "/auth/validateApiToken").permitAll()
         .antMatchers(HttpMethod.GET, "/solution/{solutionId}/revision/{revisionId}/{accessType}/document").permitAll()
         .antMatchers(HttpMethod.GET, "/solution/revision/{revisionId}/{accessType}/description").permitAll()
+        /*.antMatchers("/publish/request/").permitAll()
+        .antMatchers("/publish/request/{publishRequestId}").permitAll()
+        .antMatchers("/publish/request/search/revision/{revisionId}").permitAll()
+        .antMatchers("/publish/request/withdraw/{publishRequestId}").permitAll()*/
+        
+        
         .anyRequest().authenticated();
     	
     	// Custom JWT based authentication

@@ -233,7 +233,7 @@ limitations under the License.
 											placeholder="Change Role To" ng-disabled='!roleArr.length'
 											class="md-no-underline admin-ddl admin-change-role-ddl"
 											multiple=""> <md-option value="{{role.roleId}}"
-											ng-repeat='role in roles'>{{role.name}}</md-option> </md-select>
+											ng-repeat='role in allRoles'>{{role.name}}</md-option> </md-select>
 									</div>
 								</div>
 								<button
@@ -302,7 +302,7 @@ limitations under the License.
 							</thead>
 							<!-- <tbody ng-repeat="val in ($parent.filtertedUser = (userDetails | filter: {username : searchUserDetails.username}))"> -->
 							<tbody
-								ng-repeat="val in (filtertedUser = (userDetails | orderBy:orderByField:reverseSort | filter : search) )">
+								ng-repeat="val in (filtertedUser = (userDetails | orderBy:orderByField:reverseSort | filter : searchData) )">
 								<tr>
 						
 									<td><label
