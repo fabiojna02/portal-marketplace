@@ -359,15 +359,37 @@ angular
 
 						}
 						
-						var modelType = '';
-						$scope.apiUrl;
-						if ($stateParams.solutionId == null) {
-							$scope.apiUrl = '/api/solutions/'
-									+ $scope.solutionId;
-						} else {
-							$scope.apiUrl = '/api/solutions/'
-									+ $stateParams.solutionId
-						}
+					$scope.getModelAuthors = function(){
+						$http({
+							method : 'GET',
+							url : 'api/solution/'+ $stateParams.solutionId +'/revision/'+ $stateParams.revisionId +'/authors',
+						})
+								.success(
+										function(data, status, headers, config) {
+											console.log(data.response_body);
+											$scope.authorList = data.response_body;
+											
+										})
+								.error(function(data, status, headers, config) {
+										// called asynchronously if an error occurs
+										// or server returns response with an error
+										// status.
+										console.log(status);
+										});
+					}
+					
+					$scope.getModelAuthors();
+					
+					var modelType = '';
+					$scope.apiUrl;
+					if ($stateParams.solutionId == null) {
+						$scope.apiUrl = '/api/solutions/'
+								+ $scope.solutionId;
+					} else {
+						$scope.apiUrl = '/api/solutions/'
+								+ $stateParams.solutionId
+					}
+					
 					$scope.getModelDetails = function() {
 						$http({
 							method : 'GET',
@@ -398,8 +420,11 @@ angular
 												var counter = 0;
 												//**adding list of versions
 												$scope.versionList = [];
+												$scope.publisherList = [];
 												while(counter < length){
 													($scope.versionList).push(data.response_body.revisions[counter]);
+													if(data.response_body.revisions[counter].publisher !== null)
+														($scope.publisherList).push(data.response_body.revisions[counter].publisher);
 													counter++;
 												}
 												
@@ -598,13 +623,11 @@ angular
 							var reqObj = {
 									  "request_body": {
 										    "page": 0,
-										    "size": 0
+										    "size": 100
 										  },
 										};
 							
-							 var tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-							 tz = encodeURIComponent(tz);
-							 apiService.getComment($scope.solutionId, $scope.revisionId, tz, reqObj).then(function(response) {
+							 apiService.getComment($scope.solutionId, $scope.revisionId, reqObj).then(function(response) {
 								 
 								$scope.totalCommentCount = response.data.response_body.content.length;
 								$scope.commentList = [];
@@ -1206,6 +1229,9 @@ angular
 							
 						}
 						
+						apiService.getKubernetesDocUrl().then( function(response){
+							$scope.kubernetesDocUrl = response.data.response_body;
+						});
 						
 						//Default values
 						$scope.positionM1 = "mime_type";$scope.positionM3 = "image_binary";$scope.positionM2 = 1;$scope.positionM4 = 2;

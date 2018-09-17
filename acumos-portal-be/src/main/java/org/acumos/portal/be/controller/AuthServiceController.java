@@ -200,6 +200,7 @@ public class AuthServiceController extends AbstractController {
 		User userObj = null;
 		String jwtToken = null;
 		boolean isValid = false;
+		boolean firstLogin = false;
 		MLPUser mlpUser = null;
 		List<MLPRole> userAssignedRolesList = new ArrayList<>();
 		
@@ -214,7 +215,6 @@ public class AuthServiceController extends AbstractController {
 				if (!PortalUtils.isEmptyOrNullString(user.getBody().getUsername()) && PortalUtils.isEmptyOrNullString(provider)) {
 					try {
 						mlpUser = userService.login(user.getBody().getUsername(), user.getBody().getPassword());
-						mlpUser.setLastLogin(new Date(System.currentTimeMillis()));
 						userAssignedRolesList = userService.getUserRole(mlpUser.getUserId());
 						isValid = true;
 					} catch(HttpStatusCodeException exc) {
@@ -237,7 +237,6 @@ public class AuthServiceController extends AbstractController {
 				} else 
 					if (!PortalUtils.isEmptyOrNullString(user.getBody().getEmailId()) && !PortalUtils.isEmptyOrNullString(provider) && "LFCAS".equals(provider)) {
 						 mlpUser = userService.findUserByEmail(user.getBody().getEmailId()); 
-						 mlpUser.setLastLogin(new Date(System.currentTimeMillis()));
 						 userAssignedRolesList = userService.getUserRole(mlpUser.getUserId());
 						 isValid = true; 
 					}
@@ -287,6 +286,9 @@ public class AuthServiceController extends AbstractController {
 								userObj.setApiTokenHash(apiToken);
 								userObj.setActive("Y");
 								userService.updateUser(userObj);
+
+								//If jwt token is null then this is the first time the user is logging in
+								firstLogin = true;
 							}
 						} catch (Exception e) {
 
@@ -356,13 +358,17 @@ public class AuthServiceController extends AbstractController {
 			}
 		}
 		
-		if(userService.isAdminRole(mlpUser.getUserId()))
-			responseObject.setAdmin(true);
-		
-		if(userService.isPublisherRole(mlpUser.getUserId()))
-			responseObject.setPublisher(true);
+		if(mlpUser != null) {
+			if(userService.isAdminRole(mlpUser.getUserId()))
+				responseObject.setAdmin(true);
+			
+			if(userService.isPublisherRole(mlpUser.getUserId()))
+				responseObject.setPublisher(true);
 
-		responseObject.setUserAssignedRolesList(userAssignedRolesList);
+			responseObject.setFirstLogin(firstLogin);
+			responseObject.setUserAssignedRolesList(userAssignedRolesList);
+		}
+
 		return responseObject;
 	}
 

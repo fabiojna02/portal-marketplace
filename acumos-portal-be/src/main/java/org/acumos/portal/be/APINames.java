@@ -102,6 +102,8 @@ public class APINames {
     public static final String DROP_TAG = "/dropTag/{solutionId}/tag/{tag}";
     public static final String SEARCH_SOLUTION_TAGS = "/searchSolutionsTags/{tags}";
     public static final String ADD_TO_CATALOG = "/addToCatalog/{userId}";
+    public static final String PREFERRED_TAGS = "/preferredTags/{userId}";
+    public static final String CREATE_USER_TAG = "/tags/createUserTag/{userId}";   
     //Will be used when search condition is applied
     public static final String SEARCH_SOLUTION = "/searchSolutions";
     
@@ -197,7 +199,7 @@ public class APINames {
 	   public static final String UPDATE_COMMENT = "comments/update";
 	   public static final String DELETE_COMMENT = "comments/delete/{threadId}/{commentId}";
 	   public static final String GET_COMMENT = "comments/{threadId}/{commentId}";
-	   public static final String GET_COMMENT_SOLUTIONREVISION = "thread/{solutionId}/{revisionId}/{clientTimeZone}/comments";
+	   public static final String GET_COMMENT_SOLUTIONREVISION = "thread/{solutionId}/{revisionId}/comments";
 	//Thread
 	   public static final String CREATE_THREAD = "thread/create";
 	   public static final String UPDATE_THREAD = "thread/update";

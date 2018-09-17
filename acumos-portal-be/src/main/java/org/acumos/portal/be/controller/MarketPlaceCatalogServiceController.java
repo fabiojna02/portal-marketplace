@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -76,6 +77,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -456,7 +458,7 @@ public class MarketPlaceCatalogServiceController extends AbstractController {
 	@RequestMapping(value = { APINames.TAGS }, method = RequestMethod.PUT, produces = APPLICATION_JSON)
 	@ResponseBody
 	public JsonResponse<RestPageResponseBE> getTagsList(@RequestBody JsonRequest<RestPageRequest> restPageReq) {
-		log.debug(EELFLoggerDelegate.debugLogger, "getSolutionsList");
+		log.debug(EELFLoggerDelegate.debugLogger, "getTagsList");
 		List<String> mlTagsList = new ArrayList<>();
 		JsonResponse<RestPageResponseBE> data = new JsonResponse<>();
 		try {
@@ -477,6 +479,57 @@ public class MarketPlaceCatalogServiceController extends AbstractController {
 			data.setErrorCode(e.getErrorCode());
 			data.setResponseDetail(e.getMessage());
 			log.error(EELFLoggerDelegate.errorLogger, "Exception Occurred Fetching tags for Market Place Catalog", e);
+		}
+		return data;
+	}
+	@ApiOperation(value = "Gets a list of preffered tags for Market Place Catalog.", response = RestPageResponseBE.class)
+	@RequestMapping(value = { APINames.PREFERRED_TAGS }, method = RequestMethod.PUT, produces = APPLICATION_JSON)
+	@ResponseBody
+	public JsonResponse<RestPageResponseBE> getPreferredTagsList(
+			@RequestBody JsonRequest<RestPageRequest> restPageReq, @PathVariable("userId") String userId) {
+		log.debug(EELFLoggerDelegate.debugLogger, "getPreferredTagsList");
+		List<String> mlTagsList = new ArrayList<>();
+		JsonResponse<RestPageResponseBE> data = new JsonResponse<>();
+		try {			 
+			List<Map<String, String>> prefTagsList = catalogService.getPreferredTagsList(restPageReq, userId);
+			if (mlTagsList != null) {
+				List content = new ArrayList<>();
+				RestPageResponseBE responseBody = new RestPageResponseBE<>(content);
+				responseBody.setPrefTags(prefTagsList);
+				data.setResponseBody(responseBody);
+				data.setErrorCode(JSONTags.TAG_ERROR_CODE_SUCCESS);
+				data.setResponseDetail("Tags fetched Successfully");
+			} else {
+				data.setErrorCode(JSONTags.TAG_ERROR_CODE);
+				data.setResponseDetail("Exception Occurred Fetching Preferred tags for Market Place Catalog");
+				log.error(EELFLoggerDelegate.errorLogger,
+						"Exception Occurred Fetching Preferred tags for Market Place Catalog");
+			}
+		} catch (AcumosServiceException e) {
+			data.setErrorCode(e.getErrorCode());
+			data.setResponseDetail(e.getMessage());
+			log.error(EELFLoggerDelegate.errorLogger,
+					"Exception Occurred Fetching Preferred tags for Market Place Catalog", e);
+		}
+		return data;
+	}
+	@ApiOperation(value = "Create User Tag", response = MLPTag.class)
+	@RequestMapping(value = { APINames.CREATE_USER_TAG }, method = RequestMethod.POST, produces = APPLICATION_JSON)
+	@ResponseBody
+	public JsonResponse<RestPageResponseBE> createUserTag(@PathVariable("userId") String userId, 
+													@RequestBody JsonRequest<RestPageRequestBE> tagListReq) {
+		JsonResponse<RestPageResponseBE> data = new JsonResponse<>();
+		try {
+			List<String> tagList = tagListReq.getBody().getTagList();
+			List<String> dropTagList = tagListReq.getBody().getDropTagList();
+			catalogService.createUserTag(userId, tagList, dropTagList);
+			data.setErrorCode(JSONTags.TAG_ERROR_CODE_SUCCESS);
+			data.setResponseDetail("User Tags created Successfully");
+			log.debug(EELFLoggerDelegate.debugLogger, "createUserTag :  ");
+		} catch (AcumosServiceException e) {
+			data.setErrorCode(JSONTags.TAG_ERROR_CODE);
+			data.setResponseDetail("Exception occured while createUserTag");
+			log.error(EELFLoggerDelegate.errorLogger, "Exception Occurred createUserTag :", e);
 		}
 		return data;
 	}
@@ -1019,9 +1072,17 @@ public class MarketPlaceCatalogServiceController extends AbstractController {
 			@RequestBody JsonRequest<RestPageRequestPortal> restPageReqPortal, HttpServletResponse response) {
 		
 		JsonResponse<RestPageResponseBE<MLSolution>> data = new JsonResponse<>();
+		String userId = (String)request.getAttribute("loginUserId");
+		Set<MLPTag> prefTags = null;
+		if(userId != null && !StringUtils.isEmpty(userId)) {
+			MLPUser user = userService.findUserByUserId(userId);
+			if(user != null ) {
+				prefTags = user.getTags();
+			}
+		}
 		RestPageResponseBE<MLSolution> mlSolutions = null;
 		try {
-			mlSolutions = catalogService.findPortalSolutions(restPageReqPortal.getBody());
+			mlSolutions = catalogService.findPortalSolutions(restPageReqPortal.getBody(),prefTags);
 			if (mlSolutions != null) {
 				data.setResponseBody(mlSolutions);
 				data.setErrorCode(JSONTags.TAG_ERROR_CODE_SUCCESS);

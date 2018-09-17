@@ -58,6 +58,7 @@ angular.module('AcumosApp')
         var urlAuthAndDeployToAzure='/azure/authAndpushimage';//'http://localhost:9081/azure/authAndpushimage';
         var urlqandAUrl = 'api/users/qAUrl';
         var docUrl = 'api/users/docs';
+        var kubernetesHelpDocUrl = 'api/users/k8s/docs/help';
         var dashboardUrl = 'api/admin/dashboard';
         var urlmodelFileUpload = 'api/model/upload';
         var urlTermsCondition = '/site/api-manual/Solution/global/termsCondition';
@@ -102,7 +103,9 @@ angular.module('AcumosApp')
         var urlGetCloudEnabledUrl = 'api/cloudEnabled';
         var urlGetCLIPushUrl = 'api/properties/cliPushUrl';
         var urlGetCLIAuthUrl = 'api/properties/cliAuthUrl';
-        	
+        var urlGetCauroselUrl = "api/admin/user/carouseConfig";
+        var urlPreferredTag ="api/preferredTags"; 	
+        var urlsetPreferredTag = "api/tags/createUserTag";
         /**************** ALL GET ******************/
         this.getCloudEnabled = function () {
             return $http.get(urlGetCloudEnabledUrl);
@@ -177,6 +180,9 @@ angular.module('AcumosApp')
             return $http.get(docUrl);
         };
         
+        this.getKubernetesDocUrl = function () {
+            return $http.get(kubernetesHelpDocUrl);
+        };
         this.getDashboardUrl = function () {
             return $http.get(dashboardUrl);
         };
@@ -414,8 +420,8 @@ angular.module('AcumosApp')
         	return $http.post(urlComment + '/delete/' + threadId + '/' + commentId);
         };
         
-        this.getComment = function(solutionId, revisionId, tz, dataObj){
-            return $http.post(urlThread + '/' + solutionId + '/' + revisionId + '/' + tz + '/comments', dataObj);
+        this.getComment = function(solutionId, revisionId, dataObj){
+            return $http.post(urlThread + '/' + solutionId + '/' + revisionId + '/comments', dataObj);
         };
         
         this.getUserAccountDetails = function(userID){
@@ -519,5 +525,14 @@ angular.module('AcumosApp')
         this.getCLIAuthUrl = function () {
             return $http.get(urlGetCLIAuthUrl);
         };
+        this.getcaurosalDetails = function (userID) {
+            return $http.get(urlGetCauroselUrl + '?userId=' + userID);
+        };
+        this.getPreferredTag = function (userId, reqObj) {
+            return $http.put(urlPreferredTag +'/' + userId, reqObj);
+        }; 
+        this.setPreferredTag = function (userId, tagList) {
+            return $http.post(urlsetPreferredTag +'/' + userId, tagList);
+        }; 
         
     }]);
