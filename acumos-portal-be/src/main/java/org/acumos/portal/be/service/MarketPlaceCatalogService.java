@@ -22,6 +22,8 @@ package org.acumos.portal.be.service;
  
 import java.io.InputStream;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.acumos.portal.be.common.JsonRequest;
 import org.acumos.portal.be.common.RestPageRequestBE;
@@ -43,6 +45,7 @@ import org.acumos.cds.domain.MLPSolutionRating;
 import org.acumos.cds.domain.MLPSolutionRevision;
 import org.acumos.cds.domain.MLPSolutionWeb;
 import org.acumos.cds.domain.MLPTag;
+import org.acumos.cds.domain.MLPUser;
 import org.acumos.cds.transport.AuthorTransport;
 import org.acumos.cds.transport.RestPageRequest;
 import org.acumos.portal.be.transport.RestPageRequestPortal;
@@ -135,6 +138,8 @@ public interface MarketPlaceCatalogService {
 
 	RestPageResponseBE<MLSolution> findPortalSolutions(RestPageRequestPortal pageRequestPortal); 
 
+	RestPageResponseBE<MLSolution> findPortalSolutions(RestPageRequestPortal pageRequestPortal, Set<MLPTag> prefTags); 
+
 	RestPageResponseBE<MLSolution> findUserSolutions(RestPageRequestPortal pageRequestPortal); 
 
 	RestPageResponse<MLPSolution> getUserAccessSolutions(String userId, RestPageRequest pageRequest);
@@ -164,5 +169,9 @@ public interface MarketPlaceCatalogService {
 	RevisionDescription getRevisionDescription(String revisionId, String accessType) throws AcumosServiceException;
 
 	RevisionDescription addUpdateRevisionDescription(String revisionId, String accessType, RevisionDescription description) throws AcumosServiceException;
+	List<Map<String, String>> getPreferredTagsList(JsonRequest<RestPageRequest> restPageReq, String userId) throws AcumosServiceException;
+	void createUserTag(String userId, List<String> mlpTag, List<String> dropTagList) throws AcumosServiceException;
+
+	RestPageResponseBE<MLSolution> searchSolutionsByKeyword(RestPageRequestPortal pageReqPortal);
 	
 }

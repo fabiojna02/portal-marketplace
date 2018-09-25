@@ -74,7 +74,6 @@ angular.module('admin').filter('abs', function() {
                 }).then(function mySuccess(response) {console.log(response);
                 	if(response.data.status_code == 400){$scope.verified=false;$scope.errorMessage = response.data.response_detail}
                 	else{$scope.verified=true;$scope.successMessage = response.data.response_detail}
-                	debugger;
                 }, function myError(response) {
                 	console.log("Error response", response);
                 	$scope.verified=false;$scope.errorMessage = response.data.response_detail
@@ -83,12 +82,12 @@ angular.module('admin').filter('abs', function() {
 			$scope.accessType = 
 				[{
 					'name': 'Full Access',
-					'value': 'FA'
+					'value': 'FL'
 				}, {
 					'name': 'Partial Access',
-					'value': 'PA'
+					'value': 'RF'
 				}];
-			$scope.AccessValue = "FA";
+			$scope.AccessValue = "FL";
 			//Browse catelog when category and toolkitype selected
 			$scope.browseForCatTool =function(){
 				$scope.showSolutionTable = true;
@@ -716,6 +715,8 @@ angular.module('admin').filter('abs', function() {
                       //Edit PEER
                       $scope.itsEdit = false;
                       $scope.editPeer = function(peerDetail){
+                    	  $scope.verified = null; $scope.errorMessage = "";
+                    	  $scope.verify = true;
                     	  $scope.itsEdit = true;$scope.peerStatus = peerDetail.statusCode;
                     	  $scope.editPeerID = peerDetail.peerId;
                     	  $scope.peerNamePop = peerDetail.name;$scope.subNamePop = peerDetail.subjectName;$scope.emailIdPop = peerDetail.contact1;
@@ -955,8 +956,8 @@ angular.module('admin').filter('abs', function() {
             				  
             				  $scope.arrSub.push({
             					  "subId" : value.subId,
-            					  "toolKitType" : $scope.toolKitForSubId.typeName,
-            					  "modelType" : $scope.categoryForSubId.typeName,
+            					  "toolKitType" : $scope.toolKitForSubId.name,
+            					  "modelType" : $scope.categoryForSubId.name,
             					  "updatedOn" : value.modified,
             					  "createdOn" : value.created,
             					  "frequencySelected" : $scope.frequencySelected
@@ -982,14 +983,14 @@ angular.module('admin').filter('abs', function() {
                       $scope.addedToSubs = false;
                       $scope.addToSubs = function(){
                     	  var check = false;
-                    	  var jsonFormate = '',cat='',toolKit='';debugger;
+                    	  var jsonFormate = '',cat='',toolKit='';
                     	  if(!$scope.categoryValue && !$scope.toolKitTypeValue){
                     		//changed since code was getting fetched in modelType earlier
                     		  /*$scope.categoryValue = $scope.solutionDetail.modelType;
                     		  $scope.toolKitTypeValue = $scope.solutionDetail.tookitType;*/
                     		  
                     		  $scope.categoryValue = $scope.solutionDetail.modelTypeCode;
-                    		  $scope.toolKitTypeValue = $scope.solutionDetail.tookitTypeCode;
+                    		  $scope.toolKitTypeValue = $scope.solutionDetail.toolkitTypeCode;
                     		  check = true;
                     	  }
                     	                      	  
@@ -1009,7 +1010,7 @@ angular.module('admin').filter('abs', function() {
                     			    	"peerId": $scope.peerIdForSubsList,
                     			    	//"subId": $scope.subId,
                     			    	"selector" : catToolkit,
-                    			    	"ownerId" : userId,
+                    			    	"userId" : userId,
                     			    	"scopeType": $scope.AccessValue || "FL",
                     			    	"refreshInterval": freqChangeValue,
                     			    	"accessType": "PB"
@@ -1550,7 +1551,8 @@ angular.module('admin').filter('abs', function() {
                                         	  var addAllSolObj = [];
                                         	  var cat,toolKit,catToolkit;
                                         	  //angular.forEach($scope.publicSolList,function(value, key) {  //mlsolutionCatTool
-                                        	  angular.forEach($scope.mlsolutionCatTool,function(value, key) {
+                                        	  //angular.forEach($scope.mlsolutionCatTool,function(value, key) {
+                                        	  var value = $scope.mlsolutionCatTool[0];
                                     		  cat="";toolKit ="";catToolkit="";
                                     		  if(value.modelTypeCode){
                                         		  cat = '"modelTypeCode":"' +value.modelTypeCode + '"'
@@ -1571,7 +1573,7 @@ angular.module('admin').filter('abs', function() {
 		 	    		              					  "selector": catToolkit
 	    		                        				 }
        										) 
-       										});
+       										//});
                                         	  var reqAddObj = {
                                         			  "request_body": 
                                         				  addAllSolObj
@@ -1943,6 +1945,7 @@ angular.module('admin').filter('abs', function() {
 						var slide_name = $scope.carouselSlide.name;
 						var slide_headline = $scope.carouselSlide.headline;
 						var slide_supportingContent = $scope.carouselSlide.supportingContent;
+						var slide_tagName = $scope.carouselSlide.tagName;
 						slide['name']= slide_name;
 						slide['headline'] = slide_headline;
 						slide['supportingContent']= slide_supportingContent;
@@ -1959,7 +1962,7 @@ angular.module('admin').filter('abs', function() {
 	                		slide['slideEnabled'] = "true";
 	                		slide['number'] = keyIndex + 1;
 	                	}
-						
+						slide['tagName'] = slide_tagName; 
 						slide['bgImageUrl'] = $scope.carouselBGFileName;
 						slide['InfoImageUrl'] = $scope.carouselInfoFileName;
 						
@@ -3084,6 +3087,31 @@ angular.module('admin').filter('abs', function() {
 		                             }, 5000);
 		                          });
 	                    }
+	                    
+	                    /* IOT changes start */
+						$scope.loadAllTags = function(query) {
+							$scope.getTags = {
+								"request_body" : {
+									"page" : 0
+								}
+							}
+							return apiService
+									.getAllTag($scope.getTags)
+									.then(
+											function(response) {
+												$scope.status = response.data.response_detail;
+												$scope.allTags = response.data.response_body.tags;
+												$scope.allTags.splice(0, 0, "");												
+												
+											},
+											function(error) {
+												$scope.status = error.data.error;
+											});
+						}
+						$scope.loadAllTags();									
+	                    
+	                    /* IOT changes end*/
+	                    
 		}
 })
 		.service('fileUploadService', function($http, $q) {

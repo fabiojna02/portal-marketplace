@@ -261,6 +261,7 @@ angular.module('signInModal')
                                             		});
                                             	  $rootScope.$broadcast('roleCheck');
                                             	  browserStorageService.setAuthToken(response.data.jwtToken);
+                                            	  $rootScope.accessError = false;
                                             	  var authToken = jwtHelper.decodeToken(response.data.jwtToken);
                                                   if(response.data.jwtToken != ""){
 	                                                  if(authToken.loginPassExpire == true){
@@ -274,6 +275,12 @@ angular.module('signInModal')
 	                                                $scope.signinservice = authToken;
 	                                                productService.setData($scope.signinservice.mlpuser);
 	                                                var test = productService.test;
+	                                                $rootScope.$broadcast('loadCaurosel',{ userId :$scope.signinservice.mlpuser.userId } );
+	                                                $scope.showTag = function() {
+	                                                $rootScope.$broadcast('manageTags',{ userId :$scope.signinservice.mlpuser.userId });
+                                                	}
+	                                                if(response.data.firstLogin)
+	                                                	$scope.showTag();
                                                 }else{
                                                 	console.log("Error: ", response);
                                                     $scope.userPassInvalid = true;

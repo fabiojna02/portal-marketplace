@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -75,6 +76,7 @@ import org.acumos.portal.be.transport.RestPageRequestPortal;
 import org.acumos.portal.be.transport.RevisionDescription;
 import org.acumos.portal.be.transport.User;
 import org.acumos.portal.be.util.EELFLoggerDelegate;
+import org.acumos.portal.be.util.PortalConstants;
 import org.acumos.portal.be.util.PortalUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.ArrayUtils;
@@ -83,6 +85,7 @@ import org.apache.maven.wagon.ResourceDoesNotExistException;
 import org.apache.maven.wagon.TransferFailedException;
 import org.apache.maven.wagon.authentication.AuthenticationException;
 import org.apache.maven.wagon.authorization.AuthorizationException;
+import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
@@ -452,7 +455,74 @@ public class MarketPlaceCatalogServiceImpl extends AbstractServiceImpl implement
 		}
 		return mlTagsList;
 	}
+	@Override
+	public List<Map<String, String>> getPreferredTagsList(JsonRequest<RestPageRequest> restPageReq, String userId) throws AcumosServiceException {
+		List<Map<String, String>> prefTags = new ArrayList<>();
+		try {
+			Long startTime = System.currentTimeMillis();
+			System.out.println(startTime);
+			List<String> mlTagsList = new ArrayList<>();
+			List<String> userTagsList = new ArrayList<>();	
+			ICommonDataServiceRestClient dataServiceRestClient = getClient();
+			mlTagsList = getTags(restPageReq);
+			MLPUser userDetails = dataServiceRestClient.getUser(userId);
+			Set<MLPTag> userTagSet = userDetails.getTags();
+			for(MLPTag userTags : userTagSet){
+				userTagsList.add(userTags.getTag());
+			}			 
+			for (String tag : mlTagsList) {
+				for (String utag : userTagsList) {
+					if (utag.equals(tag)) {
+						Map<String, String> map = new HashMap<>();
+						map.put("tagName", utag);
+						map.put("preferred", "Yes");
+						prefTags.add(map);
+					}
+				}
+			}			
+			List<String> union = new ArrayList<String>(mlTagsList);
+			union.addAll(userTagsList); 
+			List<String> intersection = new ArrayList<String>(userTagsList);
+			intersection.retainAll(userTagsList); 
+			union.removeAll(intersection);
+			for (String utag : union) {
+				Map<String, String> map = new HashMap<>();
+				map.put("tagName", utag);
+				map.put("preferred", "No");
+				prefTags.add(map);
+			}
+			Long endTime = System.currentTimeMillis();
+			System.out.println(endTime - startTime);
+		} catch (IllegalArgumentException e) {
+			throw new AcumosServiceException(AcumosServiceException.ErrorCode.INVALID_PARAMETER, e.getMessage());
+		} catch (HttpClientErrorException e) {
+			throw new AcumosServiceException(AcumosServiceException.ErrorCode.INTERNAL_SERVER_ERROR, e.getMessage());
+		}
+		return prefTags;
+	}
 
+	@Override
+	public void createUserTag(String userId, List<String> tagList, List<String> dropTagList) throws AcumosServiceException {
+		MLPTag mlpTag = null;
+		try {
+			log.debug(EELFLoggerDelegate.debugLogger, "createUserTag");
+			ICommonDataServiceRestClient dataServiceRestClient = getClient();
+			if(dropTagList.size()!=0){
+				for(String dropTag : dropTagList){ 
+					dataServiceRestClient.dropUserTag(userId, dropTag);
+				}
+			}
+			if(tagList.size()!=0){
+				for(String tag : tagList){ 
+					dataServiceRestClient.addUserTag(userId, tag);
+				}			
+			}
+		} catch (IllegalArgumentException e) { 
+			throw new AcumosServiceException(AcumosServiceException.ErrorCode.INVALID_PARAMETER, e.getMessage());
+		} catch (HttpClientErrorException e) {
+			throw new AcumosServiceException(AcumosServiceException.ErrorCode.INTERNAL_SERVER_ERROR, e.getMessage());
+		}
+	}
 	@Override
 	public List<User> getSolutionUserAccess(String solutionId) throws AcumosServiceException {
 		List<User> users = null;
@@ -926,6 +996,26 @@ public class MarketPlaceCatalogServiceImpl extends AbstractServiceImpl implement
 	}
 
 	@Override
+	public RestPageResponseBE<MLSolution> findPortalSolutions(RestPageRequestPortal pageReqPortal, Set<MLPTag> preferredTags) {
+		log.debug(EELFLoggerDelegate.debugLogger, "findPortalSolutions(pageReqPortal, prefTags");
+
+		Set<String> mergedTags = new HashSet<>();
+		
+			if (pageReqPortal.getTags() != null && pageReqPortal.getTags().length > 0) {
+				mergedTags = new HashSet<String>(Arrays.asList(pageReqPortal.getTags()));
+			}
+			
+			if (preferredTags != null && !preferredTags.isEmpty()) {
+				for (MLPTag prefTag : preferredTags) {
+					mergedTags.add(prefTag.getTag());
+				}
+			}
+		pageReqPortal.setTags(mergedTags.toArray(new String[mergedTags.size()]));
+		
+		return findPortalSolutions(pageReqPortal);
+	}
+
+	@Override
 	public RestPageResponseBE<MLSolution> findPortalSolutions(RestPageRequestPortal pageReqPortal) {
 		log.debug(EELFLoggerDelegate.debugLogger, "findPortalSolutions");
 		ICommonDataServiceRestClient dataServiceRestClient = getClient();
@@ -934,6 +1024,26 @@ public class MarketPlaceCatalogServiceImpl extends AbstractServiceImpl implement
 				pageReqPortal.getNameKeyword(), pageReqPortal.getDescriptionKeyword(), pageReqPortal.isActive(),
 				pageReqPortal.getOwnerIds(), accessTypeCodes, pageReqPortal.getModelTypeCodes(),
 				pageReqPortal.getValidationStatusCodes(), pageReqPortal.getTags(), null, null, pageReqPortal.getPageRequest());
+
+		List<MLSolution> content = new ArrayList<>();
+		RestPageResponseBE<MLSolution> mlSolutionsRest = new RestPageResponseBE<>(content);
+
+		if (response.getContent() != null) {
+			mlSolutionsRest = fetchDetailsForSolutions(response.getContent(), pageReqPortal);
+			mlSolutionsRest.setPageCount(response.getTotalPages());
+			mlSolutionsRest.setTotalElements((int)response.getTotalElements());
+		}
+		return mlSolutionsRest;
+	}
+
+	@Override
+	public RestPageResponseBE<MLSolution> searchSolutionsByKeyword(RestPageRequestPortal pageReqPortal) {
+		log.debug(EELFLoggerDelegate.debugLogger, "findPortalSolutions");
+		ICommonDataServiceRestClient dataServiceRestClient = getClient();
+		String[] accessTypeCodes = pageReqPortal.getAccessTypeCodes();
+		
+		RestPageResponse<MLPSolution> response = dataServiceRestClient.findPortalSolutionsByKw(pageReqPortal.getNameKeyword(), true, null,
+				accessTypeCodes, null, null, pageReqPortal.getPageRequest());
 
 		List<MLSolution> content = new ArrayList<>();
 		RestPageResponseBE<MLSolution> mlSolutionsRest = new RestPageResponseBE<>(content);
@@ -1381,37 +1491,32 @@ public class MarketPlaceCatalogServiceImpl extends AbstractServiceImpl implement
 	public boolean checkUniqueSolName(String solutionId, String solName) {
 		log.debug(EELFLoggerDelegate.debugLogger, "checkUniqueSolName ={}", solutionId);
 		ICommonDataServiceRestClient dataServiceRestClient = getClient();
-		String[] accessTypeCodes = { CommonConstants.PUBLIC, CommonConstants.ORGANIZATION };
+		String[] accessTypeCodes = { CommonConstants.PUBLIC/*, CommonConstants.ORGANIZATION*/ };
 
-		/*MLPSolution solution = dataServiceRestClient.getSolution(solutionId);
-		if(solution.getAccessTypeCode().equals(CommonConstants.PUBLIC)){
-			accessTypeCodes =new String[] { CommonConstants.ORGANIZATION, CommonConstants.PUBLIC };
-		}else if(solution.getAccessTypeCode().equals(CommonConstants.ORGANIZATION)){
-			accessTypeCodes = new String[] {CommonConstants.ORGANIZATION, CommonConstants.PUBLIC };
-		}else {
-			accessTypeCodes= new String[] {CommonConstants.PUBLIC};
-			accessTypeCodes= new String[] {CommonConstants.ORGANIZATION};
-		}*/
-		String[] name = { solName };
+		//Check only if user tries to change the name or publish the solution from private to public /org
+		MLPSolution oldSolution = dataServiceRestClient.getSolution(solutionId);
+		if(!solName.equalsIgnoreCase(oldSolution.getName())) {
+			String[] name = { solName };
 
-		Map<String, String> queryParameters = new HashMap<>();
-		//Fetch the maximum possible records. Need an api that could return the exact match of names along with other nested filter criteria
-		RestPageResponse<MLPSolution> searchSolResp = dataServiceRestClient.findPortalSolutions(name, null, true, null,
-				accessTypeCodes, null, null, null, null, null, new RestPageRequest(0, 10000, queryParameters));
-		List<MLPSolution> searchSolList = searchSolResp.getContent();
+			Map<String, String> queryParameters = new HashMap<>();
+			//Fetch the maximum possible records. Need an api that could return the exact match of names along with other nested filter criteria
+			RestPageResponse<MLPSolution> searchSolResp = dataServiceRestClient.findPortalSolutions(name, null, true, null,
+					accessTypeCodes, null, null, null, null, null, new RestPageRequest(0, 10000, queryParameters));
+			List<MLPSolution> searchSolList = searchSolResp.getContent();
+	
+			//removing the same solutionId from the list
+			List<MLPSolution> filteredSolList1 = searchSolList.stream()
+					.filter(searchSol -> !searchSol.getSolutionId().equalsIgnoreCase(solutionId))
+					.collect(Collectors.toList());
+			
+			//Consider only those records that have exact match with the solution name
+			List<MLPSolution> filteredSolList = filteredSolList1.stream()
+					.filter(searchSol -> searchSol.getName().equalsIgnoreCase(solName))
+					.collect(Collectors.toList());
 
-		//removing the same solutionId from the list
-		List<MLPSolution> filteredSolList1 = searchSolList.stream()
-				.filter(searchSol -> !searchSol.getSolutionId().equalsIgnoreCase(solutionId))
-				.collect(Collectors.toList());
-		
-		//Consider only those records that have exact match with the solution name
-		List<MLPSolution> filteredSolList = filteredSolList1.stream()
-				.filter(searchSol -> searchSol.getName().equalsIgnoreCase(solName))
-				.collect(Collectors.toList());
-
-		if (!filteredSolList.isEmpty()) {
-			return false;
+			if (!filteredSolList.isEmpty()) {
+				return false;
+			}
 		}
 
 		return true;
@@ -1588,7 +1693,7 @@ public class MarketPlaceCatalogServiceImpl extends AbstractServiceImpl implement
 		}
 		
 		if(PortalUtils.isEmptyOrNullString(description.getDescription())) {
-			log.error(EELFLoggerDelegate.errorLogger, "Cannot Recognize the accessTypeCode");
+			log.error(EELFLoggerDelegate.errorLogger, "Description is Empty");
 			throw new AcumosServiceException(AcumosServiceException.ErrorCode.IO_EXCEPTION, "Description is Empty");
 		}
 

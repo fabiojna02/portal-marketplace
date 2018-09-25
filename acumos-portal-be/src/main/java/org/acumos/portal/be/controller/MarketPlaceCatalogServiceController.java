@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -76,6 +77,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -118,42 +120,6 @@ public class MarketPlaceCatalogServiceController extends AbstractController {
 		// TODO Auto-generated constructor stub
 	}
 
-	/*
-	 * @param request
-	 *            HttpServletRequest
-	 * @param response
-	 *            HttpServletResponse
-	 * @param restPageReq
-	 *            containing request parameters like page, size, searchTerm,
-	 *            modelType and modelToolkitType
-	 * @return Paginated Response with List of the MLP Solutions
-	 */
-	/*@ApiOperation(value = "Gets a list of Published Solutions for Market Place Catalog.", response = RestPageResponseBE.class)
-	@RequestMapping(value = { APINames.SOLUTIONS }, method = RequestMethod.POST, produces = APPLICATION_JSON)
-	@ResponseBody
-	public JsonResponse<RestPageResponseBE<MLSolution>> getSolutionsList(HttpServletRequest request,
-			@RequestBody JsonRequest<RestPageRequestBE> restPageReq, HttpServletResponse response) {
-		log.debug(EELFLoggerDelegate.debugLogger, "getSolutionsList");
-		RestPageResponseBE<MLSolution> mlSolutions = null;
-		JsonResponse<RestPageResponseBE<MLSolution>> data = new JsonResponse<>();
-		try {
-			if (restPageReq != null) {
-				mlSolutions = catalogService.getSearchSolution(restPageReq);
-			}
-			if (mlSolutions != null) {
-				data.setResponseBody(mlSolutions);
-				data.setErrorCode(JSONTags.TAG_ERROR_CODE_SUCCESS);
-				data.setResponseDetail("Solutions fetched Successfully");
-			}
-		} catch (AcumosServiceException e) {
-			data.setErrorCode(e.getErrorCode());
-			data.setResponseDetail(e.getMessage());
-			log.error(EELFLoggerDelegate.errorLogger, "Exception Occurred Fetching Solutions for Market Place Catalog",
-					e);
-		}
-		return data;
-	}*/
-
 	@ApiOperation(value = "Gets a Solution Detail for the given SolutionId. Same API can be used for both Solution Owner view as well as General user. API will return isOwner as true if the user is owner of the solution", response = MLSolution.class)
 	@RequestMapping(value = { APINames.SOLUTIONS_DETAILS }, method = RequestMethod.GET, produces = APPLICATION_JSON)
 	@ResponseBody
@@ -181,34 +147,6 @@ public class MarketPlaceCatalogServiceController extends AbstractController {
 		}
 		return data;
 	}
-
-	/*@ApiOperation(value = "Gets a All Solutions for the User for Manage Models Screen.", response = MLSolution.class, responseContainer = "List")
-	@RequestMapping(value = { APINames.MANAGE_MY_SOLUTIONS }, method = RequestMethod.POST, produces = APPLICATION_JSON)
-	@ResponseBody
-	public JsonResponse<RestPageResponseBE<MLSolution>> getAllMySolutions(HttpServletRequest request,
-			@PathVariable("userId") String userId, @RequestBody JsonRequest<RestPageRequestBE> restPageReq,
-			HttpServletResponse response) {
-		// List<MLSolution> mlSolutions = null;
-		RestPageResponseBE<MLSolution> mlSolutions = null;
-		// JsonResponse<List<MLSolution>> data = null;
-		JsonResponse<RestPageResponseBE<MLSolution>> data = new JsonResponse<>();
-		try {
-			mlSolutions = catalogService.getAllMySolutions(userId, restPageReq);
-			if (mlSolutions != null) {
-				data.setResponseBody(mlSolutions);
-				data.setErrorCode(JSONTags.TAG_ERROR_CODE_SUCCESS);
-				data.setResponseDetail("Solutions fetched Successfully");
-				log.debug(EELFLoggerDelegate.debugLogger, "getMySolutions: size is {} ", mlSolutions.getSize());
-			}
-			// response.setStatus(HttpServletResponse.SC_OK);
-		} catch (AcumosServiceException e) {
-			data.setErrorCode(e.getErrorCode());
-			data.setResponseDetail(e.getMessage());
-			log.error(EELFLoggerDelegate.errorLogger,
-					"Exception Occurred Fetching Solutions for a User for Manage My Models", e);
-		}
-		return data;
-	}*/
 
 	@ApiOperation(value = "Get search solution according to queryparamters sent.", response = MLSolution.class, responseContainer = "List")
 	@RequestMapping(value = { APINames.SEARCH_SOLUTION }, method = RequestMethod.GET, produces = APPLICATION_JSON)
@@ -456,7 +394,7 @@ public class MarketPlaceCatalogServiceController extends AbstractController {
 	@RequestMapping(value = { APINames.TAGS }, method = RequestMethod.PUT, produces = APPLICATION_JSON)
 	@ResponseBody
 	public JsonResponse<RestPageResponseBE> getTagsList(@RequestBody JsonRequest<RestPageRequest> restPageReq) {
-		log.debug(EELFLoggerDelegate.debugLogger, "getSolutionsList");
+		log.debug(EELFLoggerDelegate.debugLogger, "getTagsList");
 		List<String> mlTagsList = new ArrayList<>();
 		JsonResponse<RestPageResponseBE> data = new JsonResponse<>();
 		try {
@@ -477,6 +415,57 @@ public class MarketPlaceCatalogServiceController extends AbstractController {
 			data.setErrorCode(e.getErrorCode());
 			data.setResponseDetail(e.getMessage());
 			log.error(EELFLoggerDelegate.errorLogger, "Exception Occurred Fetching tags for Market Place Catalog", e);
+		}
+		return data;
+	}
+	@ApiOperation(value = "Gets a list of preffered tags for Market Place Catalog.", response = RestPageResponseBE.class)
+	@RequestMapping(value = { APINames.PREFERRED_TAGS }, method = RequestMethod.PUT, produces = APPLICATION_JSON)
+	@ResponseBody
+	public JsonResponse<RestPageResponseBE> getPreferredTagsList(
+			@RequestBody JsonRequest<RestPageRequest> restPageReq, @PathVariable("userId") String userId) {
+		log.debug(EELFLoggerDelegate.debugLogger, "getPreferredTagsList");
+		List<String> mlTagsList = new ArrayList<>();
+		JsonResponse<RestPageResponseBE> data = new JsonResponse<>();
+		try {			 
+			List<Map<String, String>> prefTagsList = catalogService.getPreferredTagsList(restPageReq, userId);
+			if (mlTagsList != null) {
+				List content = new ArrayList<>();
+				RestPageResponseBE responseBody = new RestPageResponseBE<>(content);
+				responseBody.setPrefTags(prefTagsList);
+				data.setResponseBody(responseBody);
+				data.setErrorCode(JSONTags.TAG_ERROR_CODE_SUCCESS);
+				data.setResponseDetail("Tags fetched Successfully");
+			} else {
+				data.setErrorCode(JSONTags.TAG_ERROR_CODE);
+				data.setResponseDetail("Exception Occurred Fetching Preferred tags for Market Place Catalog");
+				log.error(EELFLoggerDelegate.errorLogger,
+						"Exception Occurred Fetching Preferred tags for Market Place Catalog");
+			}
+		} catch (AcumosServiceException e) {
+			data.setErrorCode(e.getErrorCode());
+			data.setResponseDetail(e.getMessage());
+			log.error(EELFLoggerDelegate.errorLogger,
+					"Exception Occurred Fetching Preferred tags for Market Place Catalog", e);
+		}
+		return data;
+	}
+	@ApiOperation(value = "Create User Tag", response = MLPTag.class)
+	@RequestMapping(value = { APINames.CREATE_USER_TAG }, method = RequestMethod.POST, produces = APPLICATION_JSON)
+	@ResponseBody
+	public JsonResponse<RestPageResponseBE> createUserTag(@PathVariable("userId") String userId, 
+													@RequestBody JsonRequest<RestPageRequestBE> tagListReq) {
+		JsonResponse<RestPageResponseBE> data = new JsonResponse<>();
+		try {
+			List<String> tagList = tagListReq.getBody().getTagList();
+			List<String> dropTagList = tagListReq.getBody().getDropTagList();
+			catalogService.createUserTag(userId, tagList, dropTagList);
+			data.setErrorCode(JSONTags.TAG_ERROR_CODE_SUCCESS);
+			data.setResponseDetail("User Tags created Successfully");
+			log.debug(EELFLoggerDelegate.debugLogger, "createUserTag :  ");
+		} catch (AcumosServiceException e) {
+			data.setErrorCode(JSONTags.TAG_ERROR_CODE);
+			data.setResponseDetail("Exception occured while createUserTag");
+			log.error(EELFLoggerDelegate.errorLogger, "Exception Occurred createUserTag :", e);
 		}
 		return data;
 	}
@@ -1019,9 +1008,17 @@ public class MarketPlaceCatalogServiceController extends AbstractController {
 			@RequestBody JsonRequest<RestPageRequestPortal> restPageReqPortal, HttpServletResponse response) {
 		
 		JsonResponse<RestPageResponseBE<MLSolution>> data = new JsonResponse<>();
+		String userId = (String)request.getAttribute("loginUserId");
+		Set<MLPTag> prefTags = null;
+		if(userId != null && !StringUtils.isEmpty(userId)) {
+			MLPUser user = userService.findUserByUserId(userId);
+			if(user != null ) {
+				prefTags = user.getTags();
+			}
+		}
 		RestPageResponseBE<MLSolution> mlSolutions = null;
 		try {
-			mlSolutions = catalogService.findPortalSolutions(restPageReqPortal.getBody());
+			mlSolutions = catalogService.findPortalSolutions(restPageReqPortal.getBody(),prefTags);
 			if (mlSolutions != null) {
 				data.setResponseBody(mlSolutions);
 				data.setErrorCode(JSONTags.TAG_ERROR_CODE_SUCCESS);
@@ -1031,6 +1028,32 @@ public class MarketPlaceCatalogServiceController extends AbstractController {
 		} catch (Exception e) {
 			data.setErrorCode(JSONTags.TAG_ERROR_CODE);
 			data.setResponseDetail(e.getMessage());
+			log.error(EELFLoggerDelegate.errorLogger, "Exception Occurred Fetching Solutions", e);
+		}
+		return data;
+	}
+
+
+	@ApiOperation(value = "searchSolutionBykeyword", response = MLSolution.class, responseContainer = "List")
+	@RequestMapping(value = { "/searchSolutionBykeyword" }, method = RequestMethod.POST, produces = APPLICATION_JSON)
+	@ResponseBody
+	public JsonResponse<RestPageResponseBE<MLSolution>> searchSolutionsByKeyword(HttpServletRequest request,
+			@RequestBody JsonRequest<RestPageRequestPortal> restPageReqPortal, HttpServletResponse response) {
+		
+		JsonResponse<RestPageResponseBE<MLSolution>> data = new JsonResponse<>();
+		RestPageResponseBE<MLSolution> mlSolutions = null;
+		try {
+			mlSolutions = catalogService.searchSolutionsByKeyword(restPageReqPortal.getBody());
+			if (mlSolutions != null) {
+				data.setResponseBody(mlSolutions);
+				data.setErrorCode(JSONTags.TAG_ERROR_CODE_SUCCESS);
+				data.setResponseDetail("Solutions fetched Successfully");
+				log.debug(EELFLoggerDelegate.debugLogger, "searchSolutionsByKeyword: size is {} ", mlSolutions.getSize());
+			}
+		} catch (Exception e) {
+			data.setErrorCode(JSONTags.TAG_ERROR_CODE);
+			data.setResponseDetail(e.getMessage());
+			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
 			log.error(EELFLoggerDelegate.errorLogger, "Exception Occurred Fetching Solutions", e);
 		}
 		return data;

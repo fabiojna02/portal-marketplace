@@ -70,6 +70,7 @@ p {font-size: 1em;}
 
 .filter-catagory {width: 20px; height:13px; background: url("../images/sidebar-icons/filter_by_category_icon.png") no-repeat center center;}
 .icon-tags {width: 20px; height:20px; background: url("../images/sidebar-icons/path_catalog_icon.png") no-repeat center center;}
+.icon-preferred-tags {width: 20px; height:20px; background: url("../images/sidebar-icons/icon_prefered_tags.png") no-repeat center center;}
 
 .statistics-icons,.tab-icons {display: inline-block; }
 .icon-chat {width: 14px; height:14px; background: url("../images/chat.png") no-repeat center center; position:relative; top: 3px;}
@@ -82,6 +83,7 @@ p {font-size: 1em;}
 .mdl-tabs__tab .tab-signatures {width:18px; height:12px;background: url("../images/model_details/signature.png") no-repeat center center; }
 .mdl-tabs__tab .tab-documents {width:18px; height:22px;background: url("../images/model_details/documents.png") no-repeat center center; }
 .mdl-tabs__tab .tab-versionhistory {width:21px; height:18px;background: url("../images/model_details/version_history.png") no-repeat center center; }
+.mdl-tabs__tab .tab-author_details {width:18px; height:18px;background: url("../images/model_details/icon_author_publisher_details.png") no-repeat center center;margin-left: 2px;margin-right: 8px; }
 
 .mdl-tabs__tab .tab-profile {width:19px; height:19px;background: url("../images/userprofile/profile.png") no-repeat center center; }
 .mdl-tabs__tab .tab-contact-setting {width:20px; height:18px;background: url("../images/userprofile/contact_settings.png") no-repeat center center; }
@@ -92,6 +94,7 @@ p {font-size: 1em;}
 .mdl-tabs__tab.is-active .tab-signatures {background: url("../images/model_details/signature_selected.png") no-repeat center center; }
 .mdl-tabs__tab.is-active .tab-documents {background: url("../images/model_details/documents_selected.png") no-repeat center center; }
 .mdl-tabs__tab.is-active .tab-versionhistory {background: url("../images/model_details/version_history_selected.png") no-repeat center center; }
+.mdl-tabs__tab.is-active .tab-author_details {background: url("../images/model_details/icon_author_publisher_details_selected.png") no-repeat center center; }
 
 .md-icons1 {margin-right: 5px;}
 /*********** Icons section end **************/
@@ -507,6 +510,9 @@ transition: all 0.2s ease-in-out;
 .marketplace-btn-container {display: inline-block;}
 .marketplace-btn-container .mdl-button {color: #414141}
 
+.md-icons .mdl-button.mdl-button--icon.mdl-js-button[disabled], 
+.md-icons .mdl-button.mdl-button--icon.mdl-js-button[disabled]:hover {background: none !important;}
+
 .mp-container1 {display:flex; justify-content: space-between; flex-wrap: nowrap;}
 .mp-container1 .select-control {margin-right: 5px;}
 .statcontainer {position: absolute; top:5px; right: 0;}
@@ -912,6 +918,10 @@ md-tabs md-ink-bar {background: #671C9D;}
 .sidebar-seperator {border: none; border-bottom:1px solid #DEDEDE; width: 100%; clear:both; display:block;}
 md-checkbox.md-checked .md-icon:after {width: 6px; height: 9px; left: 3px;}
 
+.preferred-tags-list {list-style-type:none; padding:0 0 0 15px;margin: 0;}
+.preferred-tags-list li {padding-left: 7px;font-size: 13px; min-height: 35px; }
+.preferred-tags-list li:before {height: 16px; width: 16px; display: inline-block;content: url(../images/general-icons/ico_prefered_tags_list.png); position: relative; left: -8px;top: 4px;}
+.manage-tags {margin-left: 15px; font-size: 13px;}
 /*******User Profile page Style start *********/
 .ud-row {display:flex; flex-wrap:nowrap; justify-content: space-between;}
 .ud-row > div {width: auto;flex-grow: 3; }
@@ -1363,7 +1373,10 @@ md-select-header:first-child {padding: 16px 16px 8px 16px; display:block;}
 md-select-header input {width: 100%;height: 30px;padding-left: 10px;}
 .md-modellbl1 {display: inline-block;white-space: normal; text-overflow:ellipsis; max-width: 150px; float: left; overflow: hidden;white-space: nowrap;}
 
-
+.addslide-select {padding: 0px 1px !important;}
+.addslide-select md-select {border-radius: 2px; height: 35px;}
+.addslide-select md-select .md-select-value {height: 32px;}
+.addslide-container1 .md-errors-spacer { min-height: 1px !important;}
 /************** GRID STYLE ENDS************/
 
 /********* Error 404 page style Start ***************/
@@ -1425,6 +1438,8 @@ md-menu-content.notelist_1 md-menu-item {border-top: 1px dotted #b1b1b1;margin: 
 md-menu-content.notelist_1 md-menu-item:first-child {border-top: none;}
 md-menu-content.notelist_1 md-menu-item.readall-btn-container {position: relative;border-top: 1px dotted #b1b1b1;margin: 3px 0; padding-top: 10px !important; }
 
+md-menu-item:hover { background-color: #eee;}
+
 md-menu-content.notelist_1 .mdl-button {min-height: 10px; width:15px; min-width: 15px; background: none;}
 md-menu-content.notelist_1 .mdl-button.btn-readall-msg {height: 30px; position:relative; text-align: center; width:175px; margin: 0 auto;text-transform: none; color:#0366d6;font-size: 14px; font-weight: normal;line-height: 28px; }
 md-menu-content.notelist_1 .mdl-button.btn-readall-msg:hover { color:#671C9D;}
@@ -1456,6 +1471,7 @@ terms-condition {padding: 0 20px; display:block;}
 .a-logo-container.logo-without-login.logo_white_bg {display:inline-flex;min-width: 250px;background: #fff url("../images/general-icons/header_cross_img.png") no-repeat -40px center;}
 .a-logo-container.logo_white_bg {display:inline-flex;min-width: 250px;background: #fff url("../images/general-icons/header_cross_img.png") no-repeat left center;}
 
+md-menu-item.header-ddl a {text-align:left; color: #2e2f2f;}
 
 /* ---------- validation -------------*/
 .validation-container{padding:0; margin: 0 -8px;}
@@ -1978,6 +1994,38 @@ table tbody tr td .a-tooltipval {top:5px}
 .a-info-message {padding: 20px; background: #f2f2f2; margin: 50px 20px;}
 .a-info-message p:last-child {margin:0;}
 /********* info message style end*********/
+
+/***************** IOT theme dialog box start **********/
+.IOT-theme-dialog1 {width: 825px;max-height: 90%;}
+.theme-progress-container { padding: 15px 20px; background: #F5F5F5; border-bottom: 1px solid #d8d8d8; position: relative; margin: -20px -20px 20px -20px;}
+.theme-progress-container-inner {display: flex; flex-wrap: nowrap; justify-content: space-between;}
+.theme-progress-container-inner > label {font-weight: 600; }
+
+.theme-progress-container2 {}
+.theme-tile-wrapper {display: flex; flex-wrap: wrap;max-height: 265px; overflow-y: auto; position:relative; margin-bottom: 10px; padding-top: 8px;}
+
+.theme-tile {background: #F5F5F5; border: 1px solid #d5d5d5; border-radius: 3px; width: 85px; height: 70px; position: relative; margin-bottom: 20px; margin-right: 40px;  }
+.theme-check-container {text-align: right; width: calc(100% + 25px);position: absolute; top: 50%; margin-top: -13px;
+	background: #fff; border-left: 0; border-top: 1px solid #d5d5d5; border-right: 1px solid #d5d5d5; border-bottom: 1px solid #d5d5d5;
+	border-top-right-radius: 12px; border-bottom-right-radius: 12px; padding: 2px 0 3px 0; display: flex; flex-wrap: nowrap; justify-content: space-between;
+}
+.theme-tile .theme-image-container {position: absolute; top: 0; left: 0; width: 100%;height: 100%; display: flex; justify-content: center; align-items: center; }
+.theme-check-container label {text-align: center; margin-bottom:0;width: calc(100% - 19px);overflow: hidden; text-overflow: ellipsis; max-width: 80%;padding-left: 5px;}
+.theme-tile md-checkbox {margin-bottom:0;width: 19px; height: 19px; margin-right: 3px; background: url("../images/general-icons/icon_uncheck.png") no-repeat center center;}
+.theme-tile md-checkbox .md-icon {border:none;}
+.theme-tile md-checkbox.md-checked {background: url("../images/general-icons/icon_checked.png") no-repeat center center;}
+.theme-tile md-checkbox.md-checked .md-icon {background:none;}
+.theme-tile md-checkbox.md-checked .md-icon:after{border:none;}
+.theme-tile .theme-image-container img {border-radius: 3px;position:relative;max-width: 100%; max-height: 100%;}
+
+.theme-step-container { position:relative; height: 20px; background: #d7d7d7; border-radius: 10px; width: 100%;margin: 0 15px;}
+.theme-step-bar { position: absolute; height: 100%; background: #009900; width: 50%;border-radius: 10px;}
+.theme-step-bar_100 { position: absolute; height: 100%; background: #009900; width: 100%;border-radius: 10px;}
+.theme-progress-container1 {display: flex; justify-content: space-between;align-items: center;margin-bottom: 20px;}	
+.theme-searchbox {padding-top: 5px; padding-bottom: 5px;}
+.theme-valmsg {margin-left: 10px;}
+/***************** IOT theme dialog box end **********/
+
 /*********** MEDIA QUERIES SECTION END  ************/
 
 /****** publish request starts*******/
@@ -2468,4 +2516,5 @@ label.model-name{color:#0366d6;}
     .header-right1 md-menu > button:first-child span {margin-right: 2px !important;}
     .mp-grid-list figure {display:flex;}
 }
+/*********** MEDIA QUERIES SECTION END  ************/
 

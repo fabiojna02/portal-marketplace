@@ -19,7 +19,7 @@ limitations under the License.
 */
 
 app.factory('authenticationInterceptor', function ( $q, $state, $rootScope, $injector, browserStorageService) {
-	var accessError = false;
+  $rootScope.accessError = false;
   return {
     request: function (config) {
       config.headers = config.headers;
@@ -28,6 +28,9 @@ app.factory('authenticationInterceptor', function ( $q, $state, $rootScope, $inj
       }
       if(sessionStorage.getItem('provider'))
           config.headers.provider = sessionStorage.getItem('provider');
+      var tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      tz = encodeURIComponent(tz);
+      config.headers.UserTimeZone = tz;
       return config;
     },
     response: function (response) {
@@ -35,9 +38,9 @@ app.factory('authenticationInterceptor', function ( $q, $state, $rootScope, $inj
     },
     responseError: function (response){
     	
-    	if (response.status === 401 && accessError == false/* && response.config.url != 'api/admin/config/site_config'*/) {
+    	if (response.status === 401 && $rootScope.accessError == false/* && response.config.url != 'api/admin/config/site_config'*/) {
             //session token expired or unauthorized access
-    		accessError = true;
+    		$rootScope.accessError = true;
     		browserStorageService.removeAuthToken();
     		sessionStorage.clear();
     		localStorage.clear();

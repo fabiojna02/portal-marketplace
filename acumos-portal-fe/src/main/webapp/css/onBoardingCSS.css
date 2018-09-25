@@ -41,13 +41,13 @@ limitations under the License.
 /********* manage model page*******************/
  /* vertical tab */
 /*Vertical Tabs*/
-.workflow-leftheader {width: 210px; float: left; padding: 15px 0; background-color:rgb(232,229,236); color: #681D9e;}
+.workflow-leftheader {width: 240px; float: left; padding: 15px 0; background-color:rgb(232,229,236); color: #681D9e;}
 .workflow-leftheader span{padding:0 20px;}
 .workflow-right-header {float: left; padding: 15px 20px; color: #424043;}
 .workflow-right-header span{padding:0 10px;} 
 .workflow-header{background-color:rgb(246,243,250); border-bottom:0px; font-weight:bold; padding:0; float:left; width:100%;}
-.mdl-cell.workflow-left {width:210px; float: left; background-color:#F1F1F1;}
-.mdl-cell.workflow-right {float: left; padding: 22px 0 25px; width: calc(100% - 210px) !important;}
+.mdl-cell.workflow-left {width:240px; float: left; background-color:#F1F1F1;}
+.mdl-cell.workflow-right {float: left; padding: 22px 0 25px; width: calc(100% - 240px) !important;}
 .onboarding .mdl-cell.workflow-right h2{margin-top:0;}
 .tabs-left {border-bottom: none; margin:0; padding:0; width: 100%; border-right: 0px solid #ddd;}
 .tabs-left .mdl-tabs__tab{text-transform:none;padding: 0 20px;}
@@ -554,7 +554,7 @@ md-tabs-canvas md-tab-item.md-tab.md-ink-ripple.md-active{  color: rgb(104, 29, 
 
 /* upload-model-bundle */
 .upload-model-bundle .mdl-grid{padding:0;}
-.upload-model-bundle-left {border-right:1px solid #ccc; padding:0 16px 16px 0px;}
+.upload-model-bundle-left {/*border-right:1px solid #ccc; padding:0 16px 16px 0px;*/ }
 .upload-model-bundle .timeline-label-cont{padding-left:0px;}
 .upload-model-bundle .timeline-label-cont h3{margin-top:0; padding-bottom:0px;}
 .upload-file-container{float:left; width:100%;}
@@ -563,13 +563,23 @@ md-tabs-canvas md-tab-item.md-tab.md-ink-ripple.md-active{  color: rgb(104, 29, 
 .input-upload-button .mdl-button{position:relative; bottom:0;  margin-left:4px; }
 .input-upload-button button.btn-secondary{margin-right:0; margin-top:5px; background: #671C9D; color: #fff; height: 34px; border-radius: 0;  border: 1px solid rgba(0,0,0,.12);}
 .input-div .upload-field{font-size:15px; font-weight:600;}
-.progress-bar-div{display: flex; flex-direction: row; flex-wrap: nowrap;position:relative; border: 1px solid rgba(0,0,0,.12); font-size:11px; margin-top: 5px; float: left;  width: 100%; }
-.progress-bar-div div{padding: 1px; margin-top:5px;}	
+.progress-bar-div{display: flex; flex-direction: row; flex-wrap: nowrap;position:relative; border: 1px solid rgba(0,0,0,.12); font-size:11px; margin-top: 5px; float: left;  width: 100%; padding-bottom: 5px;}
+.progress-bar-div div{padding: 1px 2px; margin-top:5px; line-height: 14px;}   
 .fileclose{float:right; padding: 2px 5px 0; margin: 0;   position: absolute; right: 0; cursor:pointer;}
 .fileclose i{font-size:12px;}
 .onboardbtn{padding-left:8px;}
-.timeline h6.onboard-heading{padding-bottom:5px;}
+.timeline h6.onboard-heading{padding-bottom:5px; margin-bottom:0;}
+.upload-model-bundle-right{background-color:#F3F3F3; padding:0px;}
+.upload-model-bundle-right h5{font-size:14px; color:#671c9d; font-weight:400px; line-height: 19px; margin: 0 -16px 16px; padding: 0px 16px 16px;}
+.upload-model-bundle-right-content{padding:16px;}
+.upload-model-bundle-right.mdl-cell, .upload-model-bundle-left.mdl-cell{margin-top:0px;}
+.upload-model-bundle-left h5{font-size:14px; border-bottom:0px; padding: 15px 10px 12px 0; margin-bottom: 0;}
+.upload-model-bundle-right-content p{margin-bottom: 10px; line-height: 18px;}
+.progress-bar-div .pro-status{width:75px; margin-right:15px; text-align: center;}
+.namelength{white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width:150px; float:left;}
+.progress-bar-div .fileclose{padding-top:3px;}
 /* upload-model-bundle */
+
 /* media query start */
 @media(max-width:1024px){
 body,  ul, ol{font-size:12px;}

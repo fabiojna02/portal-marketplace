@@ -269,23 +269,46 @@ angular
 								}
 							}
 
-							apiService.insertSolutionDetail(dataObj).then(
-									function(response) {
-										$scope.totalPages = response.data.response_body.pageCount;
-										$scope.totalElements = response.data.response_body.totalElements;
-										$rootScope.relatedModelType = '';										
-										getSolution(response);
-										$scope.loadpage = $scope.selectedPage;
-										$scope.startPageSize = $scope.loadpage * $scope.solutionSize + 1; 
-										$scope.endPageSize = (($scope.loadpage + 1) * $scope.solutionSize) < $scope.totalElements ? (($scope.loadpage + 1) * $scope.solutionSize) : $scope.totalElements;
-										$scope.SetDataLoaded = false;
-										$rootScope.setLoader = false;										
-									},
-									function(error) {
-										$rootScope.setLoader = false;
-										console.log(error);
-										
-									});
+							if($rootScope.valueToSearch !== undefined
+									&& $rootScope.valueToSearch !== null && $rootScope.valueToSearch !== ''){
+								apiService.insertSearchSolutionDetail(dataObj).then(
+										function(response) {
+											$scope.totalPages = response.data.response_body.pageCount;
+											$scope.totalElements = response.data.response_body.totalElements;
+											$rootScope.relatedModelType = '';										
+											getSolution(response);
+											$scope.loadpage = $scope.selectedPage;
+											$scope.startPageSize = $scope.loadpage * $scope.solutionSize + 1; 
+											$scope.endPageSize = (($scope.loadpage + 1) * $scope.solutionSize) < $scope.totalElements ? (($scope.loadpage + 1) * $scope.solutionSize) : $scope.totalElements;
+											$scope.SetDataLoaded = false;
+											$rootScope.setLoader = false;										
+										},
+										function(error) {
+											$scope.SetDataLoaded = false;
+											$rootScope.setLoader = false;
+											console.log(error);
+											
+										})
+							} else{
+								apiService.insertSolutionDetail(dataObj).then(
+										function(response) {
+											$scope.totalPages = response.data.response_body.pageCount;
+											$scope.totalElements = response.data.response_body.totalElements;
+											$rootScope.relatedModelType = '';										
+											getSolution(response);
+											$scope.loadpage = $scope.selectedPage;
+											$scope.startPageSize = $scope.loadpage * $scope.solutionSize + 1; 
+											$scope.endPageSize = (($scope.loadpage + 1) * $scope.solutionSize) < $scope.totalElements ? (($scope.loadpage + 1) * $scope.solutionSize) : $scope.totalElements;
+											$scope.SetDataLoaded = false;
+											$rootScope.setLoader = false;										
+										},
+										function(error) {
+											$scope.SetDataLoaded = false;
+											$rootScope.setLoader = false;
+											console.log(error);
+											
+										})
+							}
 
 						}
 
@@ -367,10 +390,6 @@ angular
 							//pagination logic
 
 							$scope.size = new Array( $scope.totalPages );
-							
-						
-							
-							
 						}
 						var privacyArr = [];
 						var caegoryArr = [];
@@ -388,6 +407,8 @@ angular
 							$scope.selectedPage = 0;
 							$scope.modelCount = 0;
 							$scope.isBusy = false;
+							$rootScope.valueToSearch = null;
+							$rootScope.search = null;
 					    
 							if (type == 'searchFilter') {
 								if(inputChangedPromise){
@@ -519,6 +540,48 @@ angular
 									return {"width" : + starPercentageRounded + "%"};										
 								}
 							  } 
+
+						 $scope.showTag = function() {
+                     		$rootScope.$broadcast('manageTags');
+                     	}
+						 $scope.$on("loadMarketplace",function(event, data) {
+							 $scope.loadMore(0);
+							 $scope.getalltags();
+						 });
+						 $scope.getalltags = function() {
+						  $scope.selected = [];		 
+						  if (JSON.parse(browserStorageService.getUserDetail())) {
+							  $scope.loginUserID = JSON.parse(browserStorageService
+										.getUserDetail())[1];
+							}
+
+							  var dataObj = {
+										"request_body" : {
+											 "fieldToDirectionMap": {},
+											 "page": 9,
+											 "size": 0
+										},
+										"request_from" : "string",
+										"request_id" : "string"
+									}
+								apiService
+									.getPreferredTag($scope.loginUserID, dataObj)
+									.then(
+											function(response) {												
+												$scope.siteConfigTag = response.data.response_body.prefTags;																										
+												for(var i = 0; i < 2 ; i++)
+												 {					 
+													 if ($scope.siteConfigTag[i].preferred == "Yes") {
+														 $scope.selected.push($scope.siteConfigTag[i]);														 
+													  }
+												 }
+											},
+											function(error) {
+												console.log(error);
+											});						 							 						 							 			
+						}
+						if($scope.loginUserID)
+							$scope.getalltags();
 
 						$scope.updateFavorite = function(solutionId, key) {
 							// $scope.selectFav = !$scope.selectFav;
