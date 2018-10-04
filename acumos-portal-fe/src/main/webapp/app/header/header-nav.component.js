@@ -213,7 +213,7 @@ angular.module('headerNav')
 		
 
 		if($scope.loginUserID!=null && $scope.loginUserID!=''){
-			$scope.getNotificationMessage($scope.loginUserID, $scope.page);
+			$scope.getNotificationMessage($scope.loginUserID, $scope.page, true);
 			$interval(function () {
 				var userId = JSON.parse(browserStorageService.getUserDetail())[1]
 				if(userId){
@@ -235,7 +235,7 @@ angular.module('headerNav')
 					$scope.page =0;
 					//$scope.notificationManageObj=[];
 					//$rootScope.notificationCount=0;
-					$scope.getNotificationMessage($scope.loginUserID, $scope.page);
+					$scope.getNotificationMessage($scope.loginUserID, $scope.page, true);
 					$state.go('notificationModule');
 				 }
 			}).error(function(data, status, headers, config) {
@@ -252,7 +252,7 @@ angular.module('headerNav')
 				//$scope.notificationManageObj=[];
 				//$rootScope.notificationCount=0;
 				$rootScope.notificationCount = $rootScope.notificationCount-1;
-				$scope.getNotificationMessage($scope.loginUserID, $scope.page);
+				$scope.getNotificationMessage($scope.loginUserID, $scope.page, true);
 			});
 			/*var req = {
 				    method: 'DELETE',
