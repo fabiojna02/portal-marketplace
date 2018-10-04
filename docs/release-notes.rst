@@ -20,7 +20,31 @@
 Portal Marketplace Release Notes
 ================================
 
-Version 1.15.45, 21th September 2018
+Version 1.16.0, 28th September 2018
+===================================
+* IST2:  UI is displaying distorted on header when shared user have profile pic and also white strip is displaying (ACUMOS-1578)
+* IST: Deploy to Local : Download packages and help is not working on the popup (ACUMOS-1653)
+* IST: Issues in review/approve workflow when users request publish to public (ACUMOS-1764)
+* IST: Preferred tag is not displaying on model tile (ACUMOS-1765)
+* Portal image upload screen cannot recognize JPG suffix, insists on jpg (ACUMOS-1722)
+* Portal publish-approve screen does not allow viewing comments after approve/decline (ACUMOS-1775)
+* Portal login failure screen typo "does not exists" (ACUMOS-1799)
+* Portal must not reveal existence of user after failed login attempts cause lock (ACUMOS-1774)
+
+
+Version 1.15.48, 25th September 2018
+====================================
+* Issues on Web Onboarding Screen (ACUMOS-1711)
+* Portal implementation for kubernetes-client API does not conform to design (ACUMOS-1760)
+* Publish on-boarding URLs from configuration on Portal documentation page (ACUMOS-931)
+* Portal federation admin screen cannot create subscription to model by ID (ACUMOS-1686)
+* Portal federation peer dialog verification behaviors buggy (ACUMOS-1721)
+* Portal text on web on-boarding screen has typo missing "s (ACUMOS-1729)
+* Portal federation peer subscription field does not show selector content (ACUMOS-1744)
+* Portal create new user dialog does not offer all available roles (ACUMOS-1772)
+* Portal user cannot delete preferred tag (theme)  (ACUMOS-1779)
+
+Version 1.15.47, 21th September 2018
 ====================================
 * IST2/IST - Login issue when time out occures (ACUMOS-1761)
 * <Portal Marketplace/Web Onboarding> Error displayed while onbording when earlier model onboarding is failed (ACUMOS-1718)
