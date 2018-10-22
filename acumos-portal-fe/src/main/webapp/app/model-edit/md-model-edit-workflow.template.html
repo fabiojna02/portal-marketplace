@@ -70,7 +70,9 @@ limitations under the License.
 								width="2"> <md-menu-item
 								ng-repeat="sharedmember in sharedWith track by $index">
                               
-							<span ng-click=""> <img
+							<span ng-click=""> 
+							<span class="profileimageholder">
+							<img
 								ng-hide="sharedmember.picture == null || sharedmember.picture == ''"
 								ng-src="data:image/PNG;base64,{{sharedmember.picture}}"
 								alt="{{sharedmember.firstName}} {{sharedmember.lastName}}"
@@ -81,6 +83,7 @@ limitations under the License.
 								src="images/userprofile/user-profile-black.png"
 								alt="{{sharedmember.firstName}} {{sharedmember.lastName}}"
 								title="{{sharedmember.firstName}} {{sharedmember.lastName}}" />
+								</span>
 								{{sharedmember.firstName}} {{sharedmember.lastName}}
 							</span> </md-menu-item> </md-menu-content> </md-menu>
 					</div>
@@ -256,9 +259,6 @@ limitations under the License.
 											</div>
 											<div class="managelefttext">
 												<article>Export / Deploy to Cloud</article>
-												<ul class="red">
-													<li>Not started</li>
-												</ul>
 											</div>
 									</a></li>
 									<li><a href class="mdl-tabs__tab"
@@ -571,7 +571,7 @@ limitations under the License.
 								<h4 class="gridlistheading">Existing Authors</h4>
 								
 								<tags-input ng-model="AuthorsTag" class="mdl-chip__text" display-property="name"  
-									placeholder="Add a author" key-property="contact" on-tag-clicked="updateTag($tag)"									
+									placeholder="Add a author" key-property="nameContact" on-tag-clicked="updateTag($tag)"									
 								    tag-class="{selected_author: $index == selectedtagindex}" on-tag-removing="tagRemoved1($tag)">
 								</tags-input> 
 								
@@ -583,7 +583,7 @@ limitations under the License.
 									<div class="md-toolbar-tools">
 										<h2>Delete Author</h2>
 										<span flex></span>
-										<md-button class="md-icon-button" ng-click="closePoup()">
+										<md-button class="md-icon-button" ng-click="closeAuthorPoup()">
 										<i class="material-icons">close</i> </md-button>
 									</div>
 									</md-toolbar> <md-dialog-content>
@@ -594,7 +594,7 @@ limitations under the License.
 									</form>
 									</md-dialog-content> <md-dialog-actions>
 									<div class="dialog-footer-container1">
-										<md-button ng-click="closePoup()"
+										<md-button ng-click="closeAuthorPoup()"
 											class="mdl-button mdl-js-button btn-secondary">
 										Cancel </md-button>
 										<md-button ng-click="deleteAuthor()"
@@ -1228,7 +1228,7 @@ limitations under the License.
 															your model.</p>
 														<!-- add cocument popover  -->
 														<div class="popovers add-document"
-															ng-show="showFileUpload">
+															ng-if="showFileUpload">
 															<md-toolbar class="_md _md-toolbar-transitions">
 															<div class="md-toolbar-tools">
 																<h2>Add Documents</h2>
@@ -1263,24 +1263,25 @@ limitations under the License.
 																			       <div class="drag-drop-files hide">
 																			              <p>doc.pdf</p>
 																			       </div>
-																			<div file-droppable filename="privatefilename" file=solutionFile>
+																					<div file-droppable filename="privatefilename" file=solutionFile docerror="docerror" size=10000000>
 																			              <img src="images/upload-doc-vector.png" alt="" title=""/>
 																			              <div class="destext">Drag & Drop your file here!</div>
 																			       </div>
+																			       
 																			</div>
 																			
-																			<div file-upload file="solutionFile" 
+																			<div file-upload file="$parent.solutionFile" 
 																						uploadid="documentuploadid" id="uploadFile"
-																						filename="privatefilename" 
+																						filename="$parent.privatefilename"
 																						ng-model="solutionFile" accept = ""
-																						upload-image-model="solutionFile" size=10000000 docerror="docerror" readonly alt="Browse" title="Browse">
-																						
-																						</div>
-																						<div class="upload-image-input files-uploaded">
+																						size=10000000 docerror="docerror" readonly alt="Browse" title="Browse">	
+																			</div>
+																		
+																			<div class="upload-image-input files-uploaded">
 																		    			<input class="mdl-textfield__input disabledClick"
 																						placeholder="Upload File" type="text"
 																						ng-model="privatefilename" readonly />
-																						</div>
+																			</div>
 																			<div  > <!-- ng-show="progressVisible" -->
 														            		
 														            <div class="progress-bar" ng-style="{'width': $root.progressBar+'%'}">
@@ -3023,7 +3024,7 @@ limitations under the License.
 															ng-if="public.step4">Completed on {{currentDate |
 															date:'MM/dd/yyyy'}}</span>
 													</h2>
-													<div class="popovers add-document" ng-show="showFileUpload">
+													<div class="popovers add-document" ng-if="showFileUpload">
 														<md-toolbar class="_md _md-toolbar-transitions">
 														<div class="md-toolbar-tools">
 															<h2>Add Documents</h2>
@@ -3046,46 +3047,36 @@ limitations under the License.
 																	<div
 																		class="mdl-textfield mdl-js-textfield mdl-textfield--file has-placeholder is-upgraded upload-image-input"
 																		data-upgraded=",MaterialTextfield">
-																		<!-- <input class="mdl-textfield__input" placeholder="File"
-																			type="file" id="uploadFile"
-																			upload-image-model="solutionFile" readonly="">
-																		<div
-																			class="mdl-button mdl-button--primary mdl-button--icon mdl-button--file">
-																			<i class="material-icons">attach_file</i> <input
-																				type="file" id="uploadBtn">
-																		</div> -->
-																	<div class="drag-drop"  id = "public-dropbox">
+																	
+																		<div class="drag-drop"  id = "public-dropbox">
 																			       <div class="drag-drop-files hide">
 																			              <p>doc.pdf</p>
 																			       </div>
-																			<div file-droppable filename="publicfilename" file=publicsolutionFile>
+																					<div file-droppable filename="publicfilename" file=publicsolutionFile docerror="docerror" size=10000000>
 																			              <img src="images/upload-doc-vector.png" alt="" title=""/>
 																			              <div class="destext">Drag & Drop your file here!</div>
 																			       </div>
-																			</div> 
-																		<div file-upload file="solutionFile" 
+																		</div> 
+																		<div file-upload file="$parent.solutionFile" 
 																						uploadid="publicDocumentuploadid" id="publicUploadFile"
-																						filename="publicfilename" 
+																						filename="$parent.publicfilename" 
 																						ng-model="solutionFile" accept = ""
-																						upload-image-model="solutionFile" size=10000000 docerror="docerror" readonly alt="Browse" title="Browse">
+																						size=10000000 docerror="docerror" readonly alt="Browse" title="Browse">
 																						
-																						</div>
-																						<div class="upload-image-input files-uploaded upload-txtbox">
-																		    			<input class="mdl-textfield__input"
-																						placeholder="Upload File" type="text"
-																						ng-model="publicfilename"  readonly />
-																						</div>
-																		 <!-- <input class="mdl-textfield__input"
-																						placeholder="Upload File" type="text"
-																						ng-model="publicfilename" readonly />	 -->
-																			<div class="progress-bar" ng-style="{'width': $root.progressBar+'%'}">
-																			</div>
-														               		<div class=""><span ng-show = "$root.progressBar != 100 && $root.progressBar != 0">{{$root.progressBar| number : 0}}%</span>
-														            			<span ng-show = "$root.progressBar == 100">Completed</span>
-														            		</div>
-														            		 <div class="help-inline validation-msgs">
-																				<span ng-show="docerror">Document should be of max size 10MB.</span>
-																			 </div>
+																		</div>
+																		<div class="upload-image-input files-uploaded upload-txtbox">
+															    			<input class="mdl-textfield__input"
+																			placeholder="Upload File" type="text"
+																			ng-model="publicfilename"  readonly />
+																		</div>
+																		<div class="progress-bar" ng-style="{'width': $root.progressBar+'%'}">
+																		</div>
+													               		<div class=""><span ng-show = "$root.progressBar != 100 && $root.progressBar != 0">{{$root.progressBar| number : 0}}%</span>
+													            			<span ng-show = "$root.progressBar == 100">Completed</span>
+													            		</div>
+													            		 <div class="help-inline validation-msgs">
+																			<span ng-show="docerror">Document should be of max size 10MB.</span>
+																		 </div>
 																	</div>
 																</form>
 															</div>

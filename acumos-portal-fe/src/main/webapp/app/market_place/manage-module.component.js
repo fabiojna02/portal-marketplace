@@ -942,7 +942,10 @@ angular.module('manageModule')
 																		ownerName: response.data.response_body.content[i].ownerName,
 																		modelType : response.data.response_body.content[i].modelType,
 																		ratingCount: response.data.response_body.content[i].ratingCount,
-                                                                                                                          			picture: response.data.response_body.content[i].picture
+																		picture: response.data.response_body.content[i].picture,
+																		onboardingStatusFailed: response.data.response_body.content[i].onboardingStatusFailed,
+																		pendingApproval: response.data.response_body.content[i].pendingApproval,
+																		latestRevisionId: response.data.response_body.content[i].latestRevisionId
 
 																	});
 															angular.forEach($scope.favouriteSolutions,
@@ -1059,6 +1062,14 @@ angular.module('manageModule')
 							}
 						};
 						
+						$scope.Tag = false;
+						$scope.slnID = null;
+						$scope.showListTag = function(solutionID) {
+							if($scope.slnID != solutionID )
+								$scope.Tag = false;
+						  $scope.Tag = !$scope.Tag;
+						  $scope.slnID = solutionID;
+						}
 						
 						// Images URL
 						$scope.imgURLCL = "images/alarm.png";
