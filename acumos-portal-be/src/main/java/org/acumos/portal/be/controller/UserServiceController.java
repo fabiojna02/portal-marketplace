@@ -52,7 +52,9 @@ import org.acumos.portal.be.transport.PasswordDTO;
 import org.acumos.portal.be.transport.ResponseVO;
 import org.acumos.portal.be.transport.User;
 import org.acumos.portal.be.util.EELFLoggerDelegate;
+import org.acumos.portal.be.util.PortalConstants;
 import org.acumos.portal.be.util.PortalUtils;
+import org.acumos.portal.be.util.SanitizeUtils;
 import org.apache.commons.lang.ArrayUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
@@ -451,7 +453,10 @@ public class UserServiceController extends AbstractController {
     @ResponseBody
 	public JsonResponse<List<MLPRole>> getUserRole(@PathVariable("userId") String userId, HttpServletRequest request, HttpServletResponse response) {
 		// public JsonResponse getUserAccountDetails() {
-		log.debug(EELFLoggerDelegate.debugLogger, "changeUserPassword={}");
+		
+    	userId = SanitizeUtils.sanitize(userId);
+    	
+    	log.debug(EELFLoggerDelegate.debugLogger, "changeUserPassword={}");
 		// Object responseVO = null;
 		JsonResponse<List<MLPRole>> responseVO = new JsonResponse<>();
 		try {
@@ -474,7 +479,10 @@ public class UserServiceController extends AbstractController {
     @RequestMapping(value = {APINames.UPDATE_USER_IMAGE}, method = RequestMethod.POST, produces = APPLICATION_JSON)
     @ResponseBody
     public JsonResponse updateUserImage(HttpServletRequest request, @RequestParam("userImage") MultipartFile file, @PathVariable("userId") String userId, HttpServletResponse response) {
-        log.debug(EELFLoggerDelegate.debugLogger, "updateUserImage={}");
+        
+    	userId = SanitizeUtils.sanitize(userId);
+    	
+    	log.debug(EELFLoggerDelegate.debugLogger, "updateUserImage={}");
         JsonResponse<MLPUser> responseVO = new JsonResponse<>();
 		try {
 			if (PortalUtils.isEmptyOrNullString(userId)) {
@@ -506,6 +514,9 @@ public class UserServiceController extends AbstractController {
     @ResponseBody
 	public JsonResponse<byte[]> getUserImage(@PathVariable("userId") String userId) {
 		// public JsonResponse getUserAccountDetails() {
+		
+		userId = SanitizeUtils.sanitize(userId);
+		
 		log.debug(EELFLoggerDelegate.debugLogger, "getUserImage={}");
 		// Object responseVO = null;
 		JsonResponse<byte []> responseVO = new JsonResponse<>();
@@ -714,6 +725,19 @@ public class UserServiceController extends AbstractController {
 	        String imageSize = env.getProperty("image.size", "");
 	        JsonResponse<String> responseVO = new JsonResponse<String>();
 	        responseVO.setResponseBody(imageSize);
+	        responseVO.setStatus(true);
+	        responseVO.setResponseDetail("Success");
+	        responseVO.setStatusCode(HttpServletResponse.SC_OK);
+	        return responseVO;
+	    }
+
+	@ApiOperation(value = "Get the User publishOwnRequestEnabled flag", response = JsonResponse.class)
+	   @RequestMapping(value = {APINames.PUBLISH_OWN_REQUESTS_ENABLED}, method = RequestMethod.GET, produces = APPLICATION_JSON)
+	   @ResponseBody
+	    public JsonResponse<String> publishOwnRequestEnabled(HttpServletRequest request, HttpServletResponse response) {	        
+	        String publishOwnReqFlag = env.getProperty(PortalConstants.PUBLISH_SELF_REQ_ENABLED_PROPERTY, "");
+	        JsonResponse<String> responseVO = new JsonResponse<String>();
+	        responseVO.setResponseBody(publishOwnReqFlag);
 	        responseVO.setStatus(true);
 	        responseVO.setResponseDetail("Success");
 	        responseVO.setStatusCode(HttpServletResponse.SC_OK);

@@ -95,6 +95,13 @@ limitations under the License.
 							ng-if='orderByField=="requestorName"'
 							ng-class="reverseSortPbReq?'ascending':'descending'"
 							class="gridcell-sort"></span></th>
+						<th
+							ng-click="orderByField='creationDate'; reverseSortPbReq = !reverseSortPbReq">Created Date<span
+							ng-if='orderByField!="creationDate"'
+							class="gridcell-sort deactivate"></span><span
+							ng-if='orderByField=="creationDate"'
+							ng-class="reverseSortPbReq?'ascending':'descending'"
+							class="gridcell-sort"></span></th>
 						<!-- <th>Subscriptions</th> -->
 						<th
 							ng-click="orderByField='revisionStatusName'; reverseSortPbReq = !reverseSortPbReq">Status<span
@@ -125,29 +132,32 @@ limitations under the License.
 				<tbody><!-- (filtertedUser = (allPublishRequest | orderBy:orderByField:reverseSortPbReq | filter : search) ) -->
 
 					<tr ng-repeat="publishReq in allPublishRequest | orderBy:orderByField:reverseSortPbReq | filter : searchPublishRequest">
-						<td ng-class="{'disabled': publishReq.requestStatusName !== 'Pending'}"><a ui-sref="marketSolutions({solutionId:publishReq.solutionId,revisionId:publishReq.revisionId,publishRequestId:publishReq.publishRequestId})"><label class="model-name">{{publishReq.solutionName}}</label></a>
+						<td ng-class="{'disabled': publishReq.requestStatusName !== 'Pending'}"><a ui-sref="marketSolutions({solutionId:publishReq.solutionId,revisionId:publishReq.revisionId,publishRequestId:publishReq.publishRequestId,requestUserId:publishReq.requestUserId})"><label class="model-name">{{publishReq.solutionName}}</label></a>
 							<label class="small">{{publishReq.solutionId}}</label></td>
 						<td ng-class="{'disabled': publishReq.requestStatusName !== 'Pending'}"><label>{{publishReq.revisionName}}</label> <label
 							class="small">Revision ID: {{publishReq.revisionId}}</label></td>
 						<td ng-class="{'disabled': publishReq.requestStatusName !== 'Pending'}">{{publishReq.requestorName}}</td>
+						<td ng-class="{'disabled': publishReq.requestStatusName !== 'Pending'}">{{publishReq.textDate}}</td>
 						<td ng-class="{'disabled': publishReq.requestStatusName !== 'Pending'}">{{publishReq.revisionStatusName}}</td>
 						<td ng-class="{'disabled': publishReq.requestStatusName !== 'Pending'}"><label
 							ng-class="{'text-green': publishReq.requestStatusName == 'Approved' , 
 							'text-red': publishReq.requestStatusName == 'Declined',
 							'text-orange': publishReq.requestStatusName == 'Withdrawn'}">{{publishReq.requestStatusName}}</label>
 						</td>
-						<td><div class="a-tooltip publishreq-tooltip"><span
-								class="a-tooltipval">View</span> <span class="a-tooltiptext">{{publishReq.comment}}</span>
+						<td><div ng-if="publishReq.comment" class="a-tooltip publishreq-tooltip"><span
+								class="a-tooltipval">View</span> <span class="a-tooltiptext publish-tooltip">{{publishReq.comment}}</span>
+						</div><div ng-hide="publishReq.comment" class="a-tooltip publishreq-tooltip"><label
+								class="a-tooltipval">N/A</label>
 						</div></td>
-						<td ng-class="{'disabled': publishReq.requestStatusName !== 'Pending'}">
+						<td ng-class="{'disabled': publishReq.requestStatusName !== 'Pending'">
 							<div class="admin-action-container">
-								<button name="approvePublishRequestModal"
+								<button ng-disabled="(publishOwnRequestsEnabled == 'false' && loginUserID == publishReq.requestUserId )" name="approvePublishRequestModal"
 									ng-style="publishReq.requestStatusName !== 'Pending'&&{'-webkit-filter': 'grayscale(100%)', 'filter': 'grayscale(100%)'}"
 									ng-click="publishReq.requestStatusName !== 'Pending'||showModalPublishReq($index, 'approve',publishReq.solutionName, publishReq.publishRequestId)"
 									class="mdl-button mdl-js-button mdl-button--icon">
 									<span class="gridicon-approve"></span>
 								</button>
-								<button name="declinePublishRequestModal"
+								<button ng-disabled="(publishOwnRequestsEnabled == 'false' && loginUserID == publishReq.requestUserId )"  name="declinePublishRequestModal"
 									ng-style="publishReq.requestStatusName !== 'Pending'&&{'-webkit-filter': 'grayscale(100%)', 'filter': 'grayscale(100%)'}"
 									ng-click="publishReq.requestStatusName !== 'Pending'||showModalPublishReq($index, 'decline',publishReq.solutionName, publishReq.publishRequestId)"
 									class="mdl-button mdl-js-button mdl-button--icon">
