@@ -351,8 +351,7 @@ limitations under the License.
 											<i class="far fa-file-excel" ng-if="supportingDoc.ext == 'csv'" aria-hidden="true"></i>
 											<i class="far fa-file-alt" ng-if="supportingDoc.ext == 'txt'" aria-hidden="true"></i>
 											<i class="far fa-file-archive" ng-if="supportingDoc.ext == 'zip'" aria-hidden="true"></i>
-									</span><a
-										class="link-blue">{{supportingDoc.name}}</a></td>
+									</span><span>{{supportingDoc.name}}</span></td>
 									<td>{{versionId}}</td>
 									<td>{{solution.modified | date:'MM/dd/yyyy' }}</td>
 									<td><a href="/api/solution/revision/document/{{supportingDoc.documentId}}?jwtToken={{auth}}" alt="Download" title="Download">
@@ -976,7 +975,7 @@ limitations under the License.
 							href="/package/getSolutionZip/{{solutionId}}/{{revisionId}}" target="_blank"> Download Solution Package</md-button>
 						</md-input-container>
 						<br />
-						<p>More Info at <a href="" target="_blank">help</a></p>
+						<p>More Info at <a href="{{kubernetesDocUrl}}" target="_blank">help</a></p>
 					</form>
 				</div>
 				<div class="dialog-btn-container-deploy-to-cloud" ng-show="exportTo=='deploylocal'">
