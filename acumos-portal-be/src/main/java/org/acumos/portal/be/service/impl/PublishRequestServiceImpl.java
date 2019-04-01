@@ -20,20 +20,21 @@
  */
 package org.acumos.portal.be.service.impl;
 
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.acumos.cds.CodeNameType;
-import org.acumos.cds.MessageSeverityCode;
 import org.acumos.cds.client.ICommonDataServiceRestClient;
 import org.acumos.cds.domain.MLPCodeNamePair;
 import org.acumos.cds.domain.MLPNotification;
 import org.acumos.cds.domain.MLPPublishRequest;
+import org.acumos.cds.domain.MLPSolution;
 import org.acumos.cds.domain.MLPSolutionRevision;
-import org.acumos.cds.domain.MLPStepResult;
 import org.acumos.cds.domain.MLPUser;
+
 import org.acumos.cds.transport.RestPageRequest;
 import org.acumos.cds.transport.RestPageResponse;
 import org.acumos.portal.be.common.CommonConstants;
@@ -46,8 +47,9 @@ import org.acumos.portal.be.service.PublishSolutionService;
 import org.acumos.portal.be.service.UserService;
 import org.acumos.portal.be.transport.MLPublishRequest;
 import org.acumos.portal.be.transport.MLSolution;
-import org.acumos.portal.be.util.EELFLoggerDelegate;
 import org.acumos.portal.be.util.PortalUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpStatusCodeException;
@@ -58,7 +60,7 @@ import org.springframework.web.client.HttpStatusCodeException;
 @Service
 public class PublishRequestServiceImpl extends AbstractServiceImpl implements PublishRequestService {
 
-	private static final EELFLoggerDelegate log = EELFLoggerDelegate.getLogger(PublishRequestServiceImpl.class);
+	private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());	
 
 	@Autowired
 	UserService userService;
@@ -71,10 +73,12 @@ public class PublishRequestServiceImpl extends AbstractServiceImpl implements Pu
 	
 	@Autowired
 	private NotificationService notificationService;
+	
+	private static final String MSG_SEVERITY_ME = "ME";
 
 	@Override
 	public MLPublishRequest getPublishRequestById(Long publishRequestId) {
-		log.debug(EELFLoggerDelegate.debugLogger, "getPublishRequestById");
+		log.debug("getPublishRequestById");
 
 		ICommonDataServiceRestClient dataServiceRestClient = getClient();
 
@@ -86,7 +90,7 @@ public class PublishRequestServiceImpl extends AbstractServiceImpl implements Pu
 
 	@Override
 	public MLPublishRequest searchPublishRequestByRevId(String revisionId) {
-		log.debug(EELFLoggerDelegate.debugLogger, "searchPublishRequestByRevId");
+		log.debug("searchPublishRequestByRevId");
 
 		ICommonDataServiceRestClient dataServiceRestClient = getClient();
 
@@ -121,7 +125,7 @@ public class PublishRequestServiceImpl extends AbstractServiceImpl implements Pu
 				mlPublishRequest.setSolutionName(solutionDetail.getName());
 			} catch (AcumosServiceException e) {
 				// Log the error and do nothing. Continue populating the remaining fields
-				log.error(EELFLoggerDelegate.errorLogger, "Error in fetching the solution details for request "
+				log.error("Error in fetching the solution details for request "
 						+ publishRequest.getRequestId() + " and Solution Id " + publishRequest.getSolutionId());
 			}
 		}
@@ -163,7 +167,7 @@ public class PublishRequestServiceImpl extends AbstractServiceImpl implements Pu
 
 	@Override
 	public PagableResponse<List<MLPublishRequest>> getAllPublishRequest(RestPageRequest requestObj) {
-		log.debug(EELFLoggerDelegate.debugLogger, "getAllPublishRequest");
+		log.debug("getAllPublishRequest");
 		PagableResponse<List<MLPublishRequest>> response = new PagableResponse<>();
 
 		ICommonDataServiceRestClient dataServiceRestClient = getClient();
@@ -172,8 +176,13 @@ public class PublishRequestServiceImpl extends AbstractServiceImpl implements Pu
 		if(mlpPublishRequestResponse !=null) {
 			List<MLPPublishRequest> mlpPublishRequestList = mlpPublishRequestResponse.getContent();
 			for(MLPPublishRequest mlpPublishRequest : mlpPublishRequestList) {
-				MLPublishRequest mlPublishRequest = getPublishRequestDetails(mlpPublishRequest);
-				publishrequestList.add(mlPublishRequest);
+				MLPSolution solutionDetail = dataServiceRestClient.getSolution(mlpPublishRequest.getSolutionId());
+				if(solutionDetail != null && solutionDetail.isActive()){
+					MLPublishRequest mlPublishRequest = getPublishRequestDetails(mlpPublishRequest);
+					publishrequestList.add(mlPublishRequest);
+				} else {
+					log.debug("getAllPublishRequest : Solution is not active, SolutionId : " +mlpPublishRequest.getSolutionId());
+				}
 			}
 		}
 		response.setResponseBody(publishrequestList);
@@ -185,7 +194,7 @@ public class PublishRequestServiceImpl extends AbstractServiceImpl implements Pu
 
 	@Override
 	public MLPublishRequest updatePublishRequest(MLPublishRequest publishRequest) throws AcumosServiceException {
-		log.debug(EELFLoggerDelegate.debugLogger, "updatePublishRequest");
+		log.debug("updatePublishRequest");
 
 		ICommonDataServiceRestClient dataServiceRestClient = getClient();
 		MLPPublishRequest oldRequest = dataServiceRestClient.getPublishRequest(publishRequest.getPublishRequestId());
@@ -225,7 +234,7 @@ public class PublishRequestServiceImpl extends AbstractServiceImpl implements Pu
 	private void generateNotification(String message, String userId) {
 
 		MLPNotification notificationObj = new MLPNotification();
-		notificationObj.setMsgSeverityCode(MessageSeverityCode.ME.toString());
+		notificationObj.setMsgSeverityCode(MSG_SEVERITY_ME);
 		notificationObj.setMessage(message);
 		notificationObj.setTitle(message);
 		notificationService.generateNotification(notificationObj, userId);
@@ -233,7 +242,7 @@ public class PublishRequestServiceImpl extends AbstractServiceImpl implements Pu
 
 	@Override
 	public MLPublishRequest withdrawPublishRequest(long publishRequestId, String loginUserId) throws AcumosServiceException {
-		log.debug(EELFLoggerDelegate.debugLogger, "withdrawPublishRequest");
+		log.debug("withdrawPublishRequest");
 
 		ICommonDataServiceRestClient dataServiceRestClient = getClient();
 		MLPPublishRequest oldRequest = dataServiceRestClient.getPublishRequest(publishRequestId);

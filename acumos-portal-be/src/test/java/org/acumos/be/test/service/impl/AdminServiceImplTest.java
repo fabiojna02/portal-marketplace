@@ -25,19 +25,28 @@ import org.acumos.cds.domain.MLPSiteConfig;
 import org.acumos.cds.transport.RestPageRequest;
 import org.acumos.cds.transport.RestPageResponse;
 import org.acumos.portal.be.service.impl.AdminServiceImpl;
-import org.acumos.portal.be.util.EELFLoggerDelegate;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import static org.mockito.Mockito.*;
+
+import java.lang.invoke.MethodHandles;
+import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
+import org.springframework.data.domain.PageRequest;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 
@@ -45,7 +54,7 @@ import org.springframework.mock.web.MockHttpServletResponse;
 @RunWith(MockitoJUnitRunner.class)
 public class AdminServiceImplTest {
 
-	private static final EELFLoggerDelegate logger = EELFLoggerDelegate.getLogger(AdminServiceImplTest.class);
+	private static final Logger logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());	
 
 
 	final HttpServletResponse response = new MockHttpServletResponse();
@@ -63,9 +72,8 @@ public class AdminServiceImplTest {
 			restPageReq.setSize(9);
 			if (restPageReq.getPage() != null && restPageReq.getSize() != null) {
 
-				RestPageResponse<MLPPeer> peerRes = new RestPageResponse<>();
-				peerRes.setSize(0);
-				peerRes.setTotalPages(2);//peerRes.setTotalElements(2);commented coz of migrating to 1.10.1				
+				RestPageResponse<MLPPeer> peerRes = 
+						new RestPageResponse<>(null, PageRequest.of(0, 1), 2);
 				Mockito.when(impl.getAllPeers(restPageReq)).thenReturn(peerRes );
 				Assert.assertEquals(peerRes, peerRes);
 				logger.info("Successfully fetched all the peers");
@@ -84,7 +92,7 @@ public class AdminServiceImplTest {
 			MLPPeer mlpPeer = new MLPPeer();
 			mlpPeer.setApiUrl("http://peer-api");
 			mlpPeer.setContact1("Contact1");
-			Date created = new Date();
+			Instant created = Instant.now();
 			mlpPeer.setCreated(created);
 			mlpPeer.setDescription("Peer description");
 			mlpPeer.setName("Peer-1509357629935");
@@ -110,7 +118,7 @@ public class AdminServiceImplTest {
 			MLPPeer mlpPeer = new MLPPeer();
 			mlpPeer.setApiUrl("http://peer-api");
 			mlpPeer.setContact1("Contact1");
-			Date created = new Date();
+			Instant created = Instant.now();
 			mlpPeer.setCreated(created);
 			mlpPeer.setDescription("Peer description");
 			mlpPeer.setName("Peer-1509357629935");
@@ -141,7 +149,7 @@ public class AdminServiceImplTest {
 			MLPPeer mlpPeer = new MLPPeer();
 			mlpPeer.setApiUrl("http://peer-api");
 			mlpPeer.setContact1("Contact1");
-			Date created = new Date();
+			Instant created = Instant.now();
 			mlpPeer.setCreated(created);
 			mlpPeer.setDescription("Peer description");
 			mlpPeer.setName("Peer-1509357629935");
@@ -169,7 +177,7 @@ public class AdminServiceImplTest {
 			MLPPeer mlpPeer = new MLPPeer();
 			mlpPeer.setApiUrl("http://peer-api");
 			mlpPeer.setContact1("Contact1");
-			Date created = new Date();
+			Instant created = Instant.now();
 			mlpPeer.setCreated(created);
 			mlpPeer.setDescription("Peer description");
 			mlpPeer.setName("Peer-1509357629935");
@@ -215,7 +223,7 @@ public class AdminServiceImplTest {
 			MLPPeer mlpPeer = new MLPPeer();
 			mlpPeer.setApiUrl("http://peer-api");
 			mlpPeer.setContact1("Contact1");
-			Date created = new Date();
+			Instant created = Instant.now();
 			mlpPeer.setCreated(created);
 			mlpPeer.setDescription("Peer description");
 			mlpPeer.setName("Peer-1509357629935");
@@ -250,7 +258,7 @@ public class AdminServiceImplTest {
 			MLPPeer mlpPeer = new MLPPeer();
 			mlpPeer.setApiUrl("http://peer-api");
 			mlpPeer.setContact1("Contact1");
-			Date created = new Date();
+			Instant created = Instant.now();
 			mlpPeer.setCreated(created);
 			mlpPeer.setDescription("Peer description");
 			mlpPeer.setName("Peer-1509357629935");
@@ -276,6 +284,27 @@ public class AdminServiceImplTest {
 		}
 
 	}
+	
+	@Test
+	public void getPeerSubscriptionCountsTest() {
+		try {
+			String peerId = "ab20f129-06ba-48dc-b238-335f9982799c";
+			Integer subCount = 7;
+			
+			List<String> ids = new ArrayList<>();
+			ids.add(peerId);
+
+			Map<String,Integer> counts = new HashMap<>();
+			counts.put(peerId, subCount);
+			
+			Mockito.when(impl.getPeerSubscriptionCounts(ids)).thenReturn(counts);
+			logger.info("Successfully fetched subscription counts :  " + counts);
+			Assert.assertEquals(counts.get(peerId), subCount);
+
+		} catch (Exception e) {
+			logger.error("Exception while fetching subscription counts", e);
+		}
+	}
 
 	@Test
 	public void createPeerSubscriptionTest() {
@@ -283,7 +312,7 @@ public class AdminServiceImplTest {
 			MLPPeerSubscription mlpPeerSubcription = new MLPPeerSubscription();
 			mlpPeerSubcription.setPeerId("ab20f129-06ba-48dc-b238-335f9982799c");
 			mlpPeerSubcription.setSubId((long) Math.incrementExact(0));
-			Date created = new Date();
+			Instant created = Instant.now();
 			mlpPeerSubcription.setCreated(created);
 
 			if (mlpPeerSubcription.getSubId() != null) {
@@ -305,7 +334,7 @@ public class AdminServiceImplTest {
 			MLPPeerSubscription mlpPeerSubcription = new MLPPeerSubscription();
 			mlpPeerSubcription.setPeerId("ab20f129-06ba-48dc-b238-335f9982799c");
 			mlpPeerSubcription.setSubId((long) 4);
-			Date created = new Date();
+			Instant created = Instant.now();
 			mlpPeerSubcription.setCreated(created);
 
 			AdminServiceImpl mockImpl = mock(AdminServiceImpl.class);
@@ -329,7 +358,7 @@ public class AdminServiceImplTest {
 			MLPPeerSubscription mlpPeerSubcription = new MLPPeerSubscription();
 			mlpPeerSubcription.setPeerId("ab20f129-06ba-48dc-b238-335f9982799c");
 			mlpPeerSubcription.setSubId((long) 4);
-			Date created = new Date();
+			Instant created = Instant.now();
 			mlpPeerSubcription.setCreated(created);
 
 			AdminServiceImpl mockimpl =mock(AdminServiceImpl.class);
@@ -353,9 +382,9 @@ public class AdminServiceImplTest {
 			mlpSiteConfig.setConfigValue(
 					"{\"siteInstanceName\":\"Acumos\",\"ConnectionConfig\": {\"socketTimeout\":\"300\",\"connectionTimeout\":\"10\"}}");
 			mlpSiteConfig.setUserId("41058105-67f4-4461-a192-f4cb7fdafd34");
-			Date created = new Date();
+			Instant created = Instant.now();
 			mlpSiteConfig.setCreated(created);
-			Date modified = new Date();
+			Instant modified = Instant.now();
 			mlpSiteConfig.setModified(modified);
 
 			String configKey = "12";

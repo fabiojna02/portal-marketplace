@@ -19,8 +19,9 @@
  */
 package org.acumos.be.test.service.impl;
 
+import java.lang.invoke.MethodHandles;
+import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -30,7 +31,6 @@ import org.acumos.cds.domain.MLPUserNotification;
 import org.acumos.cds.transport.RestPageRequest;
 import org.acumos.portal.be.service.impl.NotificationServiceImpl;
 import org.acumos.portal.be.transport.MLNotification;
-import org.acumos.portal.be.util.EELFLoggerDelegate;
 import org.acumos.portal.be.util.PortalUtils;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -38,6 +38,8 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import static org.mockito.Mockito.*;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 
@@ -46,7 +48,7 @@ import org.junit.Assert;
 @RunWith(MockitoJUnitRunner.class)
 public class NotificationServiceTestImpl {
 
-	private static final EELFLoggerDelegate logger = EELFLoggerDelegate.getLogger(NotificationServiceTestImpl.class);
+	private static final Logger logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());	
 
 	final HttpServletResponse response = new MockHttpServletResponse();
 	final HttpServletRequest request = new MockHttpServletRequest();
@@ -58,16 +60,16 @@ public class NotificationServiceTestImpl {
 	public void createNotificationTest() {
 		try {
 			MLPNotification mlpNotification = new MLPNotification();
-			Date created = new Date();
+			Instant created = Instant.now();
 			mlpNotification.setCreated(created);
 			mlpNotification.setMessage("notification created for view count");
-			Date modified = new Date();
+			Instant modified = Instant.now();
 			mlpNotification.setModified(modified);
 			mlpNotification.setTitle("Notification");
 			mlpNotification.setUrl("http://notify.com");
-			Date end = new Date();
+			Instant end = Instant.now();
 			mlpNotification.setEnd(end);
-			Date start = new Date();
+			Instant start = Instant.now();
 			mlpNotification.setStart(start);
 
 			MLNotification notifiacation = PortalUtils.convertToMLNotification(mlpNotification);
@@ -86,16 +88,16 @@ public class NotificationServiceTestImpl {
 	public void getNotificationsTest() {
 		try {
 			MLPNotification mlpNotification = new MLPNotification();
-			Date created = new Date();
+			Instant created = Instant.now();
 			mlpNotification.setCreated(created);
 			mlpNotification.setMessage("notification created for view count");
-			Date modified = new Date();
+			Instant modified = Instant.now();
 			mlpNotification.setModified(modified);
 			mlpNotification.setTitle("Notification");
 			mlpNotification.setUrl("http://notify.com");
-			Date end = new Date();
+			Instant end = Instant.now();
 			mlpNotification.setEnd(end);
-			Date start = new Date();
+			Instant start = Instant.now();
 			mlpNotification.setStart(start);
 
 			MLNotification notifiacation = PortalUtils.convertToMLNotification(mlpNotification);
@@ -120,15 +122,15 @@ public class NotificationServiceTestImpl {
 			restPageRequest.setSize(9);
 			restPageRequest.setPage(1);
 			MLPUserNotification mlpUserNotification = new MLPUserNotification();
-			Date created = new Date();
+			Instant created = Instant.now();
 			mlpUserNotification.setCreated(created);
 			mlpUserNotification.setMessage("notification created");
-			Date modified = new Date();
+			Instant modified = Instant.now();
 			mlpUserNotification.setModified(modified);
 			mlpUserNotification.setNotificationId("037ad773-3ae2-472b-89d3-9e185a2cbfc9");
 			mlpUserNotification.setTitle("Notification");
 			mlpUserNotification.setUrl("http://notify.com");
-			Date viewed = new Date();
+			Instant viewed = Instant.now();
 			mlpUserNotification.setViewed(viewed);
 
 			MLPNotifUserMap mlpNotificationUserMap = new MLPNotifUserMap();

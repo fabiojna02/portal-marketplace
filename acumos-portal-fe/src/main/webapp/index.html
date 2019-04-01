@@ -34,7 +34,7 @@ limitations under the License.
 	content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
 <title>{{$root.siteInstanceName}} Market Place</title>
 <script>
-	document.title = "Loading..";
+	document.title = "Acumos";
 </script>
 <!-- Add to homescreen for Chrome on Android -->
 <meta name="mobile-web-app-capable" content="yes">
@@ -108,6 +108,9 @@ limitations under the License.
 <script type="text/javascript" src="app/design-studio/js/crossfilter.js"></script>
 <script type="text/javascript" src="app/design-studio/js/dc.js"></script>
 <script type="text/javascript" src="app/design-studio/js/queue.js"></script>
+<script type="text/javascript" src="app/design-studio/js/promise-polyfill.js"></script>
+<script type="text/javascript" src="app/design-studio/js/classlist-polyfill.js"></script>
+
 <script type="text/javascript"
 	src="app/design-studio/js/d3-tip/index.js"></script>
 
@@ -285,6 +288,9 @@ limitations under the License.
 
 	<script src="app/publish-request/publish-request.module.js"></script>
 	<script src="app/publish-request/publish-request.component.js"></script>
+	
+	<script src="app/onboarding-history/onboarding-history.module.js"></script>
+	<script src="app/onboarding-history/onboarding-history.component.js"></script>
 	<!-- 	<script src="app/ckeditor/ckeditor.js"></script>
 	<script src="app/ckeditor/adapter-jquery.js"></script> -->
 
@@ -304,7 +310,8 @@ limitations under the License.
 	<script type="text/javascript" src="app/design-studio/js/tether.js"></script>
 	<!--  <script type="text/javascript" src="js/bootstrap.js"></script> -->
 	<!-- End Design studio dependencies -->
-
+ 	<script src="app/error-page/error-403.module.js"></script>
+	<script src="app/error-page/error-403.component.js"></script>
 	<script src="app/error-page/error-404.module.js"></script>
 	<script src="app/error-page/error-404.component.js"></script>
 	<script src="js/ng-file-upload.js"></script>

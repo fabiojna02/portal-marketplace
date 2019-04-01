@@ -19,8 +19,9 @@
  */
 package org.acumos.be.test.service.impl;
 
+import java.lang.invoke.MethodHandles;
+import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -41,14 +42,18 @@ import org.acumos.portal.be.transport.MLSolution;
 import org.acumos.portal.be.transport.MLSolutionFavorite;
 import org.acumos.portal.be.transport.MLSolutionRating;
 import org.acumos.portal.be.transport.User;
-import org.acumos.portal.be.util.EELFLoggerDelegate;
 import org.acumos.portal.be.util.PortalUtils;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import static org.mockito.Mockito.*;
+
+import org.springframework.data.domain.PageRequest;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 
@@ -57,7 +62,7 @@ import org.junit.Assert;
 @RunWith(MockitoJUnitRunner.class)
 public class MarketPlaceServiceImplTest {
 
-	private static final EELFLoggerDelegate logger = EELFLoggerDelegate.getLogger(MarketPlaceServiceImplTest.class);
+	private static final Logger logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
 	final HttpServletResponse response = new MockHttpServletResponse();
 	final HttpServletRequest request = new MockHttpServletRequest();
@@ -73,9 +78,7 @@ public class MarketPlaceServiceImplTest {
 			Integer page = 0;
 			Integer size = 9;
 			String sortingOrder = "ASC";
-			RestPageResponse<MLPSolution> mlpSolution = new RestPageResponse<>();
-			mlpSolution.setNumberOfElements(1);
-			mlpSolution.setSize(0);
+			RestPageResponse<MLPSolution> mlpSolution = new RestPageResponse<>(null, PageRequest.of(0, 1), 1);
 
 			if (page != null && size != null && sortingOrder != null) {
 
@@ -95,7 +98,6 @@ public class MarketPlaceServiceImplTest {
 			MLSolution mlsolution = new MLSolution();
 			mlsolution.setSolutionId("Solution1");
 			mlsolution.setName("Test_Solution data");
-			mlsolution.setDescription("Test data");
 			mlsolution.setOwnerId("41058105-67f4-4461-a192-f4cb7fdafd34");
 			mlsolution.setAccessType("PB");
 			mlsolution.setActive(true);
@@ -123,7 +125,6 @@ public class MarketPlaceServiceImplTest {
 			MLSolution mlsolution = new MLSolution();
 			mlsolution.setSolutionId("Solution1");
 			mlsolution.setName("Test_Solution data");
-			mlsolution.setDescription("Test data");
 			mlsolution.setOwnerId("41058105-67f4-4461-a192-f4cb7fdafd34");
 			mlsolution.setAccessType("PB");
 			mlsolution.setActive(true);
@@ -132,7 +133,8 @@ public class MarketPlaceServiceImplTest {
 
 			if (mlsolution != null) {
 				String solutionId = "6e5036e0-6e20-4425-bd9d-b4ce55cfd8a4";
-				Mockito.when(impl.getSolution(solutionId)).thenReturn(mlsolution);
+				String revisionId = "5d893b98-d131-4657-a890-978cac70456c";
+				Mockito.when(impl.getSolution(solutionId, revisionId, mlsolution.getOwnerId())).thenReturn(mlsolution);
 				logger.info("Solution fetched successfully for solution given id");
 				Assert.assertNotNull(solutionId);
 				Assert.assertEquals(mlsolution, mlsolution);
@@ -143,92 +145,71 @@ public class MarketPlaceServiceImplTest {
 		}
 	}
 
-	/*@Test
-	public void getSearchSolutionTest() {
-		try {
-			JsonRequest<RestPageRequestBE> restPageReqBe = new JsonRequest<>();
-			RestPageRequestBE body = new RestPageRequestBE();
-			body.setSearchTerm("Solution");
-			body.setPage(1);
-			body.setSize(9);
-			body.setAccessType("OR");
-			body.setActiveType("Y");
-			restPageReqBe.setBody(body);
+	/*
+	 * @Test public void getSearchSolutionTest() { try {
+	 * JsonRequest<RestPageRequestBE> restPageReqBe = new JsonRequest<>();
+	 * RestPageRequestBE body = new RestPageRequestBE();
+	 * body.setSearchTerm("Solution"); body.setPage(1); body.setSize(9);
+	 * body.setAccessType("OR"); body.setActiveType("Y");
+	 * restPageReqBe.setBody(body);
+	 * 
+	 * MLSolution mlsolution = new MLSolution();
+	 * mlsolution.setSolutionId("Solution1"); mlsolution.setName(
+	 * "Test_Solution data"); mlsolution.setDescription("Test data");
+	 * mlsolution.setOwnerId("41058105-67f4-4461-a192-f4cb7fdafd34");
+	 * mlsolution.setAccessType("PB"); mlsolution.setActive(true);
+	 * mlsolution.setModelType("CL"); mlsolution.setTookitType("DS");
+	 * 
+	 * List<MLSolution> mlSolutions = new ArrayList<>();
+	 * mlSolutions.add(mlsolution); RestPageResponseBE<MLSolution> response =
+	 * new RestPageResponseBE<>(mlSolutions); response.setContent(mlSolutions);
+	 * 
+	 * if (body != null) {
+	 * Mockito.when(impl.getSearchSolution(restPageReqBe)).thenReturn(response);
+	 * logger.info("Solution searched successfully");
+	 * Assert.assertNotNull(response); }
+	 * 
+	 * } catch (Exception e) { logger.info("Failed to fetch solutions " + e); }
+	 * }
+	 */
 
-			MLSolution mlsolution = new MLSolution();
-			mlsolution.setSolutionId("Solution1");
-			mlsolution.setName("Test_Solution data");
-			mlsolution.setDescription("Test data");
-			mlsolution.setOwnerId("41058105-67f4-4461-a192-f4cb7fdafd34");
-			mlsolution.setAccessType("PB");
-			mlsolution.setActive(true);
-			mlsolution.setModelType("CL");
-			mlsolution.setTookitType("DS");
-
-			List<MLSolution> mlSolutions = new ArrayList<>();
-			mlSolutions.add(mlsolution);
-			RestPageResponseBE<MLSolution> response = new RestPageResponseBE<>(mlSolutions);
-			response.setContent(mlSolutions);
-
-			if (body != null) {
-				Mockito.when(impl.getSearchSolution(restPageReqBe)).thenReturn(response);
-				logger.info("Solution searched successfully");
-				Assert.assertNotNull(response);
-			}
-
-		} catch (Exception e) {
-			logger.info("Failed to fetch solutions " + e);
-		}
-	}*/
-
-	/*@Test
-	public void getAllMySolutionsTest() {
-		try {
-
-			JsonRequest<RestPageRequestBE> restPageReqBe = new JsonRequest<>();
-			RestPageRequestBE body = new RestPageRequestBE();
-			body.setSearchTerm("Solution");
-			body.setPage(1);
-			body.setSize(9);
-			body.setAccessType("OR");
-			body.setActiveType("Y");
-			restPageReqBe.setBody(body);
-
-			String userId = "1810f833-8698-4233-add4-091e34b8703c";
-
-			MLSolution mlsolution = new MLSolution();
-			mlsolution.setSolutionId("Solution1");
-			mlsolution.setName("Test_Solution data");
-			mlsolution.setDescription("Test data");
-			mlsolution.setOwnerId("41058105-67f4-4461-a192-f4cb7fdafd34");
-			mlsolution.setAccessType("PB");
-			mlsolution.setActive(true);
-			mlsolution.setModelType("CL");
-			mlsolution.setTookitType("DS");
-
-			List<MLSolution> mlSolutions = new ArrayList<>();
-			mlSolutions.add(mlsolution);
-			RestPageResponseBE<MLSolution> response = new RestPageResponseBE<>(mlSolutions);
-			response.setContent(mlSolutions);
-
-			if (userId != null) {
-				Mockito.when(impl.getAllMySolutions(userId, restPageReqBe)).thenReturn(response);
-				logger.info("Solutions fecthed successfully according to userId ");
-				Assert.assertNotNull(userId);
-				Assert.assertEquals(mlSolutions, mlSolutions);
-			}
-
-		} catch (Exception e) {
-			logger.info("Failed to fetch solutions " + e);
-		}
-	}*/
+	/*
+	 * @Test public void getAllMySolutionsTest() { try {
+	 * 
+	 * JsonRequest<RestPageRequestBE> restPageReqBe = new JsonRequest<>();
+	 * RestPageRequestBE body = new RestPageRequestBE();
+	 * body.setSearchTerm("Solution"); body.setPage(1); body.setSize(9);
+	 * body.setAccessType("OR"); body.setActiveType("Y");
+	 * restPageReqBe.setBody(body);
+	 * 
+	 * String userId = "1810f833-8698-4233-add4-091e34b8703c";
+	 * 
+	 * MLSolution mlsolution = new MLSolution();
+	 * mlsolution.setSolutionId("Solution1"); mlsolution.setName(
+	 * "Test_Solution data"); mlsolution.setDescription("Test data");
+	 * mlsolution.setOwnerId("41058105-67f4-4461-a192-f4cb7fdafd34");
+	 * mlsolution.setAccessType("PB"); mlsolution.setActive(true);
+	 * mlsolution.setModelType("CL"); mlsolution.setTookitType("DS");
+	 * 
+	 * List<MLSolution> mlSolutions = new ArrayList<>();
+	 * mlSolutions.add(mlsolution); RestPageResponseBE<MLSolution> response =
+	 * new RestPageResponseBE<>(mlSolutions); response.setContent(mlSolutions);
+	 * 
+	 * if (userId != null) { Mockito.when(impl.getAllMySolutions(userId,
+	 * restPageReqBe)).thenReturn(response); logger.info(
+	 * "Solutions fecthed successfully according to userId ");
+	 * Assert.assertNotNull(userId); Assert.assertEquals(mlSolutions,
+	 * mlSolutions); }
+	 * 
+	 * } catch (Exception e) { logger.info("Failed to fetch solutions " + e); }
+	 * }
+	 */
 
 	@Test
 	public void updateSolutionTest() throws AcumosServiceException {
 		try {
 			MLSolution mlsolution = new MLSolution();
 			mlsolution.setName("Test_Solution data");
-			mlsolution.setDescription("Test data");
 			mlsolution.setOwnerId("601f8aa5-5978-44e2-996e-2dbfc321ee73");
 			mlsolution.setAccessType("PB");
 			mlsolution.setActive(true);
@@ -451,9 +432,9 @@ public class MarketPlaceServiceImplTest {
 		try {
 
 			MLPSolutionRating mlpSolutionRating = new MLPSolutionRating();
-			Date created = new Date();
+			Instant created = Instant.now();
 			mlpSolutionRating.setCreated(created);
-			Date modified = new Date();
+			Instant modified = Instant.now();
 			mlpSolutionRating.setModified(modified);
 			mlpSolutionRating.setRating(2);
 			mlpSolutionRating.setSolutionId("6e5036e0-6e20-4425-bd9d-b4ce55cfd8a4");
@@ -482,9 +463,9 @@ public class MarketPlaceServiceImplTest {
 			MarketPlaceCatalogServiceImpl mockimpl = mock(MarketPlaceCatalogServiceImpl.class);
 
 			MLPSolutionRating mlpSolutionRating = new MLPSolutionRating();
-			Date created = new Date();
+			Instant created = Instant.now();
 			mlpSolutionRating.setCreated(created);
-			Date modified = new Date();
+			Instant modified = Instant.now();
 			mlpSolutionRating.setModified(modified);
 			mlpSolutionRating.setRating(4);
 			mlpSolutionRating.setSolutionId("6e5036e0-6e20-4425-bd9d-b4ce55cfd8a4");
@@ -518,9 +499,9 @@ public class MarketPlaceServiceImplTest {
 			pageRequest.setSize(9);
 
 			MLPSolutionRating mlpSolutionRating = new MLPSolutionRating();
-			Date created = new Date();
+			Instant created = Instant.now();
 			mlpSolutionRating.setCreated(created);
-			Date modified = new Date();
+			Instant modified = Instant.now();
 			mlpSolutionRating.setModified(modified);
 			mlpSolutionRating.setRating(4);
 			mlpSolutionRating.setSolutionId("6e5036e0-6e20-4425-bd9d-b4ce55cfd8a4");
@@ -554,7 +535,6 @@ public class MarketPlaceServiceImplTest {
 			MLSolution mlsolution = new MLSolution();
 			mlsolution.setSolutionId("Solution1");
 			mlsolution.setName("Test_Solution data");
-			mlsolution.setDescription("Test data");
 			mlsolution.setOwnerId("41058105-67f4-4461-a192-f4cb7fdafd34");
 			mlsolution.setAccessType("PB");
 			mlsolution.setActive(true);
@@ -611,7 +591,6 @@ public class MarketPlaceServiceImplTest {
 			MLSolution mlsolution = new MLSolution();
 			mlsolution.setSolutionId("Solution1");
 			mlsolution.setName("Test_Solution data");
-			mlsolution.setDescription("Test data");
 			mlsolution.setOwnerId("41058105-67f4-4461-a192-f4cb7fdafd34");
 			mlsolution.setAccessType("PB");
 			mlsolution.setActive(true);
@@ -659,7 +638,6 @@ public class MarketPlaceServiceImplTest {
 			MLSolution mlsolution = new MLSolution();
 			mlsolution.setSolutionId("6e5036e0-6e20-4425-bd9d-b4ce55cfd8a4");
 			mlsolution.setName("Test_Solution data");
-			mlsolution.setDescription("Test data");
 			mlsolution.setOwnerId("601f8aa5-5978-44e2-996e-2dbfc321ee73");
 			mlsolution.setAccessType("PB");
 			mlsolution.setActive(true);
@@ -702,7 +680,6 @@ public class MarketPlaceServiceImplTest {
 			MLSolution mlsolution = new MLSolution();
 			mlsolution.setSolutionId("6e5036e0-6e20-4425-bd9d-b4ce55cfd8a4");
 			mlsolution.setName("Test_Solution data");
-			mlsolution.setDescription("Test data");
 			mlsolution.setOwnerId("601f8aa5-5978-44e2-996e-2dbfc321ee73");
 			mlsolution.setAccessType("PB");
 			mlsolution.setActive(true);

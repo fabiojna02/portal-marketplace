@@ -23,16 +23,13 @@ import org.acumos.cds.domain.MLPRole;
 import org.acumos.cds.domain.MLPUser;
 import org.acumos.portal.be.common.JsonRequest;
 import org.acumos.portal.be.common.JsonResponse;
-import org.acumos.portal.be.common.exception.MalformedException;
 import org.acumos.portal.be.common.exception.UserServiceException;
 import org.acumos.portal.be.controller.UserServiceController;
 import org.acumos.portal.be.security.jwt.JwtTokenUtil;
-import org.acumos.portal.be.service.AdminService;
 import org.acumos.portal.be.service.UserService;
 import org.acumos.portal.be.service.impl.UserServiceImpl;
 import org.acumos.portal.be.transport.PasswordDTO;
 import org.acumos.portal.be.transport.User;
-import org.acumos.portal.be.util.EELFLoggerDelegate;
 import org.acumos.portal.be.util.PortalUtils;
 import org.junit.Assert;
 import org.junit.Test;
@@ -41,27 +38,22 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
-import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.test.web.servlet.RequestBuilder;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.web.multipart.MultipartFile;
 
-import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.lang.invoke.MethodHandles;
+import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
@@ -70,7 +62,7 @@ import javax.servlet.http.HttpServletResponse;
 @RunWith(MockitoJUnitRunner.class)
 public class UserServiceControllerTest {
 
-	private static final EELFLoggerDelegate logger = EELFLoggerDelegate.getLogger(UserServiceControllerTest.class);
+	private static final Logger logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());	
 	final HttpServletResponse response = new MockHttpServletResponse();
 	final HttpServletRequest request = new MockHttpServletRequest();
 
@@ -248,7 +240,7 @@ public class UserServiceControllerTest {
 		try {
 			MLPRole mlRole = new MLPRole();
 			mlRole.setName("Admin");
-			Date created = new Date();
+			Instant created = Instant.now();
 			mlRole.setCreated(created);
 			mlRole.setRoleId("12345678-abcd-90ab-cdef-1234567890ab");
 			Assert.assertNotNull(mlRole);

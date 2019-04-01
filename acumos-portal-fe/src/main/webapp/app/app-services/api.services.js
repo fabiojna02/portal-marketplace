@@ -62,9 +62,7 @@ angular.module('AcumosApp')
         var kubernetesHelpDocUrl = 'api/users/k8s/docs/help';
         var dashboardUrl = 'api/admin/dashboard';
         var urlmodelFileUpload = 'api/model/upload';
-        var urlTermsCondition = '/site/api-manual/Solution/global/termsCondition';
         var urlDownloadArtifact = '/api/downloads';
-        var urlModelerResourcesContent = '/site/api-manual/Solution/global/modelerresource';
         var urladdToCatalog = 'api/webBasedOnBoarding/addToCatalog';
         var urlCreateRating = 'api/solution/createRating';
         var urlUpdateRating = 'api/solution/updateRating';
@@ -73,20 +71,19 @@ angular.module('AcumosApp')
         var urlDeleteFavorite = 'api/solution/deleteFavorite';
         var urlFavoriteSolution = 'api/solution/getFavoriteSolutions';
         var urlNotification = 'api/notifications';
-        var urlSolutionImages = '/site/api-manual/Solution/solutionImages';
         var urlValidationStatus = 'api/validation';
         var urlCreateRole = 'api/createRole';
         var urlSiteConfig = 'api/admin/config';
+        var urlContactInfo = 'api/site/content/global/footer/contactinfo';
+        var urlTermsConditions = 'api/site/content/global/termsConditions';
         var urlCreateTags = 'api/tags/create'
-        var urlSolutionDescription = '/site/api-manual/Solution/description';
         var urlAddUser =  'api/admin/addUser';
         var urlAddPeer = 'api/admin/peer/subcription/create';
-        /*var urldeleteUser = '/api/users/user/updateUser';*////user/deleteUser
         var urldeleteUser = '/api/users/user/deleteUser';
         var rolesCount = '/api/roles/count';
         var urlSearchSolution = "api/searchSolutions";
         var urlGetVersion	= "api/admin/version";
-		 var urlComment = "api/comments";
+		var urlComment = "api/comments";
         var urlThread = "api/thread";
         var urlUserProfileImage = "api/users/userProfileImage";
         var urlUserAccountDetails = "api/users/userAccountDetails";
@@ -108,6 +105,16 @@ angular.module('AcumosApp')
         var urlPreferredTag ="api/preferredTags"; 	
         var urlsetPreferredTag = "api/tags/createUserTag";
         var urlPublishOwnRequestsEnabled = "api/users/publishOwnRequestsEnabled";
+        var urlJupyterUrl = 'api/users/jupyterUrl';
+       
+        var urlOnboardingOverviewUrl = '/api/site/content/global/onboarding/overview';
+        var urlCobrandLogoUrl = "/api/site/content/global/coBrandLogo";
+        var urlCarouselPictureUrl = "/api/site/content/carouselImages";
+        var urlUnreadNotification =  "/api/unreadnotifications/count";
+        var urlOnBoardingHistoryTaskList =  "/api/onboardinghistory/getTasks";
+        var urlOnBoardingHistoryStepResult =  "/api/onboardinghistory/getStepResult";
+        var urlPublisher =  "/api/solution";        
+			
         /**************** ALL GET ******************/
         this.getCloudEnabled = function () {
             return $http.get(urlGetCloudEnabledUrl);
@@ -130,10 +137,6 @@ angular.module('AcumosApp')
             return $http.get("/api/solution/revision/" + revisionId + '/' + publicOrOrg  + '/description' )
         };
         
-        this.getSolutionImage = function(solutionId){
-        	return $http.get(urlSolutionImages + '/'+solutionId)
-        }
-        
         this.getModelTypes = function () {
             return $http.get(urlModelTypes);
         };
@@ -150,8 +153,16 @@ angular.module('AcumosApp')
             return $http.get(urlToolkitTypes);
         };
         
-        this.getSolutionDetail = function (solutionId) {
-            return $http.get(urlSolutions + '/' + solutionId);
+        this.getSolutionDetail = function (solutionId, revisionId) {
+            return $http.get(urlSolutions + '/' + solutionId + '/' + revisionId);
+        };
+        
+        this.getSolutionPicture = function (solutionId) {
+            return $http.get(urlSolutions + '/' + solutionId + "/picture");
+        };
+        
+        this.setSolutionPicture = function (solutionId, image) {
+            return $http.post(urlSolutions + '/' + solutionId + "/picture", image);
         };
         
         this.getPeer = function(peerId){
@@ -197,15 +208,6 @@ angular.module('AcumosApp')
         	return $http.get(urlDownloadArtifact + '/' + solutionId + '?artifactId=' + artifactId + '&revisionId=' + revisionId);
         };
         
-        this.getTermsCondition = function (){
-        	return $http.get(urlTermsCondition);
-        };
-        
-        this.getModelerResourcesContent = function (modelName){
-        	return $http.get(urlModelerResourcesContent + '/'+ modelName);
-        };
-        
-        
         this.getFavoriteSolutions = function (userId){
         	return $http.get(urlFavoriteSolution + '/'+ userId);
         };
@@ -221,6 +223,15 @@ angular.module('AcumosApp')
         this.getSiteConfig = function(configKey){
         	return $http.get(urlSiteConfig + '/' + configKey);
         };
+        
+        //Site content
+        this.getContactInfo = function(){
+        	return $http.get(urlContactInfo);
+        }
+        
+        this.getTermsConditions = function(){
+        	return $http.get(urlTermsConditions);
+        }
         
         this.updateUserRole = function(userDetails){
         	return $http.post(updateUserRole, userDetails);
@@ -253,6 +264,15 @@ angular.module('AcumosApp')
         this.getAuthors = function (solutionId , revisionId) {
             return $http.get("/api/solution/" + solutionId + "/revision/" + revisionId + "/authors");
         }
+        
+        this.getPublisher = function (solutionId , revisionId) {
+            return $http.get(urlPublisher + '/'+solutionId + "/revision/" + revisionId + "/publisher");
+        }
+        
+        this.getUnreadNotificationCount = function(userID){
+            return $http.get(urlUnreadNotification + '/' + userID);
+        }
+        
         /**************** ALL PUT ******************/
         this.updateSolutions = function(solution){
         	return $http.put(urlSolutions + '/' + solution.request_body.solutionId, solution);
@@ -320,9 +340,21 @@ angular.module('AcumosApp')
         this.removeAuthor = function (solutionId , revisionId, obj) {
             return $http.put("/api/solution/" + solutionId + "/revision/" + revisionId + "/removeAuthor", obj);
         }
+       
+        this.addPublisher = function (solutionId , revisionId, obj) {
+            return $http.put(urlPublisher + '/' + solutionId + "/revision/" + revisionId + "/publisher", obj);
+        }
         /**************** ALL POST ******************/
         this.postGlobalUserDetails = function(){
         	return $http.put(urlPostGlobalLogin);
+        }
+        
+        this.updateTermsConditions = function(request){
+        	return $http.post(urlTermsConditions,request);
+        }
+        
+        this.updateContactInfo = function(request){
+        	return $http.post(urlContactInfo, request);
         }
         
         this.updateUser = function(){
@@ -544,4 +576,48 @@ angular.module('AcumosApp')
         this.isPublishOwnRequestsEnabled = function () {
             return $http.get(urlPublishOwnRequestsEnabled );
         };
+        
+        this.deleteSolution = function(solution){
+            return $http.put(urlSolutions + '/' + solution.request_body.solutionId + '/' + solution.request_body.revisionId, solution);
+        };
+        
+        this.getJupyterUrl = function () {
+        	return $http.get(urlJupyterUrl);
+        };
+        
+        this.getOnboardingOverview = function() {
+        	return $http.get(urlOnboardingOverviewUrl);
+        }
+        
+        this.getCobrandLogo = function() {
+        	return $http.get(urlCobrandLogoUrl);
+        };
+        
+        this.getCobrandLogoUrl = function() {
+        	return urlCobrandLogoUrl;
+        };
+        
+        this.uploadCobrandLogo = function(request) {
+        	return $http.post(urlCobrandLogoUrl, request);
+        };
+        
+        this.deleteCobrandLogo = function() {
+        	return $http.delete(urlCobrandLogoUrl);
+        };
+        
+        this.uploadCarouselPicture = function(request) {
+        	return $http.post(urlCarouselPictureUrl, request);
+        };
+        
+        this.deleteCarouselPicture = function(key) {
+        	return $http.delete(urlCarouselPictureUrl + "/" + key);
+        }; 
+        this.onBoardingHistoryTaskList = function(userId,pageRequest) {
+        	return $http.post(urlOnBoardingHistoryTaskList + "/" + userId, pageRequest);
+        }; 
+        this.onBoardingHistoryStepResult = function(taskId) {
+        	return $http.post(urlOnBoardingHistoryStepResult + "/" + taskId);
+        };
+        
+
     }]);

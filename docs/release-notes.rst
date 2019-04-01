@@ -20,6 +20,213 @@
 Portal Marketplace Release Notes
 ================================
 
+Version 2.2.7  29th March 2019
+=================================
+
+* As a User , I want  add editable Publisher field for use by modelers per Authorship proposal (ACUMOS-1595)
+* Portal create user screen to edit contact details shown in page footer (ACUMOS-2548)
+* Modify Web on-boarding UI to allow user to copy paste docker URI and type a name (ACUMOS-2245)
+* IST: Federation: Add Peer Details :Error message is not displaying in user understandable format (ACUMOS-2522)
+* <IST> <Portal Marketplace> Manage My Model: Upload image acceptance criteria is not working properly (ACUMOS-2539)
+* Portal allows users to browse private models of other users (ACUMOS-2137)
+* Portal cannot clear web on-boarding results (ACUMOS-2317)
+* IST | Incorrect option selection shows for deploy to local on modelEdit screen when user selects deploy to local from design studio screen. (ACUMOS-2527)
+
+
+Version 2.2.6  22nd March 2019
+=================================
+
+* Dev: User is not able to delete the uploaded document  from manage my model when file name contain special character and spaces  (ACUMOS-2274)
+* <IST> <Portal Marketplace> Text not properly displayed on bell notification (ACUMOS-2576)
+* Portal cannot clear web on-boarding results (ACUMOS-2317)
+* As a model builder I would like to view and manage on-boarding history with detailed results (ACUMOS-1128)
+* Portal reduce page load time by sending send links to solution images (ACUMOS-2040)
+* As a User , I need  different Flag for publishing validation (ACUMOS-1753)
+* Components use revised CDS data model for Onboarding History (ACUMOS-2387)
+* Logging Standardization- Portal (ACUMOS-2325)
+* Detect automatically ONNX, PFA models in Web-on-boarding (ACUMOS-2244)
+* Modify web on-boarding UI page to take into account licence (ACUMOS-2288)
+* Portal use CDS back-end to manage web-site content like Carousel etc (ACUMOS-2419)
+* Portal use CDS 2.1 task and step result objects to manage onboarding history (ACUMOS-2511)
+
+Version 2.2.5  7th March 2019
+=================================
+* Dev: User is not able to delete the uploaded document  from manage my model when file name contain special character and spaces (ACUMOS-12680)
+* IST: Sort By: Values of drop down on the filter is different in the marketplace and manage my model. (ACUMOS-12980)
+* IST: Pagination is displaying incorrect in the my model section when user select values from showing dropdown (ACUMOS-13021)
+* IST: Top Carousel : Edit of slide is not working (ACUMOS-13031)
+* <IST> <Portal Marketplace> Tag functionality is not working properly after searching the values	(ACUMOS-12725)
+* Portal cannot clear web on-boarding results (ACUMOS-12723)
+
+
+Version 2.2.3  1st March 2019
+=================================
+* IST: Sort By: Values of drop down on the filter is different in the marketplace and manage my model.(ACUMOS-2523)
+* IST: Federation: Drop Down value is displaying wrong on View add subscription popup (ACUMOS-2537)
+* Portal reduce page load time by sending send links to solution images	(ACUMOS-2040)
+* Portal cannot clear web on-boarding results (ACUMOS-2317
+* Portal cannot edit/upload carousel slide image (ACUMOS-2530)
+* Top Carousel - Unable to remove top section from the Top carousel (ACUMOS-2479)
+* Allow sharing private solution created from DesignStudio with other users (ACUMOS-1670)
+
+Version 2.2.1  25th February 2019
+=================================
+* Portal refine left navigation bar icons to match user expectations (ACUMOS-2400)
+* IST: Notification Screen: Search Bar is not working (ACUMOS-2521)
+* IST: Mozilla Browser: Search Bar on header is overlapping with bell icon (ACUMOS-2525)
+* <IST> <Portal Marketplace> Tag functionality is not working properly after searching the values (ACUMOS-2319)
+* <IST><Portal Marketplace> Manage My Model: model onboarding date not getting refreshed as per the default selected version. (ACUMOS-2526)
+* Portal page title forever shows "Loading.." (ACUMOS-2531)
+* Manage Authors - Created by field does not display the author of a model (ACUMOS-2514)
+
+Version 2.2.0  14th February 2019
+=================================
+* CDS clients pass request ID from front-end thru in client calls (ACUMOS-1801)
+* As a admin user I want to have subscriptions publish to private or company (ACUMOS-2435)
+* As a User , I want Portal Migrate from CMS to  CDS  for web-site admin content like carousel, images etc. (ACUMOS-1992)
+* IST: Submitted Rating and count is not displaying on model description page. (ACUMOS-2450)
+* IST: Notification: Checkbox is getting selected when user click on refresh (ACUMOS-2475)
+* <IST><Portal Marketplace> Notifications: Bell notifications are not refreshing when model onboarding is failed (ACUMOS-2322)
+* Sort By / Most Downloaded is broken (ACUMOS-2081)
+* IST - Model Builder -Jupyter shows no connection - broken link (ACUMOS-2448)
+* <IST> For every model's description 'R' in coming in the heading line. (ACUMOS-2466)
+
+
+Version 2.1.7  7th February 2019
+================================
+* IST: Sort By ID: Issues on the filter given under sort by ID (ACUMOS-1652)
+* IST: Error message is not displaying in proper format after FQDN is not verified (ACUMOS-2152)
+* Portal reduce page load time by sending send links to solution images (ACUMOS-2040)
+* As a User , I want to View Model Signature for composite solution model (ACUMOS-1554)
+* Portal extend getVersion endpoint to benefit proprietary portal implementations (ACUMOS-2427)
+* <IST> Not able to delete the unpublished models. (ACUMOS-2465)
+* <IST> Pop-ups are getting highlited everywhere in the page. (ACUMOS-2464)
+* <IST>Not able to browse and upload the model documents while publishing the model in public marketplace (ACUMOS-2401)
+* Dev: User is not able to delete the uploaded document  from manage my model when file name contain special character and spaces (ACUMOS-2274)
+* Documents not available for model published to company (ACUMOS-2462)
+* IST: Created Date field value getting blank after the publisher approval, when user refresh the screen value get displayed (ACUMOS-2375)
+* IST: Pagination is displaying incorrect in the My Model Section (ACUMOS-2444)
+* IST: Please should display in one line on dialog re policy popup (ACUMOS-2445)
+* IST: Publish Request: Approval Button getting disable when user uses enter while writing the approval comment (ACUMOS-2452)
+* IST: Status circle color is incorrect in publish to public tab when a publish to public model is published to company (ACUMOS-2113)
+* Portal allows creation of multiple publish requests for exact same model (ACUMOS-2441)
+* Portal cannot clear web on-boarding results (ACUMOS-2317)
+* Portal publication request approve/decline dialog textbox carries old text (ACUMOS-2442)
+* metadata file incorrectly lists "ISC" as the license (ACUMOS-2429)
+
+
+
+Version 2.1.6,  29th January 2019
+=================================
+* IST2: Publish request entry is displaying for a deleted model.(ACUMOS-1904)
+* legacy federated models can't be changed (ACUMOS-1810)
+* As a User , I want to Remove generated artifacts (docker etc.) when deleting a model (ACUMOS-1196)
+* Azure deployer must accept user-specified username and password for VM (ACUMOS-1351)
+* As a User , I want  pagination consistency in  Marketplace and  My Models (ACUMOS-1355)
+* Improve usability of Federation Add Peer screen in Portal (ACUMOS-1550)
+* Portal on deploy show user a dialog re policy that requires confirmation (ACUMOS-2120)
+* Publisher User Guide missing from documentation (ACUMOS-2148)
+* Portal Change for CDS 2.0.0 (ACUMOS-2357)
+* IST: Complete Model Name is not displaying in single line on model description screen (ACUMOS-2135)
+* IST: FedrationUI:Full/Partial dropdown display at wrong place (ACUMOS-2373)
+* IST: Long Model name  cause distorted model description screen (ACUMOS-2374)
+* IST: Approve button getting disable when user enter something after spaces e.g. good to go (ACUMOS-2376)
+* <IST>|AUTOMATION| No unique id for textarea for comments section in approve publish request pop-up (ACUMOS-2378)
+
+
+Version 2.0.5,  11th January 2019
+=================================
+* Portal show name below icon for models shared with other users (ACUMOS-2116)
+* Incorrect Protobuf.json and TGIF.json generated for nested messages (ACUMOS-2272)
+* IST: Preview Model Tab is displaying wrong (ACUMOS-2249)
+* As a User , I should be able to remove API token entirely (ACUMOS-1577)
+* Portal publish approve/decline dialog must REQUIRE a comment, not optional (ACUMOS-2364)
+* IST: Complete Model Name is not displaying in single line on model description screen  (ACUMOS-2135)
+* <IST><Portal Marketplace> Marketplace/My Models: Unwanted text displayed on Model details page (ACUMOS-2321)
+* IST: JPG File icon is not displaying on the document section on model description screen (ACUMOS-2306)
+* IST2: When onboarding of a model fail user is not getting both logs by the link provided on the notification bell icon  (ACUMOS-1903)
+* Portal publish to public Copy Docs button should not be enabled if none avail	 (ACUMOS-1758)
+* IST: Checkbox is not getting unchecked when user cancel the filter  (ACUMOS-2318)
+* Portal federation peer subscription field shows full/partial for peer, not sub  (ACUMOS-1900)
+* Portal show long publish approve/decline comments in dialog (ACUMOS-2273)
+
+
+Version 2.0.4,  20th December 2018
+==================================
+* Remove the not yet published bar for publish to company option (ACUMOS-2146)
+* As a User , I want Marketplace model detail page show CATEGORY (ACUMOS-1160)
+* DS show info to user why models cannot be connected esp split, collate (ACUMOS-1451)
+* As an Admin , I want Portal federation admin screen show number of subscription records (ACUMOS-1688)
+* CDS controllers should log additional data to enable error diagnosis (ACUMOS-1697)
+* As a User , I want User notifications screen show read/unread difference prominently (ACUMOS-1762)
+* As a User , I want to see Warning message when  UI fails to reach back-end server (ACUMOS-1380)
+* Remove Sender name column from Manage Notifications Page (ACUMOS-2025)
+* Filter By Category: Deleted Model Filter is not working on my model screen (ACUMOS-2076)
+* IST: Color of grid content is getting change across the application (ACUMOS-2115)
+* Portal publish to public Copy Docs button should not be enabled if none avail (ACUMOS-1758)
+* Portal publish-approve screen does not allow viewing comments after approve/decline (ACUMOS-1775)
+* Web onboarding does not report failure on malformed bundle (ACUMOS-1835)
+* Show on-boarding error in UI element that allows view and copy of complete message (ACUMOS-1970)
+* Portal fails to report auth failure in web onboarding (ACUMOS-1990)
+* Portal BE throws exception if On-boarding fails without leaving an error log (ACUMOS-2038)
+* Portal does not check for missing user API token during web-onboarding request (ACUMOS-2041)
+* Portal federation admin table screen cannot scroll right some columns hidden (ACUMOS-2193)
+* Missing check box for Manage Notifications (ACUMOS-2139)
+* IST: Complete Model Name is not displaying in single line on model description screen  (ACUMOS-2135)
+* IST: Success / Error message display at wrong place on the Federation screen after click on verify button  (ACUMOS-2153)
+* <Portal Marketplace> <Manage My Model> Cursor displayed in Model Documents box and added text not saved anywhere (ACUMOS-2075)
+
+
+Version 2.0.3,  7th December 2018
+=================================
+* IST: Spacing is incorrect of counts of comment , view and download on tiles on marketplace and my model screen(list view) (ACUMOS-2114)
+* IST: Confirmation Popup is not coming while un-sharing the model (ACUMOS-2134)
+* Portal federation peer dialog verification behaviors buggy (ACUMOS-1721)
+* Gateway client builder fails to check for missing gateway.url configuration (ACUMOS-2024)
+* Portal publish author name field validation rejects period, cannot enter an initial (ACUMOS-2032)
+* As a User , I want to have Preview displayed when clicking on a Word doc file. (ACUMOS-1706)
+* IST- missing part of model label (ACUMOS-2149)
+
+
+Version 2.0.2,  30th November 2018
+==================================
+* Federation peer FQDN field should validate that entry is valid host name  (ACUMOS-1923)
+* Publish Requests List: Add Date Field if possible (ACUMOS-1826)
+* Portal: can modelers in Publisher role approve their own public requests? (ACUMOS-1797)
+* Liked Filter is not required if there are no liked button on comment (ACUMOS-1915)
+* PM provide un-share capability in Manage My Models (ACUMOS-1258)
+* Portal shall allow delete of model that failed on-boarding (ACUMOS-1392)
+* Extend P/M notifications screen to allow sort on column esp date (ACUMOS-1508)
+* Improve notifications screen when user has none in table (ACUMOS-1509)
+* Portal remember Marketplace view customization like size and sort on BACK (ACUMOS-1612)
+* Portal show complete model name set by user (ACUMOS-1708)
+* Portal publish request table extend to show submitted date (ACUMOS-1726)
+* Portal improve viewing of publish approve/decline comments (ACUMOS-1833)
+* need more descriptive errors and interaction path (ACUMOS-964)
+* IST2: Manage My Model: Document: Same Document is not getting selected if user cancel first time (ACUMOS-1531)
+* IST2: Site Content : Supporting content : Character count on login displaying incorrect. (ACUMOS-1548)
+* IST: Author Name is not displaying when user added the success story  (ACUMOS-1626)
+* IST2: View Comment box(tool tip) getting cut down for blank text on publish  request screen (ACUMOS-1803)
+* IST2: Published by text is cut down on model tiles  when publisher have long name (ACUMOS-1819)
+* Portal manage-my-models page shows status Not Started altho deploy to cloud process is completed (ACUMOS-1882)
+* IST2: Web Onboarding: Quit(X) is not working during and after uploading of files (ACUMOS-1889)
+* IST2: Comment Count is getting zero from tiles when user change the view on marketplace screen (ACUMOS-1912)
+* IST2: Comment count width(distance) is displaying wrong on the tiles for company and public section on Manage my model screen (ACUMOS-1913)
+* IST2: Tiles size is displaying different for model with pending for approval with other model. (ACUMOS-1914)
+* IST: Solution name is not displaying in the notification when user published the model to company marketplace (ACUMOS-1932)
+* IST2: Different name is displaying on the model tile on marketplace and manage my model screen for multiple user (ACUMOS-2102)
+* <IST2> <Marketplace> Error displayed for Version field (ACUMOS-1555)
+* Portal publish to public Copy Docs button should not be enabled if none avail (ACUMOS-1758)
+* Portal publish-approve screen does not allow viewing comments after approve/decline (ACUMOS-1775)
+* Edit Peer dialog always sets self status to false  (ACUMOS-1924)
+* Marketplace pagination - Hitting Back button in browser does not cache my 100 count list and brings me back to 10 models (ACUMOS-1630)
+* Unable to exit out of the attach document to model in Manage My Model (ACUMOS-2026)
+* IST2 - Interest (user tag for theme) popup window does not work.  (ACUMOS-1759)
+* IST2/IST - Login issue when time out occures (ACUMOS-1761)
+* IST2 - Status is not moving for states when model is published (ACUMOS-1885)
+* Intermittent Issue: Save Solution not working (ACUMOS-2037)
+
+
 Version 1.16.2, 11th October 2018
 =================================
 

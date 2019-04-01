@@ -24,17 +24,16 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.springframework.test.web.servlet.setup.MockMvcBuilders.standaloneSetup;
 
+import java.lang.invoke.MethodHandles;
+import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.concurrent.Future;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.acumos.cds.domain.MLPStepResult;
-import org.acumos.cds.domain.MLPStepStatus;
-import org.acumos.cds.domain.MLPStepType;
+import org.acumos.cds.domain.MLPTaskStepResult;
 import org.acumos.cds.domain.MLPUser;
 import org.acumos.portal.be.common.JsonRequest;
 import org.acumos.portal.be.common.JsonResponse;
@@ -46,7 +45,6 @@ import org.acumos.portal.be.transport.Broker;
 import org.acumos.portal.be.transport.MLSolution;
 import org.acumos.portal.be.transport.MLStepResult;
 import org.acumos.portal.be.transport.UploadSolution;
-import org.acumos.portal.be.util.EELFLoggerDelegate;
 import org.apache.http.HttpResponse;
 import org.junit.Assert;
 import org.junit.Before;
@@ -56,6 +54,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.web.servlet.MockMvc;
@@ -64,7 +64,7 @@ import org.springframework.test.web.servlet.MockMvc;
 public class WebBasedOnboardingTest {
 	
 	
-	private static final EELFLoggerDelegate logger = EELFLoggerDelegate.getLogger(WebBasedOnboardingTest.class);
+	private static final Logger logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());	
 
 	final HttpServletResponse response = new MockHttpServletResponse();
 	final HttpServletRequest request = new MockHttpServletRequest();
@@ -95,10 +95,9 @@ public class WebBasedOnboardingTest {
 			mlSolution.setTookitType("CP");
 			mlSolution.setTookitTypeName("Composite Solution");
 			mlSolution.setSolutionId("6e5036e0-6e20-4425-bd9d-b4ce55cfd8a4");
-			mlSolution.setDescription("Solution description");
 			mlSolution.setAccessType("OR");
 			mlSolution.setActive(true);
-			Date date = new Date();
+			Instant date = Instant.now();
 			mlSolution.setCreated(date);
 			mlSolution.setDownloadCount(23);
 			mlSolution.setLoginName("testerT1");
@@ -161,26 +160,26 @@ public class WebBasedOnboardingTest {
 	@Test
 	public void createStepResult() {
 		String trackingId = "67f4-4461-a192-f4cb7fdafd34";
-		MLPStepResult result = new MLPStepResult();
-		result.setTrackingId(trackingId);
+		MLPTaskStepResult result = new MLPTaskStepResult();
+		result.setTaskId(new Long(1));
 		result.setName("onboarding");
 		result.setResult("success");
 
 		Mockito.when(messagingService.createStepResult(result)).thenReturn(result);
-		JsonResponse<MLPStepResult> data = webBasedController.createStepResult(result, response);
+		JsonResponse<MLPTaskStepResult> data = webBasedController.createStepResult(result, response);
 		Assert.assertNotNull(data);
 	}
 	
 	@Test
 	public void updateStepResult() {
 		String trackingId="67f4-4461-a192-f4cb7fdafd34";
-		MLPStepResult result=new MLPStepResult();
-		result.setTrackingId(trackingId);
+		MLPTaskStepResult result=new MLPTaskStepResult();
+		result.setTaskId(new Long(1));
 		result.setName("onboarding");
 		result.setResult("success");
 		MessagingService service = mock(MessagingService.class);
-	    doNothing().when(service).updateStepResult(isA(MLPStepResult.class));
-	    JsonResponse<MLPStepResult> data = webBasedController.updateStepResult(result, response);
+	    doNothing().when(service).updateStepResult(isA(MLPTaskStepResult.class));
+	    JsonResponse<MLPTaskStepResult> data = webBasedController.updateStepResult(result, response);
 	    Assert.assertNotNull(data);
 	}
 	
@@ -189,45 +188,22 @@ public class WebBasedOnboardingTest {
 		Long stepResultId=6734L;
 		MessagingService service = mock(MessagingService.class);
 	    doNothing().when(service).deleteStepResult(isA(Long.class));
-	    JsonResponse<MLPStepResult> result = webBasedController.deleteStepResult(request, stepResultId, response);
+	    JsonResponse<MLPTaskStepResult> result = webBasedController.deleteStepResult(request, stepResultId, response);
 	    Assert.assertNotNull(result);
-	}
-	
-	@Test
-	public void getStepStatuses() {
-		List<MLPStepStatus> stepStatusesList= new ArrayList<>();
-		MLPStepStatus status=new MLPStepStatus();
-		status.setCode("success");
-		status.setName("onboard");
-		Mockito.when(messagingService.getStepStatuses()).thenReturn(stepStatusesList);
-		JsonResponse<List<MLPStepStatus>> result =	webBasedController.getStepStatuses(request, response);
-		Assert.assertNotNull(result);
-	}
-	
-	@Test
-	public void getStepTypes() {
-		List<MLPStepType> stepTypesList= new ArrayList<>();
-		MLPStepType type=new MLPStepType();
-		type.setCode("67f4-4461-a192-f4cb7fdafd34");
-		type.setName("onboard");
-		stepTypesList.add(type);
-		Mockito.when(messagingService.getStepTypes()).thenReturn(stepTypesList);
-		JsonResponse<List<MLPStepType>> result = webBasedController.getStepTypes(request, response);
-		Assert.assertNotNull(result);
 	}
 	
 	@Test
 	public void findStepresultBySolutionId() {
 		String solutionId="41058105-67f4-4461-a192-f4cb7fdafd34";
 		String revisionId="67f4-4461-a192-f4cb7fdafd34";
-		List<MLPStepResult> stepResultList=new ArrayList<>();
-		MLPStepResult result=new MLPStepResult();
-		result.setTrackingId("67f4-4461-a192-f4cb7fdafd34");
+		List<MLPTaskStepResult> stepResultList=new ArrayList<>();
+		MLPTaskStepResult result=new MLPTaskStepResult();
+		result.setTaskId(new Long(1));
 		result.setName("onboarding");
 		result.setResult("success");
 		stepResultList.add(result);
 		Mockito.when(messagingService.findStepresultBySolutionId(solutionId, revisionId)).thenReturn(stepResultList);
-		JsonResponse<List<MLPStepResult>> response = webBasedController.findStepresultBySolutionId(solutionId, revisionId);
+		JsonResponse<List<MLPTaskStepResult>> response = webBasedController.findStepresultBySolutionId(solutionId, revisionId);
 		Assert.assertNotNull(response);
 	}
 	

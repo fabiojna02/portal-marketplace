@@ -32,7 +32,7 @@ limitations under the License.
 			<div
 				class="mdl-cell mdl-cell--9-col mdl-cell--4-col-phone mdl-cell--8-col-tablet">
 				<div class="md-container1 block-container">
-					<span class="headline mob-disblock">Manage {{solution.name}}</span>
+					<span class="md-headline5 mob-disblock">Manage {{solution.name}}</span>
 					<span class="hide-xs hide-sm md-vertical-seperator"> | </span>
 					<div class="version-container">
 						<button id="demo-menu-lower-right"
@@ -136,11 +136,11 @@ limitations under the License.
 											</div>
 											<div class="managelefttext">
 												<article>On - Boarding</article>
-												<ul class="green" ng-if="solution.created">
-													<li>Completed on {{solution.created |
+												<ul class="green" ng-if="version.onboarded">
+													<li>Completed on {{version.onboarded |
 														date:'MM/dd/yyyy' }}</li>
 												</ul>
-												<ul class="red" ng-if="!solution.created">
+												<ul class="red" ng-if="!version.onboarded">
 													<li>Not Started</li>
 												</ul>
 											</div>
@@ -165,7 +165,7 @@ limitations under the License.
 												<i class="authorsimg"></i>
 											</div>
 											<div class="managelefttext">
-												<article>Manage Authors</article>
+												<article>Manage Publisher/Authors</article>
 												<ul class="">
 													<!-- <li>Shared with {{sharedWith.length}} co-worker<span ng-show="sharedWith.length>1">s</span></li> -->
 												</ul>
@@ -310,7 +310,7 @@ limitations under the License.
 													<div class="timeline-label">
 														<h2>
 															Client Library selected and downloaded | <span
-																class="green">Completed on {{solution.created |
+																class="green">Completed on {{version.onboarded |
 																date:'MM/dd/yyyy' }}</span>
 														</h2>
 														<p></p>
@@ -325,7 +325,7 @@ limitations under the License.
 													<div class="timeline-label">
 														<h2>
 															Introspection | <span class="green">Completed on
-																{{solution.created | date:'MM/dd/yyyy' }}</span>
+																{{version.onboarded | date:'MM/dd/yyyy' }}</span>
 														</h2>
 														<p></p>
 													</div>
@@ -339,7 +339,7 @@ limitations under the License.
 													<div class="timeline-label">
 														<h2>
 															Model and artifacts uploaded | <span class="green">Completed
-																on {{solution.created | date:'MM/dd/yyyy' }}</span>
+																on {{version.onboarded | date:'MM/dd/yyyy' }}</span>
 														</h2>
 														<p></p>
 													</div>
@@ -353,7 +353,7 @@ limitations under the License.
 													<div class="timeline-label">
 														<h2>
 															Tosca model generated | <span class="green">Completed
-																on {{solution.created | date:'MM/dd/yyyy' }}</span>
+																on {{version.onboarded | date:'MM/dd/yyyy' }}</span>
 														</h2>
 														<p></p>
 													</div>
@@ -367,7 +367,7 @@ limitations under the License.
 													<div class="timeline-label last">
 														<h2>
 															Model available in private catalog | <span class="green">Completed
-																on {{solution.created | date:'MM/dd/yyyy' }}</span>
+																on {{version.onboarded | date:'MM/dd/yyyy' }}</span>
 														</h2>
 														<p></p>
 													</div>
@@ -390,43 +390,67 @@ limitations under the License.
 											class="green">({{sharedWith.length}} member<span ng-show="sharedWith.length>1">s</span>)</span>
 									</p>
 									<div>
-										<span class="team-user"> <i
-											ng-repeat="sharedmember in sharedWith"> <img
+										<span class="team-user"> 
+										<div class="team-user-box" ng-repeat="sharedmember in sharedWith"  class="" style="">
+										<i
+											> <img
 												ng-hide="sharedmember.picture == null || sharedmember.picture == ''"
 												id="T{{$index}}"
 												ng-src="data:image/PNG;base64,{{sharedmember.picture}}"
 												alt="{{sharedmember.firstName}} {{sharedmember.lastName}}"
-												title="{{sharedmember.firstName}} {{sharedmember.lastName}}" />
+												title="{{sharedmember.firstName}} {{sharedmember.lastName}}" >
 
 												<img
 												ng-show="sharedmember.picture == null || sharedmember.picture == ''"
 												id="T{{$index}}"
 												src="images/userprofile/user-profile-black.png"
 												alt="{{sharedmember.firstName}} {{sharedmember.lastName}}"
-												title="{{sharedmember.firstName}} {{sharedmember.lastName}}" />
+												title="{{sharedmember.firstName}} {{sharedmember.lastName}}" >
 
 												<span class="team-user-close"> <i
-													ng-click="removeSharedUser(sharedmember.userId, sharedmember.firstName, sharedmember.lastName)"
+													ng-click="sharedWithConfirmation(sharedmember.userId, sharedmember.firstName, sharedmember.lastName)"
 													class="fa fa-times-circle" aria-hidden="true"></i>
 											</span>
-												<div class="mdl-tooltip" data-mdl-for="T{{$index}}">
-													{{sharedmember.firstName}} {{sharedmember.lastName}}</div>
-										</i> <!-- <i ng-repeat="sharedmember in sharedWith"> <img
-                                                                        id="T{{$index}}"
-                                                                        src="images/owner2.png" alt="" title=""> <span
-                                                                        class="team-user-close"> <i
-                                                                              class="fa fa-times-circle-o" aria-hidden="true"></i>
-                                                                  </span>
-                                                                        <div class="mdl-tooltip" data-mdl-for="T{{$index}}">owner</div>
-                                                            </i> --> <!--                                                           <i> <img id="owner12" src="images/owner2.png"
-                                                                        alt="" title=""> <span class="team-user-close">
-                                                                              <i class="fa fa-times-circle-o" aria-hidden="true"></i>
-                                                                  </span>
-                                                                        <div class="mdl-tooltip" data-mdl-for="owner12">owner
-                                                                        </div>
-                                                            </i>
--->
+											</i>
+										
+										
+										<div>
+										{{sharedmember.firstName}} {{sharedmember.lastName}}
+										</div>
+										</div>
 										</span>
+										
+										<!-- Delete Shared With Confirmation Starts -->
+										<div class="md-dialog-container" id="confirmPopupDeleteSharedWith"
+											style="height: 0;">
+											<md-dialog aria-label="Delete Shared"
+												> <md-toolbar>
+											<div class="md-toolbar-tools">
+												<h2>Delete Shared Member</h2>
+												<span flex></span>
+												<md-button class="md-icon-button" ng-click="closeSharedWithPoup()">
+												<i class="material-icons">close</i> </md-button>
+											</div>
+											</md-toolbar> <md-dialog-content>
+											<form ng-cloak>
+												<div class="md-dialog-content">
+													<p>Would you like to delete '{{deleteFName}} {{deleteLName}}' from the shared list?</p>											
+												</div>
+											</form>
+											</md-dialog-content> <md-dialog-actions>
+											<div class="dialog-footer-container1">
+												<md-button ng-click="closeSharedWithPoup()"
+													class="mdl-button mdl-js-button btn-secondary">
+												Cancel </md-button>
+												<md-button ng-click="removeSharedUser(deleteUserId, deleteFName, deleteLName);"
+													class="mdl-button mdl-js-button btn-primary">
+												Confirm </md-button>
+											</div>
+											</md-dialog-actions> </md-dialog>
+										</div>
+										
+										<!-- Delete Shared With Confirmation Starts -->
+										
 
 										<!-- <span class="team-user"> <i
                                                                   ng-repeat="sharedmember in sharedWith"
@@ -566,9 +590,50 @@ limitations under the License.
 							</div>
 							<!-- share end -->
 							<!--  Manage Authors start -->
-							<div class="mdl-tabs__panel authors" id="Authors" ng-show="tab=='Authors'"
-								ng-class="{'isActive':tab=='Authors'}">
-								<h4 class="gridlistheading">Existing Authors</h4>
+						<div class="mdl-tabs__panel authors" id="Authors" ng-show="tab=='Authors'"
+                                ng-class="{'isActive':tab=='Authors'}">
+                                <h4 class="gridlistheading">Publisher</h4>
+                                <div class="publisher">
+                                    <ng-form name = "AddPublisher" class="" >
+                                        <div class="removeformspace mdl-grid">
+                                            <div
+                                                class="mdl-cell mdl-cell--4-col mdl-cell--8-col-tablet mdl-cell--4-col-phone">
+                                                <md-input-container class="md-icon-float md-block">
+                                                <label>Publisher Name </label> <input
+                                                    ng-model="publisherName" valid-name name="publisherName" type="text"
+                                                    required ng-blur="NameVisited=true" ng-minlength="2"
+                                                    ng-focus="NameVisited=false">
+                                                    </md-input-container>  
+                                                
+                                                
+                                            
+                                            <div class="help-inline validation-msgs"
+														ng-class="{validationmsg:!AddPublisher.Name.$valid}">
+														<span
+															ng-show="!!AddPublisher.publisherName.$error.required && AddPublisher.publisherName.$touched && NameVisited">
+															Name Required.</span>
+															<span
+																ng-show="!!AddPublisher.publisherName.$error.invalidChars && NameVisited">First
+																name must contain letters only.</span>
+															<span
+																ng-show="!!AddPublisher.publisherName.$error.minlength && NameVisited">Publisher name should contain atleast 2 characters.</span>
+											</div> 
+											</div> 
+											                                       
+                                        </div>
+                                        <div layout="row" class="mdl-grid remove-left-padd">
+                                            <md-button
+                                                class="mdl-button mdl-js-button btn-primary"
+                                                alt="Add publisher" ng-hide="flag" ng-click="setPublisher()" disabled="disabled" ng-disabled="AddPublisher.$invalid" title="save"> Save
+                                            </md-button>  
+                                                                                    
+                                        </div>
+                                    </form>
+                                </div>
+                                <div class="clearfix"></div> 
+                                <!-- publisher end -->
+                                
+                                <h4 class="gridlistheading">Authors</h4>
 								
 								<tags-input ng-model="AuthorsTag" class="mdl-chip__text" display-property="name"  
 									placeholder="Add a author" key-property="nameContact" on-tag-clicked="updateTag($tag)"									
@@ -650,7 +715,7 @@ limitations under the License.
 												</md-input-container>
 											</div>
 										</div> 
-										<div layout="row" class="pull-right mdl-grid">
+										<div layout="row" class="pull-left mdl-grid">
 											<md-button 
 												class="mdl-button mdl-js-button btn-primary"
 												alt="Add author" ng-hide="flag" ng-click="setAuthor()" disabled="disabled" ng-disabled="AddAuthor.$invalid" title="Add author"> Add author
@@ -675,16 +740,16 @@ limitations under the License.
 								<div>
 									<ul>
 										<li> 
-											<div class="imageplace"
-												ng-class="{'completed': (validationEnabled == true && (modelDocumentation == true || version.accessTypeCode=='OR' || version.accessTypeCode=='PB' ))}">
+											<div class="imageplace">
+												
 												<span class="imagecontent model-documentation" alt="Model Documentation" title="Model Documentation"> <!-- <img
                                                                               src="images/ico_model_documentation.png" alt="" title=""> -->
 												</span>
 											</div>
 											<div class="text">Model Documentation</div>
 										</li>
-										<li class="progress-status"
-											ng-class="{'completed': (modelDocumentation == true || version.accessTypeCode=='OR' || version.accessTypeCode=='PB' ) && validationEnabled == true}">
+										<li class="progress-status">
+											
 										</li>
 										<li ng-show = "scShow">
 											<div class="imageplace">
@@ -731,8 +796,8 @@ limitations under the License.
 											<md-tooltip>{{errorTC}}</md-tooltip>
 											<div class="text">Text Check</div>
 										</li >
-										<li class="progress-status" ng-show = "tcShow"></li>
-										<li>
+										<li  ng-hide = "tcShow"></li>	
+										<!-- <li>
 											<div class="imageplace">
 												<span class="imagecontent yet-not-publish" al="Not yet published" title="Not yet published">
 												</span>
@@ -746,7 +811,7 @@ limitations under the License.
 											<div class="text">Not yet published</div>
 											<div class="text-completed">Published to Company
 												Marketplace</div>
-										</li>
+										</li> -->
 										<!-- <li class="progress-status"
                                                                   ng-class="{'green': taValidationStatus.validationStatus == 'PS' && taValidationStatus.validationType == 'TA'}"></li>
                                                             <li>
@@ -1026,8 +1091,11 @@ limitations under the License.
 																<option value="">-- Version --</option>
 															</select>
 															<md-button ng-click="copyFromOtherRevision('OR'); "
+																ng-disabled="!isSolutionDescAvailableBtn"
 																class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect btn-primary" alt="Copy" title="Copy">
 															Copy </md-button>
+															<div class="error_msg" ng-show="isSolutionDescError == true">
+																No description available.</div>
 														</div>
 														</p>
 														<!-- <div class="checkbox" ng-show="solutionCompanyDesc.length<1 || solutionCompanyDesc=='' 
@@ -1263,7 +1331,8 @@ limitations under the License.
 																			       <div class="drag-drop-files hide">
 																			              <p>doc.pdf</p>
 																			       </div>
-																					<div file-droppable filename="privatefilename" file=solutionFile docerror="docerror" size=10000000>
+																					<div file-droppable filename="privatefilename" file=solutionFile
+																					 docerror="docerror" size=10000000 validfilename = "validfilename">
 																			              <img src="images/upload-doc-vector.png" alt="" title=""/>
 																			              <div class="destext">Drag & Drop your file here!</div>
 																			       </div>
@@ -1272,9 +1341,9 @@ limitations under the License.
 																			
 																			<div file-upload file="$parent.solutionFile" 
 																						uploadid="documentuploadid" id="uploadFile"
-																						filename="$parent.privatefilename"
-																						ng-model="solutionFile" accept = ""
-																						size=10000000 docerror="docerror" readonly alt="Browse" title="Browse">	
+																						filename="parent.privatefilename"
+																						ng-model="solutionFile" accept = "" validfilename="validfilename"
+																						size=10000000 docerror="docerror"  readonly alt="Browse" title="Browse">	
 																			</div>
 																		
 																			<div class="upload-image-input files-uploaded">
@@ -1289,11 +1358,13 @@ limitations under the License.
 														            <div class=""><span ng-show = "$root.progressBar != 100 && $root.progressBar != 0">{{$root.progressBar| number : 0}}%</span>
 														            	<span ng-show = "$root.progressBar == 100">Completed</span>
 														            </div>
-														            
 														            <div class="help-inline validation-msgs">
 																		<span ng-show="docerror">Document should be of max size 10MB.</span>
 																	</div>
-														         </div>
+																	<div class="help-inline validation-msgs">
+																		<span ng-show="validfilename">Spaces and special characters are not allowed in file name.</span>
+																	</div>
+																			</div>
 																		</div>
 																	</form>
 																</div>
@@ -1313,7 +1384,7 @@ limitations under the License.
 																	<md-button ng-show="!showSolutionDocs"
 																		ng-click="updateSolutionFiles('documentuploadid');"
 																		class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect btn-primary md-button md-ink-ripple"
-																		type="button" ng-disabled = "!solutionFile || docerror == true"
+																		type="button" ng-disabled = "!solutionFile || docerror == true || validfilename"
 																		data-upgraded=",MaterialButton,MaterialRipple" alt="Done" title="Done">
 																	<span class="ng-scope"> Done </span> <span
 																		class="mdl-button__ripple-container ng-scope"><span
@@ -1323,7 +1394,7 @@ limitations under the License.
 																		<md-button ng-show="showSolutionDocs"
 																		ng-click="updateSolutionFiles('documentuploadid'); "
 																		class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect btn-primary md-button md-ink-ripple"
-																		type="button"
+																		type="button" ng-disabled = "validfilename"
 																		data-upgraded=",MaterialButton,MaterialRipple" alt="Update" title="Update">
 																	<span class="ng-scope"> Update</span> <span
 																		class="mdl-button__ripple-container ng-scope"><span
@@ -1346,13 +1417,17 @@ limitations under the License.
 															<label> Use the Documents you have in Company
 																Marketplace for Other Revisions.</label>
 															<!--  <a>View more</a> -->
-															<select ng-model="sourceRevisionId"
+															<select ng-model="sourceRevisionId" ng-change="changedDocVersion('OR', sourceRevisionId)"
 																ng-options="v.version for v in versionList">
 																<option value="">-- Version --</option>
 															</select>
 															<md-button ng-click="copyDocsFromOtherRevision('OR'); "
-																class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect btn-primary" alt="Copy" title="Copy">
+																class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect btn-primary" 
+																ng-disabled="!isSolutionDocsAvailableBtn"
+																alt="Copy" title="Copy">
 															Copy </md-button>
+															<div class="error_msg" ng-show="isSolutionDocsAvailable == false">
+															No document available.</div>
 														</div>
 														<div class="checkbox" ng-if="!showSolutionDocs">
 															<label> <input type="checkbox"
@@ -1617,7 +1692,7 @@ limitations under the License.
 																				<md-input-container><label class="md-required">Upload Image</label></md-input-container>
 																				<div class="upload-image-input">
 																					<div file-upload file="previewImage" ng-click = "cancelSolImage()"
-																						uploadid="companyuploadid" id="solImage" size = 800000 imageerror = "imageerror"
+																						uploadid="companyuploadid" id="solImage" size = 1000000 imageerror = "imageerror"
 																						filename="filename" fileinput="file" accept="image/*" imagetypeerror = "imagetypeerror"
 																						filepreview="previewImage" ng-model="solImage"
 																						icon="icon" upload-image-model="solImage" alt="Browse" title="Browse" readonly ></div>
@@ -1627,7 +1702,7 @@ limitations under the License.
 																					
 																				</div>
 																				<div class="help-inline validation-msgs">
-																					<span ng-show = "imageerror">Image should be max size of 800KB.</span>
+																					<span ng-show = "imageerror">Image should be max size of 1MB.</span>
 																				</div>
 																				<div class="help-inline validation-msgs">
 																					<span ng-show = "imagetypeerror" >Image should be in 'jpg','jpeg','png' or 'gif' file format.</span>
@@ -1658,7 +1733,7 @@ limitations under the License.
                                                                              </div> -->
                                                                              
 																				<div>
-																					<p>JPG, GIF or PNG Max Size 800KB {{iconFile}}</p>
+																					<p>JPG, GIF or PNG Max Size 1MB {{iconFile}}</p>
 																				</div>
 																			</div>
 																		</div>
@@ -1738,8 +1813,8 @@ limitations under the License.
 													<!-- updateupload image for model end -->
 													<div class="uploaded-img-des" ng-show="showSolutionImage">
 														<div class="imagecontainer">
-															<img ng-src="data:image/JPEG;base64,{{solution.picture}}" alt="" title=""
-																ng-model="imgURLdefault" />
+															<img ng-src="/api/solutions/{{solution.solutionId}}/picture" alt="" title=""
+																ng-model="imgURLdefault"/>
 														</div>
 														<div class="file-name">
 															{{solutionImageName}} | <a
@@ -1868,11 +1943,9 @@ limitations under the License.
 																<div class="grid-item">
 																	<div class="grid-top-section">
 																		<div class="product-image">
-																			<figure ng-show="solution.picture">
-																				 <img ng-src="data:image/JPEG;base64,{{solution.picture}}" class="img-rounded">
-																			</figure>
-																			<figure ng-hide="solution.picture">
-																				 <img ng-src="images/default-model.png" class="img-rounded">
+																			<figure>
+																				 <img ng-src="/api/solutions/{{solution.solutionId}}/picture" class="img-rounded"
+																					onerror="this.onerror=null;this.src='images/default-model.png'"/>
 																			</figure>
 																		</div>
 																		<div class="mpdetailscontainer">
@@ -1929,123 +2002,6 @@ limitations under the License.
 																		</div>
 																	</div>
 																</div>
-
-																<!-- two items from market place -->
-																<!-- <div class="grid-item"
-                                                                                                                  ng-repeat="mlsolution in mlsolutions | limitTo: -2  | filter:(!searchResults || '') && {active:true} as filtered ">
-                                                                                                                  <div class="grid-top-section">
-                                                                                                                        <div class="product-image">
-                                                                                                                              <figure>
-                                                                                                                                    For Demo images according to model-name
-                                                                                                                                    <img
-                                                                                                                                          ng-if="mlsolution.name.indexOf('Predictor') < 0 
-                                                                                                                                          && mlsolution.name.indexOf('Threat') < 0 
-                                                                                                                                          && mlsolution.name.indexOf('Emotion') < 0
-                                                                                                                                          && mlsolution.name.indexOf('Face') < 0
-                                                                                                                                          && mlsolution.name.indexOf('Video') < 0
-                                                                                                                                          && mlsolution.name.indexOf('Chat') < 0
-                                                                                                                                          && mlsolution.name.indexOf('Sentiment') < 0"
-                                                                                                                                          ng-src="{{imgURLdefault}}"
-                                                                                                                                          ng-click="onClickModel($index, mlsolution.solutionId)"
-                                                                                                                                          class="img-rounded" width="204" height="156">
-
-                                                                                                                                    <img
-                                                                                                                                          ng-if="mlsolution.name.indexOf('Predictor') > -1"
-                                                                                                                                          ng-src="{{imgURLnull}}"
-                                                                                                                                          ng-click="onClickModel($index, mlsolution.solutionId)"
-                                                                                                                                          class="img-rounded" width="204" height="156">
-
-                                                                                                                                    <img
-                                                                                                                                          ng-if="mlsolution.name.indexOf('Threat') > -1"
-                                                                                                                                          ng-src="{{imgURLthreat}}"
-                                                                                                                                          ng-click="onClickModel($index, mlsolution.solutionId)"
-                                                                                                                                          class="img-rounded" width="204" height="156">
-
-                                                                                                                                    <img
-                                                                                                                                          ng-if="mlsolution.name.indexOf('Emotion') > -1"
-                                                                                                                                          ng-src="{{imgURLemotion}}"
-                                                                                                                                          ng-click="onClickModel($index, mlsolution.solutionId)"
-                                                                                                                                          class="img-rounded" width="204" height="156">
-
-                                                                                                                                    <img ng-if="mlsolution.name.indexOf('Face') > -1"
-                                                                                                                                          ng-src="{{imgURLcommercial}}"
-                                                                                                                                          ng-click="onClickModel($index, mlsolution.solutionId)"
-                                                                                                                                          class="img-rounded" width="204" height="156">
-
-                                                                                                                                    <img ng-if="mlsolution.name.indexOf('Video') > -1"
-                                                                                                                                          ng-src="{{imgURLvideo}}"
-                                                                                                                                          ng-click="onClickModel($index, mlsolution.solutionId)"
-                                                                                                                                          class="img-rounded" width="204" height="156">
-
-                                                                                                                                    <img ng-if="mlsolution.name.indexOf('Chat') > -1"
-                                                                                                                                          ng-src="{{imgURLChat}}"
-                                                                                                                                          ng-click="onClickModel($index, mlsolution.solutionId)"
-                                                                                                                                          class="img-rounded" width="204" height="156">
-
-                                                                                                                                    <img
-                                                                                                                                          ng-if="mlsolution.name.indexOf('Sentiment') > -1"
-                                                                                                                                          ng-src="{{imgURLSensitive}}"
-                                                                                                                                          ng-click="onClickModel($index, mlsolution.solutionId)"
-                                                                                                                                          class="img-rounded" width="204" height="156">
-                                                                                                                              </figure>
-                                                                                                                        </div>
-                                                                                                                        <div class="mpdetailscontainer">
-                                                                                                                              <label class="griditem-title">{{mlsolution.name}}
-                                                                                                                                    <span class="text-xsmall link-orange">In Process</span>
-                                                                                                                              </label> <label class="grid-item-text-container"><span
-                                                                                                                                    class="griditem-text2 grid-item-lbl">by
-                                                                                                                                          {{mlsolution.ownerName}}</span> | <span
-                                                                                                                                    class="griditem-text2">on
-                                                                                                                                          {{mlsolution.created | date:"MM/dd/yyyy"}}</span> | <span
-                                                                                                                                    class="text-xsmall link-orange"
-                                                                                                                                    ng-if="mlsolution.active != ''">New</span></label>
-                                                                                                                              <p class="disblock mp-para"
-                                                                                                                                    ng-bind-html="mlsolution.description">{{mlsolution.description}}</p>
-                                                                                                                              <p class="disblock mp-para">**** {{mlsolution.modelType}} ****</p>   
-                                                                                                                        </div>
-                                                                                                                        <div class="rating clear_both">
-
-                                                                                                                              <span> <i class="fa fa-star"
-                                                                                                                                    ng-class="{'fa-star1': mlsolution.solutionRating == null || mlsolution.solutionRating < 1}"
-                                                                                                                                    aria-hidden="true"></i></span> <span><i
-                                                                                                                                    class="fa fa-star"
-                                                                                                                                    ng-class="{'fa-star1': mlsolution.solutionRating < 2}"
-                                                                                                                                    aria-hidden="true"></i></span> <span><i
-                                                                                                                                    class="fa fa-star"
-                                                                                                                                    ng-class="{'fa-star1': mlsolution.solutionRating < 3}"
-                                                                                                                                    aria-hidden="true"></i></span> <span><i
-                                                                                                                                    class="fa fa-star"
-                                                                                                                                    ng-class="{'fa-star1': mlsolution.solutionRating < 4}"
-                                                                                                                                    aria-hidden="true"></i></span> <span><i
-                                                                                                                                    class="fa fa-star"
-                                                                                                                                    ng-class="{'fa-star1': mlsolution.solutionRating < 5}"
-                                                                                                                                    aria-hidden="true"></i> </span>
-
-                                                                                                                              <button
-                                                                                                                                    class="mdl-button mdl-js-button mdl-button--icon mdl-button--colored"
-                                                                                                                                    ng-disabled="!loginUserID"
-                                                                                                                                    ng-click="mlsolution.selectFav = !mlsolution.selectFav; updateFavorite(mlsolution.solutionId, $index)">
-                                                                                                                                    <i class="material-icons"
-                                                                                                                                          ng-class="{'unselected-fav':!mlsolution.selectFav ,'selected-fav':mlsolution.selectFav}">favorite_border</i>
-                                                                                                                              </button>
-                                                                                                                        </div>
-                                                                                                                        <div class="md-icons md-icons-tiles">
-                                                                                                                              <span><span
-                                                                                                                                    class="statistics-icons icon-chat"></span> 0</span> <span><span
-                                                                                                                                    class="statistics-icons icon-view"></span>
-                                                                                                                                    {{mlsolution.viewCount == null ? 0 :
-                                                                                                                                    mlsolution.viewCount}}</span> <span><span
-                                                                                                                                    class="statistics-icons icon-download"></span>
-                                                                                                                                    {{mlsolution.downloadCount == null ? 0 :
-                                                                                                                                    mlsolution.downloadCount}}</span> <span><span
-                                                                                                                                    class="statistics-icons icon-attachment"></span>
-                                                                                                                                    {{mlsolution.solutionTag == null ? 0 :
-                                                                                                                                    mlsolution.solutionTag}}</span>
-
-                                                                                                                        </div>
-                                                                                                                  </div>
-                                                                                                            </div> -->
-																<!-- Grid item End -->
 															</div>
 
 															</md-content> </md-tab> <md-tab label="Model Details"> <md-content
@@ -2076,12 +2032,13 @@ limitations under the License.
 																					class="tab-box"> <span
 																						class="tab-icons tab-documents"></span> <span>Documents</span>
 																				</span>
-																				</a> <a href="#tab4-panel" class="mdl-tabs__tab" alt="Version History" title="Version History"> <span
+																				</a> <a href="#tab4-panel" class="mdl-tabs__tab" alt="Model Artifacts" title="Model Artifacts"> <span
 																					class="tab-box"> <span
-																						class="tab-icons tab-versionhistory"></span> <span>Version
-																							History</span>
+																						class="tab-icons tab-versionhistory"></span> <span>Model Artifacts</span>
 																				</span>
-																				</a> <a href="#tab5-panel" class="mdl-tabs__tab"> </a>
+																				</a> <a href="#tab5-panel" class="mdl-tabs__tab" alt="Author/Publisher Details" title="Author/Publisher Details">
+																				 <span class="tab-box"> <span class="tab-icons tab-author_details"></span> <span>Author/Publisher Details</span>
+																				</a>
 																			</div>
 																			<div>
 																				<h6 class="sectiontitle4">
@@ -2114,12 +2071,11 @@ limitations under the License.
 																				</div>
 
 																				<div class="description-img-container">
-																					<!-- <img class="modelimg1" src="images/imagegallery2.jpg" /> -->
-
 																					<!-- images changed for demo  -->
-																					<img
-																						ng-src="data:image/JPEG;base64,{{solution.picture}}" class="modelimg1"
-																						style="max-width: 400px; margin: 0 auto; display: block;">
+																					<figure>
+																				 		<img ng-src="/api/solutions/{{solution.solutionId}}/picture" class="modelimg1" style="max-width: 400px; margin: 0 auto; display: block;"
+																				 			onerror="this.onerror=null;this.src='images/default-model.png'"/>
+																					</figure>
 																				</div>
 
 																				<div ng-if="publicPreview"
@@ -2152,41 +2108,76 @@ limitations under the License.
 																						</tr>
 																					</thead>
 																					<tbody>
-																						<tr ng-show="publicPreview!=true" ng-repeat="supportingDoc in supportingDocs" >
-																							<td><span class="file-type"><i
-																									class="fa fa-file-word-o" aria-hidden="true"></i></span><a
-																								class="link-blue">{{supportingDoc.name}}</a></td>
+																						<tr class="supporting-doc"  ng-show="publicPreview!=true" ng-repeat="supportingDoc in supportingDocs" >
+																							<td><span class="file-type">
+																										<i class="far fa-file-word" ng-if="supportingDocsExt == 'docx'" aria-hidden="true"></i>
+																										<i class="far fa-file-image" ng-if="supportingDocsExt == 'png'" aria-hidden="true"></i>
+																										<i class="far fa-file-image" ng-if="supportingDocsExt == 'jpg'" aria-hidden="true"></i>
+																										<i class="far fa-file-pdf" ng-if="supportingDocsExt == 'pdf'" aria-hidden="true"></i>
+																										<i class="far fa-file-powerpoint" ng-if="supportingDocsExt == 'pptx'" aria-hidden="true"></i>
+																										<i class="far fa-file-excel" ng-if="supportingDocsExt == 'xlsx'" aria-hidden="true"></i>
+																										<i class="far fa-file-excel" ng-if="supportingDocsExt == 'csv'" aria-hidden="true"></i>
+																										<i class="far fa-file-alt" ng-if="supportingDocsExt == 'txt'" aria-hidden="true"></i>
+																										<i class="far fa-file-archive" ng-if="supportingDocsExt == 'zip'" aria-hidden="true"></i>
+																								</span>
+																								<span>{{supportingDoc.name}}</span></td>
 																							<td>{{versionId}}</td>
 																							<td>{{solution.modified | date:'MM/dd/yyyy' }}</td>
-																							<td><a ng-if="!publicPreview" 
-																									href="/api/solution/revision/document/{{supportingDoc.documentId}}" alt="Download" title="Download">
-																									<i class="fa fa-download" aria-hidden="true"></i> </a>
-																								<a ng-if="publicPreview" 
-																									href="/api/solution/revision/document/{{supportingDoc.documentId}}" alt="Download" title="Download">
-																									<i class="fa fa-download" aria-hidden="true"></i></a>
+																							<td>
+																								<md-button title="Preview Only" ng-if="!publicPreview"
+																									alt="Download"
+																									class="mdl-button mdl-js-button btn-grid-action mdl-transparent-background" 
+																									disabled="disabled">
+																									<span class="fa fa-download" aria-hidden="true"></span>
+																								</md-button>
+																							
+																								<md-button title="Preview Only" ng-if="publicPreview" 
+																									alt="Download"
+																									class="mdl-button mdl-js-button btn-grid-action mdl-transparent-background" 
+																									disabled="disabled">
+																									<span class="fa fa-download" aria-hidden="true"></span>
+																								</md-button>
 																							</td>
 																						</tr>
 
-																						<tr  ng-show="publicPreview==true" ng-repeat="supportingDoc in supportingPublicDocs">
-																							<td><span class="file-type"><i
-																									class="fa fa-file-word-o" aria-hidden="true"></i></span><a
-																								class="link-blue">{{supportingDoc.name}}</a></td>
+																						<tr class="supporting-doc" ng-show="publicPreview==true" ng-repeat="supportingDoc in supportingPublicDocs">
+																							<td><span class="file-type">
+																										<i class="far fa-file-word" ng-if="supportingPublicDocsExt == 'docx'" aria-hidden="true"></i>
+																										<i class="far fa-file-image" ng-if="supportingPublicDocsExt == 'png'" aria-hidden="true"></i>
+																										<i class="far fa-file-image" ng-if="supportingPublicDocsExt == 'jpg'" aria-hidden="true"></i>
+																										<i class="far fa-file-pdf" ng-if="supportingPublicDocsExt == 'pdf'" aria-hidden="true"></i>
+																										<i class="far fa-file-powerpoint" ng-if="supportingPublicDocsExt == 'pptx'" aria-hidden="true"></i>
+																										<i class="far fa-file-excel" ng-if="supportingPublicDocsExt == 'xlsx'" aria-hidden="true"></i>
+																										<i class="far fa-file-excel" ng-if="supportingPublicDocsExt == 'csv'" aria-hidden="true"></i>
+																										<i class="far fa-file-alt" ng-if="supportingPublicDocsExt == 'txt'" aria-hidden="true"></i>
+																										<i class="far fa-file-archive" ng-if="supportingPublicDocsExt == 'zip'" aria-hidden="true"></i>
+																								</span>
+																								<span>{{supportingDoc.name}}</span>
+																							</td>
 																							<td>{{versionId}}</td>
 																							<td>{{solution.modified | date:'MM/dd/yyyy' }}</td>
-																							<td><a ng-if="!publicPreview" 
-																									href="/api/solution/revision/document/{{supportingDoc.documentId}}" alt="Download" title="Download">
-																									<i class="fa fa-download" aria-hidden="true"></i> </a>
-																								<a ng-if="publicPreview" 
-																									href="/api/solution/revision/document/{{supportingDoc.documentId}}" alt="Download" title="Download">
-																									<i class="fa fa-download" aria-hidden="true"></i></a>
+																							<td> 	
+																								<md-button title="Preview Only" ng-if="!publicPreview"
+																									alt="Download"
+																									class="mdl-button mdl-js-button btn-grid-action mdl-transparent-background" 
+																									disabled="disabled">
+																									<i class="fa fa-download" aria-hidden="true"></i>
+																								</md-button>
+																							
+																								<md-button title="Preview Only" ng-if="publicPreview" 
+																									alt="Download"
+																									class="mdl-button mdl-js-button btn-grid-action mdl-transparent-background" 
+																									disabled="disabled">
+																									<i class="fa fa-download" aria-hidden="true"></i>
+																								</md-button>
+																								
 																							</td>
 																						</tr>
 																					</tbody>
 																				</table>
 																			</div>
 																			<div class="mdl-tabs__panel" id="tab4-panel">
-																				<h6 class="sectiontitle6">VERSION HISTORY OF
-																					SOLUTION</h6>
+																				<h6 class="sectiontitle6">Model Artifacts</h6>
 																				<table
 																					class="mdl-data-table mdl-js-data-table md-tbl1">
 																					<colgroup>
@@ -2197,9 +2188,10 @@ limitations under the License.
 																					</colgroup>
 																					<thead>
 																						<tr>
-																							<th>Version Name</th>
+																							<th>Artifact Name</th>
 																							<th>Version</th>
 																							<th>Modified on</th>
+																							<th>Size</th>
 																							<th>Action</th>
 																						</tr>
 																					</thead>
@@ -2213,10 +2205,11 @@ limitations under the License.
 																							</td>
 																							<td>{{value.version}}</td>
 																							<td>{{value.created | date:'MM/dd/yyyy'}}</td>
+																							<td>{{value.size | formatBytes:1}}</td>
 																							<td>
-																								<md-button 
-																									class="mdl-button mdl-js-button btn-grid-action" 
-																									href="/api/downloads/{{solution.solutionId}}?artifactId={{value.artifactId}}&revisionId={{revisionId}}&userId={{loginUserID}}&jwtToken={{auth}}" target="_blank">
+																								<md-button title="Preview Only"
+																									class="mdl-button mdl-js-button btn-grid-action mdl-transparent-background" 
+																									disabled="disabled">
 																									<i class="fa fa-download" aria-hidden="true"></i>
 																								</md-button>
 
@@ -2225,8 +2218,31 @@ limitations under the License.
 																					</tbody>
 																				</table>
 																			</div>
-																			<div class="mdl-tabs__panel" id="tab5-panel">Content
-																				5</div>
+																			<div class="mdl-tabs__panel" id="tab5-panel"><h6 class="sectiontitle6">Author/Publisher Details</h6>
+																				<table class="mdl-data-table mdl-js-data-table md-tbl1">
+																					<colgroup>
+																						<col />
+																						<col />								
+																					</colgroup>
+																					<thead>
+																						<tr>
+																							<th>Name</th>
+																							<th>Contact Information</th>									
+																						</tr>
+																					</thead>
+																					<tbody>								
+																						<tr ng-repeat="author in authorList">
+																							<td><span>{{author.name}}</span></td>
+																							<td><span>{{author.contact}}</span></td>									
+																						</tr>
+																						<tr ng-repeat="publisher in AuthorsTag track by $index">
+																							<td><span>{{publisher.name}}</span></td>
+																							<td><span>{{publisher.contact}}</span></td>
+																						</tr>
+																					</tbody>
+																				</table>
+																			</div>
+																			
 																			<!-- <div class="md-lower-container1">
                                                                                                                                     <div
                                                                                                                                           class="mdl-grid mdl-grid--no-spacing bdr-bottom">
@@ -2468,7 +2484,7 @@ limitations under the License.
 									
 									<li md-labeled-by-tooltip="md-tooltip-25" aria-hidden="false" >
 										<div class="imageplace"
-											ng-class="{'completed': publishRequest.requestStatusCode === 'AP', 'active': publishRequest.requestStatusCode === 'PE', 'incomplet' : publishRequest.requestStatusCode === 'DC'}">
+											ng-class="{'completed': publishRequest.requestStatusCode === 'AP' && version.accessTypeCode != 'OR', 'active': publishRequest.requestStatusCode === 'PE', 'incomplet' : publishRequest.requestStatusCode === 'DC'}">
 											<span class="imagecontent request-approval" alt="Security Scan" title=" Request Approval "></span>
 										</div>
 										<md-tooltip>{{publishRequest.comment}}</md-tooltip>
@@ -2828,12 +2844,16 @@ limitations under the License.
 															Marketplace for Other Revisions.</label>
 														<!--  <a>View more</a> -->
 														<select ng-model="fromRevisionId"
+															ng-change="changedDescVersion('PB')"
 															ng-options="v.version for v in versionList">
 															<option value="">-- Version --</option>
 														</select>
 														<md-button ng-click="copyFromOtherRevision('PB'); "
+															ng-disabled="!isSolutionDescAvailableBtn"
 															class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect btn-primary" alt="Copy" title="Copy">
 														Copy </md-button>
+														<div class="error_msg" ng-show="isSolutionDescError == true">
+															No description available.</div>
 													</div>
 													</p>
 													<!-- <div class="checkbox" ng-show="solutionPublicDesc.length<1 || solutionPublicDesc=='' 
@@ -3052,7 +3072,8 @@ limitations under the License.
 																			       <div class="drag-drop-files hide">
 																			              <p>doc.pdf</p>
 																			       </div>
-																					<div file-droppable filename="publicfilename" file=publicsolutionFile docerror="docerror" size=10000000>
+																					<div file-droppable filename="publicfilename" file=publicsolutionFile
+																					 docerror="docerror" size=10000000 validfilename = "validfilename">
 																			              <img src="images/upload-doc-vector.png" alt="" title=""/>
 																			              <div class="destext">Drag & Drop your file here!</div>
 																			       </div>
@@ -3060,7 +3081,7 @@ limitations under the License.
 																		<div file-upload file="$parent.solutionFile" 
 																						uploadid="publicDocumentuploadid" id="publicUploadFile"
 																						filename="$parent.publicfilename" 
-																						ng-model="solutionFile" accept = ""
+																						ng-model="solutionFile" accept = "" validfilename="validfilename"
 																						size=10000000 docerror="docerror" readonly alt="Browse" title="Browse">
 																						
 																		</div>
@@ -3076,7 +3097,10 @@ limitations under the License.
 													            		</div>
 													            		 <div class="help-inline validation-msgs">
 																			<span ng-show="docerror">Document should be of max size 10MB.</span>
-																		 </div>
+																		 </div>	
+																		 <div class="help-inline validation-msgs">
+																			<span ng-show="validfilename">Spaces and special characters are not allowed in file name.</span>
+																		 </div>																																			
 																	</div>
 																</form>
 															</div>
@@ -3096,7 +3120,7 @@ limitations under the License.
 																<md-button ng-show="!showPublicSolutionDocs"
 																	ng-click="updatePublicSolutionFiles('publicDocumentuploadid');"
 																	class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect btn-primary md-button md-ink-ripple"
-																	type="button" ng-disabled = "!solutionFile || docerror == true"
+																	type="button" ng-disabled = "!solutionFile || docerror == true || validfilename"
 																	data-upgraded=",MaterialButton,MaterialRipple" alt="Done" title="Done">
 																<span class="ng-scope"> Done </span> <span
 																	class="mdl-button__ripple-container ng-scope"><span
@@ -3105,7 +3129,7 @@ limitations under the License.
 																<md-button ng-show="showPublicSolutionDocs"
 																	ng-click="updatePublicSolutionFiles('publicDocumentuploadid');"
 																	class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect btn-primary md-button md-ink-ripple"
-																	type="button"
+																	type="button" ng-disabled = "validfilename"
 																	data-upgraded=",MaterialButton,MaterialRipple">
 																<span class="ng-scope"> Update </span> <span
 																	class="mdl-button__ripple-container ng-scope"><span
@@ -3125,14 +3149,18 @@ limitations under the License.
 														<label> Use the Documents you have in Public
 															Marketplace for Other Revisions.</label>
 														<!--  <a>View more</a> -->
-														<select ng-model="sourceRevisionId"
+														<select ng-model="sourceRevisionId" ng-change="changedDocVersion('PB', sourceRevisionId)"
 															ng-options="v.version for v in versionList">
 															<option value="">-- Version --</option>
 														</select>
 														<md-button
 															ng-click="copyDocsFromOtherRevision('PB'); "
-															class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect btn-primary" alt="Copy" title="Copy">
+															class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect btn-primary" 
+															ng-disabled="!isSolutionDocsAvailableBtn"
+															alt="Copy" title="Copy">
 														Copy </md-button>
+														<div class="error_msg" ng-show="isSolutionDocsAvailable == false">
+														No document available.</div>
 													</div>
 													<div class="checkbox" ng-if="!showPublicSolutionDocs">
 														<label> <input type="checkbox"
@@ -3338,7 +3366,7 @@ limitations under the License.
 																			<md-input-container><label class="md-required">Upload Image</label></md-input-container>
 																			<div class="upload-image-input">
 																				<div file-upload file=previewImage ng-click = "cancelSolImage()"
-																					uploadid="publicuploadid" id="solImage" size = 800000 imageerror = "imageerror"
+																					uploadid="publicuploadid" id="solImage" size = 1000000 imageerror = "imageerror"
 																					imagetypeerror = "imagetypeerror"
 																					filename="filename" fileinput="file" accept = "image/png, image/jpeg, image/gif"
 																					filepreview="previewImage" ng-model="solImage"
@@ -3348,7 +3376,7 @@ limitations under the License.
 																					ng-model="filename" readonly />
 																			</div>
 																			<div class="help-inline validation-msgs">
-																				<span ng-show = "imageerror">Image should be max size of 800KB.</span>
+																				<span ng-show = "imageerror">Image should be max size of 1MB.</span>
 																			</div>
 																			<div class="help-inline validation-msgs">
 																				<span ng-show = "imagetypeerror" >Image should be in 'jpg','jpeg','png' or 'gif' file format.</span>
@@ -3378,7 +3406,7 @@ limitations under the License.
                                                                                 </div>
                                                                              </div> -->
 																			<div>
-																				<p>JPG, GIF or PNG Max Size 800KB {{iconFile}}</p>
+																				<p>JPG, GIF or PNG Max Size 1MB {{iconFile}}</p>
 																			</div>
 																		</div>
 																	</div>
@@ -3459,8 +3487,8 @@ limitations under the License.
 												<!-- updateupload image for model popover end -->
 												<div class="uploaded-img-des" ng-show="showSolutionImage">
 													<div class="imagecontainer">
-														<img ng-src="data:image/JPEG;base64,{{solution.picture}}" alt="" title=""
-															ng-model="imgURLdefault" />
+														<img ng-src="/api/solutions/{{solution.solutionId}}/picture" alt="" title=""
+															ng-model="imgURLdefault"/>
 													</div>
 													<div class="file-name">
 														{{solutionImageName}} | <a
@@ -3545,7 +3573,7 @@ limitations under the License.
 								</div>
 								<div class="">
 									<button ng-click="publishtoMarket('PB')"
-										ng-disabled="activePublishBtnPB == false"
+										ng-disabled="activePublishBtnPB == false || (version.accessTypeCode=='PB' || publishRequest.requestStatusCode=='PE')"
 										class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect btn-primary " alt="Submit to Publication" title="Submit to Publication">
 										Submit to Publication</button>
 									<button
@@ -3958,7 +3986,7 @@ limitations under the License.
 						ng-class="{'isActive':tab=='delete'}">
 						
 						<p ng-show="isModelActive">Are you sure that you want to delete this model and all of its revisions, public or private?</p>
-						<button ng-click="activeFalse = false; updateSolution(); "
+						<button ng-click="activeFalse = false; openDeleteConfirmPopup(); "
 							ng-show="isModelActive"
 							class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect btn-primary" alt="Delete" title="Delete">
 							Delete Model</button>
@@ -4064,3 +4092,33 @@ limitations under the License.
 		</form>
 		</md-dialog>
 	</div>
+	
+<!-- Delete Confirmation starts -->
+	<div class="md-dialog-container" id="confirmPopupDeleteModel"
+		style="height: 0;">
+		<md-dialog aria-label="Delete Model"
+			> <md-toolbar>
+		<div class="md-toolbar-tools">
+			<h2>Delete Model: {{solution.name}}</h2>
+			<span flex></span>
+			<md-button class="md-icon-button" ng-click="closePoup()">
+			<i class="material-icons">close</i> </md-button>
+		</div>
+		</md-toolbar> <md-dialog-content>
+		<form ng-cloak>
+			<div class="md-dialog-content">
+				<p>Are you sure that you want to delete this model and all of its revisions, public or private?</p>											
+			</div>
+		</form>
+		</md-dialog-content> <md-dialog-actions>
+		<div class="dialog-footer-container1">
+			<md-button ng-click="closePoup()"
+				class="mdl-button mdl-js-button btn-secondary">
+			Cancel </md-button>
+			<md-button ng-click="deleteSolutions()"
+				class="mdl-button mdl-js-button btn-primary">
+			Confirm </md-button>
+		</div>
+		</md-dialog-actions> </md-dialog>
+	</div>
+<!-- Delete Confirmation ends -->

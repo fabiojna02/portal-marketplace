@@ -21,8 +21,9 @@ package org.acumos.be.test.service.impl;
 
 import static org.mockito.Mockito.mock;
 
+import java.lang.invoke.MethodHandles;
+import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 import org.acumos.cds.domain.MLPRole;
@@ -31,18 +32,19 @@ import org.acumos.portal.be.common.JsonRequest;
 import org.acumos.portal.be.service.impl.UserRoleServiceImpl;
 import org.acumos.portal.be.transport.MLRole;
 import org.acumos.portal.be.transport.MLRoleFunction;
-import org.acumos.portal.be.util.EELFLoggerDelegate;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @RunWith(MockitoJUnitRunner.class)		
 public class UserRoleServiceImplTest {
 
-	private static final EELFLoggerDelegate logger = EELFLoggerDelegate.getLogger(UserRoleServiceImplTest.class);
+	private static final Logger logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());	
 
 	@Mock
 	UserRoleServiceImpl impl = new UserRoleServiceImpl();
@@ -52,8 +54,8 @@ public class UserRoleServiceImplTest {
 		try{			
 			
 			boolean active = true;
-			Date created = new Date();
-			Date modified = new Date();
+			Instant created = Instant.now();
+			Instant modified = Instant.now();
 			List<String> permissionList = new ArrayList<String>();
 			permissionList.add("a");
 			permissionList.add("b");
@@ -84,8 +86,8 @@ public class UserRoleServiceImplTest {
 			String userId = "1810f833-8698-4233-add4-091e34b8703c";
 			List<MLRole> list = new ArrayList<MLRole>();
 			boolean active = true;
-			Date created = new Date();
-			Date modified = new Date();
+			Instant created = Instant.now();
+			Instant modified = Instant.now();
 			List<String> permissionList = new ArrayList<String>();
 			permissionList.add("a");
 			permissionList.add("b");
@@ -131,7 +133,7 @@ public class UserRoleServiceImplTest {
 	public void createRole(){
 		try{
 			String roleId = "12345678-abcd-90ab-cdef-1234567890ab";
-			Date date = new Date();
+			Instant date = Instant.now();
 			MLRole role = new MLRole();
 			role.setActive(true);
 			role.setCreated(date);
@@ -156,7 +158,7 @@ public class UserRoleServiceImplTest {
 		try{
 			JsonRequest<MLPRole> roleJson = new JsonRequest<>();
 			String roleId = "12345678-abcd-90ab-cdef-1234567890ab";
-			Date date = new Date();
+			Instant date = Instant.now();
 			MLPRole mlpRole = new MLPRole();
 			mlpRole.setCreated(date);
 			mlpRole.setModified(date);
@@ -194,10 +196,10 @@ public class UserRoleServiceImplTest {
 			String roleId = "12345678-abcd-90ab-cdef-1234567890ab";
 			String roleFunctionId = "7e978f26-7776-4738-a528-3a7f3f2d3c4f";
 			MLRoleFunction mlRoleFunction = new MLRoleFunction();
-			mlRoleFunction.setCreated(new Date());
+			mlRoleFunction.setCreated(Instant.now());
 			MLRole mlRole = new MLRole();
-			mlRole.setCreated(new Date());
-			mlRole.setModified(new Date());
+			mlRole.setCreated(Instant.now());
+			mlRole.setModified(Instant.now());
 			mlRole.setName("abc");
 			mlRole.setRoleId(roleId);
 			mlRoleFunction.setMlRole(mlRole);
@@ -213,7 +215,7 @@ public class UserRoleServiceImplTest {
 	@Test
 	public void createRoleFunction(){
 		try{
-			Date date = new Date();
+			Instant date = Instant.now();
 			MLPRoleFunction mlRoleFunction = new MLPRoleFunction();
 			mlRoleFunction.setCreated(date);
 			mlRoleFunction.setModified(date);
@@ -230,7 +232,7 @@ public class UserRoleServiceImplTest {
 	@Test
 	public void updateRoleFunction(){
 		try{
-			Date date = new Date();
+			Instant date = Instant.now();
 			JsonRequest<MLPRoleFunction> mlpRoleFunction = new JsonRequest<>();
 			MLPRoleFunction body = new MLPRoleFunction();
 			body.setCreated(date);

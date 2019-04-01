@@ -20,8 +20,11 @@
 
 package org.acumos.portal.be.common;
 
+import java.lang.invoke.MethodHandles;
+
 import org.acumos.portal.be.config.GatewayClientConfiguration;
-import org.acumos.portal.be.util.EELFLoggerDelegate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Scope;
@@ -35,7 +38,7 @@ import org.springframework.stereotype.Component;
 @Scope("singleton")
 public class Clients {
 	
-	private final EELFLoggerDelegate log = EELFLoggerDelegate.getLogger(Clients.class);
+	private final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());	
 
 	@Autowired
 	private ApplicationContext appCtx = null;
@@ -51,15 +54,17 @@ public class Clients {
 	}
 		
 	public Clients() {
-		log.info(EELFLoggerDelegate.debugLogger, "Clients::new");
+		log.info("Clients::new");
 	}	
 
 	/**
 	 * Build a client for the given local uri
 	 */
 	public GatewayClient getGatewayClient() {
-		return new GatewayClient(
-				env.getProperty("gateway.url"),
-				gatewayClientConfiguration.buildClient());
+		final String gatewayUrlKey = "gateway.url";
+        final String gatewayUrl = env.getProperty(gatewayUrlKey);
+        if (gatewayUrl == null || gatewayUrl.isEmpty())
+            throw new IllegalArgumentException("getGatewayClient: failed to find config " + gatewayUrlKey);
+        return new GatewayClient(gatewayUrl, gatewayClientConfiguration.buildClient());
 	}	
 }

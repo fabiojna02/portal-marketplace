@@ -23,6 +23,8 @@
  */
 package org.acumos.portal.be.controller;
 
+import java.lang.invoke.MethodHandles;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -32,8 +34,9 @@ import org.acumos.portal.be.common.JsonResponse;
 import org.acumos.portal.be.service.ValidationStatusService;
 import org.acumos.portal.be.transport.MLModelValidationCheck;
 import org.acumos.portal.be.transport.MLModelValidationStatus;
-import org.acumos.portal.be.util.EELFLoggerDelegate;
 import org.acumos.portal.be.util.SanitizeUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -48,7 +51,7 @@ import io.swagger.annotations.ApiOperation;
 @RequestMapping("/")
 public class ValidationStatusController  extends AbstractController {
 
-private static final EELFLoggerDelegate log = EELFLoggerDelegate.getLogger(ValidationStatusController.class);
+private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());	
 	
 	@Autowired
 	private ValidationStatusService validationStatusService;
@@ -60,7 +63,7 @@ private static final EELFLoggerDelegate log = EELFLoggerDelegate.getLogger(Valid
 		// TODO Auto-generated constructor stub
 	}
 
-	@ApiOperation(value = "Updates the validation status for the given TaskId, solutionId and revision Id in the Database. To be invoked by Validation Backend", response = JsonResponse.class)
+	/*@ApiOperation(value = "Updates the validation status for the given TaskId, solutionId and revision Id in the Database. To be invoked by Validation Backend", response = JsonResponse.class)
     @RequestMapping(value = {APINames.MODEL_VALIDATION_UPDATE},method = RequestMethod.PUT, produces = APPLICATION_JSON)
     @ResponseBody
     public JsonResponse<Object> updateValidationTaskStatus(HttpServletRequest request, @PathVariable("taskId") String taskId, @RequestBody MLModelValidationStatus mlModelValidationStatus,
@@ -68,7 +71,7 @@ private static final EELFLoggerDelegate log = EELFLoggerDelegate.getLogger(Valid
 		
 		taskId = SanitizeUtils.sanitize(taskId);
 		
-		log.debug(EELFLoggerDelegate.debugLogger, "updateValidationTaskStatus={}", taskId);
+		log.debug("updateValidationTaskStatus={}", taskId);
 		JsonResponse<Object> data = new JsonResponse<>();
 		try {
 			validationStatusService.updateValidationTaskStatus(taskId, mlModelValidationStatus);
@@ -79,12 +82,12 @@ private static final EELFLoggerDelegate log = EELFLoggerDelegate.getLogger(Valid
 			data.setErrorCode(JSONTags.TAG_ERROR_CODE);
 			data.setStatusCode(400);
 			data.setResponseDetail("Validation status updated Failed");
-			log.error(EELFLoggerDelegate.errorLogger, "Exception Occurred while updateValidationTaskStatus()", e);
+			log.error("Exception Occurred while updateValidationTaskStatus()", e);
 		}
 		return data;
-	}
+	}*/
 	
-	@ApiOperation(value = "Gets the validation status for the given solutionId and revision Id", response = MLModelValidationCheck.class)
+	/*@ApiOperation(value = "Gets the validation status for the given solutionId and revision Id", response = MLModelValidationCheck.class)
     @RequestMapping(value = {APINames.MODEL_VALIDATION},method = RequestMethod.GET, produces = APPLICATION_JSON)
     @ResponseBody
     public JsonResponse<MLModelValidationCheck> getValidationTaskStatus(HttpServletRequest request, @PathVariable("solutionId") String solutionId, @PathVariable("revisionId") String revisionId, 
@@ -93,7 +96,7 @@ private static final EELFLoggerDelegate log = EELFLoggerDelegate.getLogger(Valid
 		solutionId = SanitizeUtils.sanitize(solutionId);
 		revisionId = SanitizeUtils.sanitize(revisionId);
 		
-		log.debug(EELFLoggerDelegate.debugLogger, "getValidationTaskStatus={}", solutionId, revisionId);
+		log.debug("getValidationTaskStatus={}", solutionId, revisionId);
 		JsonResponse<MLModelValidationCheck> data = new JsonResponse<>();
 		try {
 			MLModelValidationCheck status = validationStatusService.getSolutionValidationTaskStatus(solutionId, revisionId);
@@ -111,9 +114,9 @@ private static final EELFLoggerDelegate log = EELFLoggerDelegate.getLogger(Valid
 			data.setErrorCode(JSONTags.TAG_ERROR_CODE);
 			data.setStatusCode(400);
 			data.setResponseDetail("Validation status retrieval Failed");
-			log.error(EELFLoggerDelegate.errorLogger, "Exception Occurred while getValidationTaskStatus()", e);
+			log.error("Exception Occurred while getValidationTaskStatus()", e);
 		}
 		return data;
-	}
+	}*/
 	
 }

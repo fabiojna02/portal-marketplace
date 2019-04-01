@@ -350,211 +350,251 @@ limitations under the License.
 						<div class="admin-tab-heading">
 							<span class="admin-title2">Site Content</span>
 						</div>
-						<h6 class="sectiontitle6">Customize Home Page</h6>
-						<div class="sc-container1">
-							<div class="sc-container1-child-left">
-								<div class="sc-child1">
-									<span>Top Carousel</span>
+	<div class="site-content-wrapper">
+							<md-tabs class="site-content-tabcontrol" md-dynamic-height md-border-bottom>
+						      <md-tab label="Content Pages">
+						        <md-content class="md-padding">
+						          
+									
 									<div>
-										<button class="mdl-button mdl-js-button btn-secondary sc-btn1"
-											ng-click='carouselSlide={};topSC="";showAddSlidesPopup()'>Add Slide</button>
-										<div class="select-control">
-											<md-select placeholder="Enable/Disable Slides"
-												class="dc-cloud-list" ng-model="changeAction"
-												ng-change='changeCarouselSlides()'> <md-option
-												title="Enable" value="true">Enable</md-option> <md-option
-												title="Disable" value="false">Disable</md-option> </md-select>
+										<h6 class="sectiontitle6">Footer Contact Information</h6>
+										<!-- Rich text control goes here -->
+										<div class="rowcontainer admin-sccontainer1"> 
+						<ng-quill-editor ng-model="contactInfo" placeholder="Add your Contact Information here...
+						Address:,EMAIL:,ContactNo:,Fax:etc"   name="contactInfo"   required ng-blur="contactInfoVisited=true"  ng-focus="contactInfoVisited=false"></ng-quill-editor>
+			
+					              </div>		
+										<div>
+											<button class="mdl-button mdl-js-button btn-primary"  ng-click="TopostContactupdate()" ng-disabled="contactInfo1==contactInfo">
+												<span>Save</span>
+											</button>
 										</div>
 									</div>
+									<div>
+										<h6 class="sectiontitle6">Terms and Conditions</h6>
+										<!-- Rich text control goes here -->
+										<div class="rowcontainer admin-sccontainer1">
+										<ng-quill-editor ng-model="termcondition1"  placeholder="Add terms and conditions here."></ng-quill-editor>
+										</div>
+											<div>
+												<button class="mdl-button mdl-js-button btn-primary" ng-click = "TopostConditionupdate()" ng-disabled="termcondition1==termcondition2">
+													<span>Save</span>
+												</button>
+											</div>
+										</div>
+									<br />
+									<br />
+									</form>		          
+						        </md-content>
+						      </md-tab>
+						      <md-tab label="Carousels">
+						        <md-content class="md-padding">
+						        	<h6 class="sectiontitle6">Customize Home Page</h6>
+							        <div class="sc-container1">
+										<div class="sc-container1-child-left">
+											<div class="sc-child1">
+												<span>Top Carousel</span>
+												<div>
+													<button class="mdl-button mdl-js-button btn-secondary sc-btn1"
+														ng-click='carouselSlide={};topSC="";showAddSlidesPopup()'>Add Slide</button>
+													<div class="select-control">
+														<md-select placeholder="Enable/Disable Slides"
+															class="dc-cloud-list" ng-model="changeAction"
+															ng-change='changeCarouselSlides()'> <md-option
+															title="Enable" value="true">Enable</md-option> <md-option
+															title="Disable" value="false">Disable</md-option> </md-select>
+													</div>
+												</div>
+											</div>
+									<div ng-repeat="(key,item) in carouselConfig">
+										<section class="sc-cell-container"
+											ng-class="item.slideEnabled == 'false' ? 'disabled-container' : ''">
+											<div class="sc-cell-childtop">
+												<div>
+													<md-checkbox aria-label="Checkbox 1"
+														ng-click="toggleCarouselCheckedList(key)"> </md-checkbox>
+													<span class="sc-slide-title">{{item.name}}</span> <span
+														class="sc-slide-status text-green"
+														ng-show="item.slideEnabled == 'true'">Enabled</span> <span
+														class="sc-slide-status text-red"
+														ng-show="item.slideEnabled == 'false'">Disabled</span>
+												</div>
+												<div>
+													<md-button class="sc-link-btn1"
+														ng-click="editCarouselSlide(key, item)">Edit</md-button>
+													<span>|</span>
+													<md-button class="sc-link-btn1" ng-if="key != 0"
+														ng-click="confirmDeleteTopCarousel($event, key)">Delete</md-button>
+													<span ng-if="key != 0">|</span>
+													<md-button class="sc-link-btn1"
+														ng-click="showOrderSlidesPopup($event, key)">Set
+													order</md-button>
+													<label class="sc-counter-container"><span
+														class="sc-slide-counter">{{key}}</span></label>
+												</div>
+											</div>
+											<div class="sc-cell-childmiddle">
+												<div class="sc-img-container">
+													<img src="../images/default-model.png" />
+												</div>
+												<div class="sc-text-container">
+													<span>{{item.headline}}</span>
+													<p ng-bind-html="item.supportingContent"></p>
+												</div>
+											</div>
+											<div class="sc-cell-childbottom">
+												<label class="sc-bottom-text1">Button Names</label>
+												<div>
+													<span>{{item.links.primary.label}}</span> <span>{{item.links.secondary.label}}</span>
+												</div>
+											</div>
+										</section>
+									</div>
 								</div>
-								<div ng-repeat="(key,item) in carouselConfig">
-									<section class="sc-cell-container"
-										ng-class="item.slideEnabled == 'false' ? 'disabled-container' : ''">
-										<div class="sc-cell-childtop">
-											<div>
-												<md-checkbox aria-label="Checkbox 1"
-													ng-click="toggleCarouselCheckedList(key)"> </md-checkbox>
-												<span class="sc-slide-title">{{item.name}}</span> <span
-													class="sc-slide-status text-green"
-													ng-show="item.slideEnabled == 'true'">Enabled</span> <span
-													class="sc-slide-status text-red"
-													ng-show="item.slideEnabled == 'false'">Disabled</span>
-											</div>
-											<div>
-												<md-button class="sc-link-btn1"
-													ng-click="editCarouselSlide(key, item)">Edit</md-button>
-												<span>|</span>
-												<md-button class="sc-link-btn1" ng-if="key != 0"
-													ng-click="confirmDeleteTopCarousel($event, key)">Delete</md-button>
-												<span ng-if="key != 0">|</span>
-												<md-button class="sc-link-btn1"
-													ng-click="showOrderSlidesPopup($event, key)">Set
-												order</md-button>
-												<label class="sc-counter-container"><span
-													class="sc-slide-counter">{{key}}</span></label>
+								<div class="sc-container1-child-right">
+									<md-tabs md-dynamic-height md-border-bottom> <md-tab
+										label="Event Carousel"> <md-content>
+									<div class="sc-child1">
+										<div>
+											<button class="mdl-button mdl-js-button btn-secondary sc-btn1"
+												ng-click='eventCarousel={};eventSC="";showEventSlidesPopup()'>Add Slide</button>
+											<div class="select-control">
+												<md-select placeholder="Enable/Disable Slides"
+													class="dc-cloud-list" ng-model="changeEventAction"
+													ng-change="changeEventSlides()"> <md-option
+													value="true">Enable</md-option> <md-option value="false">Disable</md-option>
+												</md-select>
 											</div>
 										</div>
-										<div class="sc-cell-childmiddle">
-											<div class="sc-img-container">
-												<img src="../images/default-model.png" />
+										<div>
+											<md-switch ng-model="eventConfig.enabled"
+												aria-label="Switch 1" class="md-warn"
+												ng-change="disableEventCarousel()"> <span
+												class="text-xsmall text-green"
+												ng-if="eventConfig.enabled == true">Enabled</span> <span
+												class="text-xsmall text-red"
+												ng-if="eventConfig.enabled == false || eventConfig.enabled == null ">Disabled</span>
+											</md-switch>
+										</div>
+									</div>
+									<div ng-repeat="(key,item) in eventConfig"
+										ng-if="key != 'enabled'">
+										<section class="sc-cell-container"
+											ng-class="item.slideEnabled == 'false' ? 'disabled-container' : ''">
+											<div class="sc-cell-childtop">
+												<div>
+													<md-checkbox aria-label="Checkbox 1"
+														ng-click="toggleEventCheckedList(key)"> </md-checkbox>
+													<span class="sc-slide-title">{{item.name}}</span> <span
+														class="sc-slide-status text-green"
+														ng-show="item.slideEnabled == 'true'">Enabled</span> <span
+														class="sc-slide-status text-red"
+														ng-show="item.slideEnabled == 'false'">Disabled</span>
+												</div>
+												<div>
+													<md-button class="sc-link-btn1"
+														ng-click="editEventSlide(key, item)">Edit</md-button>
+													<span>|</span>
+													<md-button class="sc-link-btn1"
+														ng-click="confirmDeleteEventCarousel($event, key)">Delete</md-button>
+													<span>|</span>
+													<md-button class="sc-link-btn1"
+														ng-click="showOrderEventSlidesPopup($event, key)">Set
+													order</md-button>
+													<label class="sc-counter-container"><span
+														class="sc-slide-counter">{{key}}</span></label>
+												</div>
 											</div>
-											<div class="sc-text-container">
-												<span>{{item.headline}}</span>
-												<p ng-bind-html="item.supportingContent"></p>
+											<div class="sc-cell-childmiddle">
+												<div class="sc-img-container">
+													<img src="../images/default-model.png" />
+												</div>
+												<div class="sc-text-container">
+													<span>{{item.headline}}</span>
+													<p ng-bind-html="item.supportingContent"></p>
+												</div>
+											</div>
+											<div class="sc-cell-childbottom">
+												<label class="sc-bottom-text1">Button Names</label>
+												<div>
+													<span>Not mentioned</span>
+												</div>
+											</div>
+										</section>
+									</div>
+									</md-content> </md-tab> <md-tab label="Success Story Carousel"> <md-content>
+									<div class="sc-child1">
+										<div>
+											<button class="mdl-button mdl-js-button btn-secondary sc-btn1"
+												ng-click="successCarousel={};successSC='';showStorySlidesPopup()">Add Slide</button>
+											<div class="select-control">
+												<md-select placeholder="Enable/Disable Slides"
+													class="dc-cloud-list" ng-model="changeStoryAction"
+													ng-change="changeStorySlides()"> <md-option
+													value="true">Enable</md-option> <md-option value="false">Disable</md-option>
+												</md-select>
 											</div>
 										</div>
-										<div class="sc-cell-childbottom">
-											<label class="sc-bottom-text1">Button Names</label>
-											<div>
-												<span>{{item.links.primary.label}}</span> <span>{{item.links.secondary.label}}</span>
-											</div>
+										<div>
+											<md-switch ng-model="storyConfig.enabled"
+												aria-label="Switch 1" class="md-warn"
+												ng-change="disableStoryCarousel()"> <span
+												class="text-xsmall text-green"
+												ng-if="storyConfig.enabled == true">Enabled</span> <span
+												class="text-xsmall text-red"
+												ng-if="storyConfig.enabled == false || storyConfig.enabled == null ">Disabled</span>
+											</md-switch>
 										</div>
-									</section>
+									</div>
+									<div ng-repeat="(key,item) in storyConfig"
+										ng-if="key != 'enabled'">
+										<section class="sc-cell-container"
+											ng-class="item.slideEnabled == 'false' ? 'disabled-container' : ''">
+											<div class="sc-cell-childtop">
+												<div>
+													<md-checkbox ng-click="toggleStoryCheckedList(key)"
+														aria-label="Checkbox 1"> </md-checkbox>
+													<span class="sc-slide-title">{{item.name}}</span> <span
+														class="sc-slide-status text-green"
+														ng-show="item.slideEnabled == 'true'">Enabled</span> <span
+														class="sc-slide-status text-red"
+														ng-show="item.slideEnabled == 'false'">Disabled</span>
+												</div>
+												<div>
+													<md-button class="sc-link-btn1"
+														ng-click="editStorySlide(key, item)">Edit</md-button>
+													<span>|</span>
+													<md-button class="sc-link-btn1"
+														ng-click="confirmDeleteStoryCarousel($event, key)">Delete</md-button>
+													<span>|</span>
+													<md-button class="sc-link-btn1"
+														ng-click="showOrderStorySlidesPopup($event, key)">Set
+													order</md-button>
+													<label class="sc-counter-container"><span
+														class="sc-slide-counter">{{key}}</span></label>
+												</div>
+											</div>
+											<div class="sc-cell-childmiddle">
+												<div class="sc-img-container">
+													<img src="../images/Success_badge.png" />
+												</div>
+												<div class="sc-text-container">
+													<p ng-bind-html="item.supportingContent"></p>
+												</div>
+											</div>
+											<div class="sc-cell-childbottom">
+												<label class="sc-bottom-text1">{{item.authorName}}</label>
+											</div>
+										</section>
+									</div>
+									</md-content> </md-tab> </md-tabs>
 								</div>
 							</div>
-							<div class="sc-container1-child-right">
-								<md-tabs md-dynamic-height md-border-bottom> <md-tab
-									label="Event Carousel"> <md-content>
-								<div class="sc-child1">
-									<div>
-										<button class="mdl-button mdl-js-button btn-secondary sc-btn1"
-											ng-click='eventCarousel={};eventSC="";showEventSlidesPopup()'>Add Slide</button>
-										<div class="select-control">
-											<md-select placeholder="Enable/Disable Slides"
-												class="dc-cloud-list" ng-model="changeEventAction"
-												ng-change="changeEventSlides()"> <md-option
-												value="true">Enable</md-option> <md-option value="false">Disable</md-option>
-											</md-select>
-										</div>
-									</div>
-									<div>
-										<md-switch ng-model="eventConfig.enabled"
-											aria-label="Switch 1" class="md-warn"
-											ng-change="disableEventCarousel()"> <span
-											class="text-xsmall text-green"
-											ng-if="eventConfig.enabled == true">Enabled</span> <span
-											class="text-xsmall text-red"
-											ng-if="eventConfig.enabled == false || eventConfig.enabled == null ">Disabled</span>
-										</md-switch>
-									</div>
-								</div>
-								<div ng-repeat="(key,item) in eventConfig"
-									ng-if="key != 'enabled'">
-									<section class="sc-cell-container"
-										ng-class="item.slideEnabled == 'false' ? 'disabled-container' : ''">
-										<div class="sc-cell-childtop">
-											<div>
-												<md-checkbox aria-label="Checkbox 1"
-													ng-click="toggleEventCheckedList(key)"> </md-checkbox>
-												<span class="sc-slide-title">{{item.name}}</span> <span
-													class="sc-slide-status text-green"
-													ng-show="item.slideEnabled == 'true'">Enabled</span> <span
-													class="sc-slide-status text-red"
-													ng-show="item.slideEnabled == 'false'">Disabled</span>
-											</div>
-											<div>
-												<md-button class="sc-link-btn1"
-													ng-click="editEventSlide(key, item)">Edit</md-button>
-												<span>|</span>
-												<md-button class="sc-link-btn1"
-													ng-click="confirmDeleteEventCarousel($event, key)">Delete</md-button>
-												<span>|</span>
-												<md-button class="sc-link-btn1"
-													ng-click="showOrderEventSlidesPopup($event, key)">Set
-												order</md-button>
-												<label class="sc-counter-container"><span
-													class="sc-slide-counter">{{key}}</span></label>
-											</div>
-										</div>
-										<div class="sc-cell-childmiddle">
-											<div class="sc-img-container">
-												<img src="../images/default-model.png" />
-											</div>
-											<div class="sc-text-container">
-												<span>{{item.headline}}</span>
-												<p ng-bind-html="item.supportingContent"></p>
-											</div>
-										</div>
-										<div class="sc-cell-childbottom">
-											<label class="sc-bottom-text1">Button Names</label>
-											<div>
-												<span>Not mentioned</span>
-											</div>
-										</div>
-									</section>
-								</div>
-								</md-content> </md-tab> <md-tab label="Success Story Carousel"> <md-content>
-								<div class="sc-child1">
-									<div>
-										<button class="mdl-button mdl-js-button btn-secondary sc-btn1"
-											ng-click="successCarousel={};successSC='';showStorySlidesPopup()">Add Slide</button>
-										<div class="select-control">
-											<md-select placeholder="Enable/Disable Slides"
-												class="dc-cloud-list" ng-model="changeStoryAction"
-												ng-change="changeStorySlides()"> <md-option
-												value="true">Enable</md-option> <md-option value="false">Disable</md-option>
-											</md-select>
-										</div>
-									</div>
-									<div>
-										<md-switch ng-model="storyConfig.enabled"
-											aria-label="Switch 1" class="md-warn"
-											ng-change="disableStoryCarousel()"> <span
-											class="text-xsmall text-green"
-											ng-if="storyConfig.enabled == true">Enabled</span> <span
-											class="text-xsmall text-red"
-											ng-if="storyConfig.enabled == false || storyConfig.enabled == null ">Disabled</span>
-										</md-switch>
-									</div>
-								</div>
-								<div ng-repeat="(key,item) in storyConfig"
-									ng-if="key != 'enabled'">
-									<section class="sc-cell-container"
-										ng-class="item.slideEnabled == 'false' ? 'disabled-container' : ''">
-										<div class="sc-cell-childtop">
-											<div>
-												<md-checkbox ng-click="toggleStoryCheckedList(key)"
-													aria-label="Checkbox 1"> </md-checkbox>
-												<span class="sc-slide-title">{{item.name}}</span> <span
-													class="sc-slide-status text-green"
-													ng-show="item.slideEnabled == 'true'">Enabled</span> <span
-													class="sc-slide-status text-red"
-													ng-show="item.slideEnabled == 'false'">Disabled</span>
-											</div>
-											<div>
-												<md-button class="sc-link-btn1"
-													ng-click="editStorySlide(key, item)">Edit</md-button>
-												<span>|</span>
-												<md-button class="sc-link-btn1"
-													ng-click="confirmDeleteStoryCarousel($event, key)">Delete</md-button>
-												<span>|</span>
-												<md-button class="sc-link-btn1"
-													ng-click="showOrderStorySlidesPopup($event, key)">Set
-												order</md-button>
-												<label class="sc-counter-container"><span
-													class="sc-slide-counter">{{key}}</span></label>
-											</div>
-										</div>
-										<div class="sc-cell-childmiddle">
-											<div class="sc-img-container">
-												<img src="../images/Success_badge.png" />
-											</div>
-											<div class="sc-text-container">
-												<p ng-bind-html="item.supportingContent"></p>
-											</div>
-										</div>
-										<div class="sc-cell-childbottom">
-											<label class="sc-bottom-text1">{{item.authorName}}</label>
-										</div>
-									</section>
-								</div>
-								</md-content> </md-tab> </md-tabs>
-							</div>
-						</div>
-						<!-- <div class="sc-button-container">
-														<button type="button" class="mdl-button mdl-js-button btn-primary">Publish Home Page</button>
-														<button type="button" class="mdl-button mdl-js-button btn-secondary">Save As Draft</button>
-													</div> -->
+							
+						        </md-content>
+						      </md-tab>					      
+						    </md-tabs>
+					    </div>
 					</div>
 
 					<div class="mdl-tabs__panel" id="tab4-panel">
@@ -815,7 +855,7 @@ limitations under the License.
 								</div>
 							</div>
 						</div>
-						<div class="admin-grid-container fedtbl">
+						<div class="admin-grid-container fedtbl tbl-overflowscroll">
 							<table
 								class="mdl-data-table mdl-js-data-table mdl-shadow--2dp admin-tbl1">
 								<colgroup>
@@ -885,14 +925,10 @@ limitations under the License.
 											href="{{val.apiUrl}}">{{val.apiUrl}}</a> <!-- <a class="disblock" data-target>{{val.webUrl}}</a> -->
 										</td>
 										<td><label class="disblock disabledRowChild">{{val.contact1}}</label>
-											<!-- <label class="disblock">{{val.contact2}}</label> --></td>
+											</td>
 										<td>
-											<!-- <label class="disabledRowChild">{{val.subscriptionCount}} Subscriptions </label> -->
-											<label class="disabledRowChild"
-											ng-repeat="count in subscriptionCount"> <label
-												ng-show="val.peerId == count.peerId">
-													{{count.subscriptionLength}} Subscriptions</label>
-										</label> <a class="fed-view-link text-small" data-target
+											<label class="disabledRowChild">{{subscriptionCounts[val.peerId]}}
+											</label><a class="fed-view-link text-small" data-target
 											ng-click="mdPrimaryClass=false;subscripDetails1 = false;showPopupPeeR1($event,val);">View/Add</a>
 										</td>
 										<td>
@@ -1828,7 +1864,7 @@ limitations under the License.
 			<md-dialog-content>
 			<div class="md-dialog-content">
 				<div layout="row" class="admin-grid1">
-					<div flex="40">
+					<div flex="50">
 						<md-input-container class="md-block" flex-gt-sm>
 						<label>Peer Name</label> <input type="text" name='peerName'
 							required ng-model='peerNamePop' /> </md-input-container>
@@ -1839,17 +1875,16 @@ limitations under the License.
 												<input type="text"  required ng-model='subNamePop'/> 
 											</md-input-container>
 										  </div> -->
-					<div flex="40">
+					<div flex="50">
 						<md-input-container class="md-block" flex-gt-sm>
 						<label>Peer Admin Email</label> <input type="text" required
 							ng-model='emailIdPop'
 							ng-pattern="/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/" /> </md-input-container>
 					</div>
-					<div flex="20"></div>
+					
 				</div>
-				<h6 class="sectiontitle">Gateway Information</h6>
-				<div layout="row" class="admin-grid1">
-					<div flex="40">
+				<h6 class="sectiontitle">Gateway Information</h6>				
+					<div>
 						<md-input-container class="md-block" flex-gt-sm>
 						<!-- <label>Subject Name</label> -->
 						<div class="admin-lbl-container-1">
@@ -1857,45 +1892,51 @@ limitations under the License.
 								class="admin-help-link admin-lbl-item2" title="Server FQDN"><i
 								class="material-icons">help</i></a>
 						</div>
-						<input type="text" required ng-model='subNamePop' ng-change="checkUrlChange()" /> </md-input-container>
+						<input name="fqdn" type="text" required ng-model='subNamePop'
+							ng-pattern="/((?!^([0-9]+\.)*[0-9]+$)^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$)/"
+							ng-change="checkUrlChange()" />
+						<div ng-messages="peerForm.fqdn.$error" role="alert" ng-show="peerForm.fqdn.$dirty && peerForm.fqdn.$error.pattern">
+      						<div ng-message="pattern" class="disblock text-red text-xsmall">Invalid FQDN</div>
+    					</div>
+						</md-input-container>
 					</div>
-					<div flex="40" layout="column" class="">
+					<div layout="row" class="admin-grid1">
+					<div flex="90" layout="column" class="">
 						<div class="fed-container3">
 							<md-input-container class="md-block" flex-gt-sm>
-							<label>API Url</label> <input type="text" required
+							<label>API URL</label> <input type="text" required
 								ng-model='apiUrlPop' ng-change="checkUrlChange()"/> </md-input-container>
 						</div>
-						<div class="fed-err-msg" ng-if="!verified&&!verify">
-							<!-- <span class="disblock text-red text-xsmall">Error-01-Host unreachable:Network error Please check your URL.</span> -->
-							<span class="disblock text-red text-xsmall"
-								ng-bind="errorMessage"></span>
-						</div>
-						<div class="fed-err-msg" ng-if="verified&&!verify">
-							<span class="disblock text-green text-xsmall">Connection
-								is settled successfully with your peer.</span>
-						</div>
 					</div>
-					<div flex="20" class="fed-container2">
-						<label class="disblock">&nbsp;</label> <a
-							class="mdl-button mdl-js-button btn-secondary btn-fed1"
-							ng-disabled="!itsEdit" ng-click="verifyUrl(apiUrlPop)"
-							ng-if="verify">Verify</a> <a flex
+					<div flex="10" class="fed-container2">						 
+							<a class="mdl-button mdl-js-button btn-secondary btn-fed1" 
+							ng-click="verifyUrl(apiUrlPop)">Verify</a> 
+							<!-- <a flex
 							class="mdl-button mdl-js-button btn-secondary btn-fed1 red-btn"
-							ng-click="verifyUrl(apiUrlPop)" ng-if="!verified&&!verify">Not
-							Verified</a> <a flex
+							ng-click="verifyUrl(apiUrlPop)" ng-show="!verified&&!verify">Not
+							Verified</a> 
+							<a flex
 							class="mdl-button mdl-js-button btn-secondary btn-fed1 green-btn"
-							ng-click="verifyUrl(apiUrlPop)" ng-if="verified&&!verify">Verified</a>
+							ng-click="verifyUrl(apiUrlPop)" ng-show="verified&&!verify">Verified</a> -->
 					</div>
 				</div>
 				<div layout="row">
 					<div flex="100">
 						<md-input-container class="md-block"> <label>Description</label>
 						<!-- <textarea ng-model="addPeer.biography" rows="4" md-select-on-focus></textarea> -->
-						<textarea ng-model="descriptionPop" rows="4"></textarea> </md-input-container>
+						<textarea ng-model="descriptionPop" rows="2"></textarea> </md-input-container>
+					</div>
+					<div class="fed-err-msg" ng-if="!verified&&!verify">
+						<!-- <span class="disblock text-red text-xsmall">Error-01-Host unreachable:Network error Please check your URL.</span> -->
+						<span class="disblock text-red text-xsmall"
+							ng-bind="errorMessage"></span>
+					</div>
+					<div class="fed-err-msg" ng-if="verified&&!verify">
+						<span class="disblock text-green text-xsmall">Connection successful.</span>
 					</div>
 
 				</div>
-				<div class="adminchkbox-container1">
+				<!-- <div class="adminchkbox-container1">
 					<md-checkbox class="adminchkbox" ng-model="data.cb1"
 						aria-label="Checkbox 1" ng-true-value="'yup'"
 						ng-false-value="'nope'">
@@ -1905,7 +1946,7 @@ limitations under the License.
 						for my Acumos so validation process is not required for all
 						incoming models from this peer.</p>
 					</md-checkbox>
-				</div>
+				</div> -->
 			</div>
 			</md-dialog-content>
 			<md-dialog-actions>
@@ -2145,8 +2186,18 @@ limitations under the License.
 						</div>
 					</div>
 					<div class="fedcontainer2" ng-show="subscripDetails1">
+					
+						<!-- <div class="select-control access-type-sec" ng-hide="!subscripDetails1">
+							<label class="fedlbl1 fedlbl4">Access Type</label>
+							<md-select ng-model="AccessValue"
+								placeholder="Select Frequency of update"
+								ng-change="freqChange(freqOfUpdatePass)"> <md-option
+								ng-repeat="freq in accessType" ng-value="freq.value">{{freq.name}}</md-option>
+							</md-select>
+						</div> -->
+						
 						<div class="filter-container">
-							<div class="fed-search-container">
+							<!-- <div class="fed-search-container">
 								<label class="fedlbl1 fedlbl4">Model ID</label>
 								<div
 									class="mdl-textfield mdl-js-textfield admin-search-container">
@@ -2154,7 +2205,7 @@ limitations under the License.
 										ng-change="modelEdit()"
 										ng-disabled="toolKitTypeValue||categoryValue|| allSubs=='true'"
 										type="text" placeholder="Filter" ng-model="modelIDValue">
-									<!-- <input class="mdl-textfield__input admin-search-control" ng-change="solutionDetail=false;browseSolution=false;noData=false" ng-disabled="toolKitTypeValue||categoryValue|| allSubs=='true'" type="text" placeholder="Filter" ng-model = "modelIDValue"> -->
+									<input class="mdl-textfield__input admin-search-control" ng-change="solutionDetail=false;browseSolution=false;noData=false" ng-disabled="toolKitTypeValue||categoryValue|| allSubs=='true'" type="text" placeholder="Filter" ng-model = "modelIDValue">
 									<span ng-click="modelEdit();browseSolution=true"
 										class="admin-btn-search"><i
 										class="material-icons search-icon" alt="Search" title="Search">search</i></span>
@@ -2162,7 +2213,7 @@ limitations under the License.
 							</div>
 							<div>
 								<span class="fedlbl5">OR</span>
-							</div>
+							</div> -->
 							<div>
 								<div class="select-control admin-select">
 									<label class="fedlbl4">Category</label>
@@ -2180,7 +2231,8 @@ limitations under the License.
 								<div class="select-control admin-select">
 									<label class="fedlbl4">Toolkit type</label>
 									<md-select ng-model="toolKitTypeValue"
-										ng-change="addedToSubs = false;solutionDetail=false;catChange(categoryValue,toolKitTypeValue);showSolutionTable=false"
+										ng-change="addedToSubs = false;solutionDetail=false;
+										catChange(categoryValue,toolKitTypeValue);showSolutionTable=false"
 										ng-disabled="modelIDValue || allSubs=='true'"
 										placeholder="Select toolkit"> <md-option
 										ng-selected="true" value="">Select toolkit</md-option> <md-option
@@ -2188,29 +2240,20 @@ limitations under the License.
 									{{tool.name}}</md-option> </md-select>
 								</div>
 							</div>
-						
+							<div>
+								<div class="select-control admin-select">
+									<label class="fedlbl4">Federate to</label>
+									<md-select ng-model="accessTypeCode"
+										ng-change="addedToSubs = false;solutionDetail=false;
+										catChange(categoryValue,toolKitTypeValue);showSolutionTable=false"
+										ng-disabled="modelIDValue || allSubs=='true'"
+										placeholder="Select"> <md-option
+										ng-repeat="accessType in accessTypeJson" ng-value="accessType.access_type_cd">
+										{{accessType.access_type_name}} ('{{accessType.access_type_cd}}')</md-option> </md-select>
+								</div>
+							</div>
 						</div>
-
-						<!-- <div class="fedgridcontainer ng-hide" ng-show='modelIDValue'>
-														<table class="mdl-data-table mdl-js-data-table mdl-shadow--2dp tbl-notification-list"> 
-															<colgroup>
-																
-																
-																<col>															
-																<col style="width:20%;">																
-															</colgroup>														 
-														  <tbody>
-															<tr>
-																<td ng-hide="browseSolution"><button ng-click="modelEdit();browseSolution=true" class="mdl-button mdl-js-button mdl-js-ripple-effect btn-secondary btn-fedgrid">Browse Remote Catalog</button></td>
-																<td ng-show="browseSolution"><button ng-click="solutionDetail=false;browseSolution=false;noData=false" class="mdl-button mdl-js-button mdl-js-ripple-effect btn-secondary btn-fedgrid">Clear Catalog</button></td>
-																<td></td>
-															</tr>														
-																												
-														  </tbody>
-														</table>
-													</div> -->
-
-
+						
 						<div class="fedgridcontainer"
 							ng-show="solutionDetail&&(modelIDValue!='')">
 							<table
@@ -2229,7 +2272,7 @@ limitations under the License.
 											<div>
 												<span class="text-small">by
 													{{solutionDetail.ownerName}} </span><span class="text-small">on
-													{{solutionDetail.created}}</span>
+													{{solutionDetail.created | date:"MM/dd/yyyy"}}</span>
 											</div> <label>Model belongs to: AT&T</label></td>
 										<td>
 											<div class="select-control">
@@ -2385,13 +2428,7 @@ limitations under the License.
 					<button ng-click='closePoup()'
 						class="mdl-button mdl-js-button btn-secondary">Cancel</button>
 				</div>
-				<div class="select-control">
-					<md-select ng-model="AccessValue"
-						placeholder="Select Frequency of update"
-						ng-change="freqChange(freqOfUpdatePass)"> <md-option
-						ng-repeat="freq in accessType" ng-value="freq.value">{{freq.name}}</md-option>
-					</md-select>
-				</div>
+				
 				<div>
 					<button ng-click='closePoup()'
 						class="mdl-button mdl-js-button btn-primary">Done</button>
@@ -2638,7 +2675,8 @@ limitations under the License.
 			<form name="carouselForm" ng-cloak>
 				<div class="md-dialog-content add-top-carousel">
 					<div class="mdl-grid">
-						
+					<alert-message msg="msg" icon="icon" styleclass="styleclass"
+						ng-show="invalidImage"></alert-message>
 						<div class="mdl-cell mdl-cell--6-col" >
 							<md-input-container class="md-block"> <label>Slide
 								Name</label> <input type="text" ng-model="carouselSlide.name"
@@ -2690,20 +2728,13 @@ limitations under the License.
 							<md-input-container class="md-block"> <label>Main
 								Background</label>
 							<div class="drag-drop-CustomFile">
-								<!-- <div class="drag-drop-files hide">
-																<p>doc.pdf</p>
-															</div>
-															<div>
-																<img src="images/upload-doc-vector.png" alt="" title=""/>
-																<div class="destext">Drag & Drop your file here!</div>
-															</div> -->
 								<div class="drag-drop-files hide">
 									<p>doc.pdf</p>
 								</div>
 								<div file-droppable filename="filename"
-									file=carouselSlide.backGround>
-									<!-- <img src="images/upload-doc-vector.png" ng-src = "{{bgImagePreview}}" alt="" title=""/> -->
-									<img class="sa-dragdropimg" src="images/upload-doc-vector.png" alt="" title="" />
+									file=carouselSlide.backGround filepreview="bgImagePreview">
+									<img class="sa-dragdropimg" src="images/upload-doc-vector.png"
+										ng-src="{{bgImagePreview}}" alt="" title="" />
 									<div class="destext">Drag & Drop your file here!</div>
 								</div>
 							</div>
@@ -2730,7 +2761,7 @@ limitations under the License.
 								</div>
 							</div>
 							<div class="upload-bg-image">
-								<div class="upload-image-input">
+								<div class="upload-image-input" style="width:100%">
 									<div ng-model="backGround">
 										<div file-upload size="800000"
 											ng-click="imageSizeError = false"
@@ -2743,16 +2774,10 @@ limitations under the License.
 											placeholder="Upload File" type="text"
 											ng-model="carouselSlide.backGround.name" readonly />
 									</div>
-									<!-- <input class="mdl-textfield__input ng-pristine ng-untouched ng-valid ng-empty" placeholder="Upload Image" type="text" ng-model="filename" readonly="" aria-invalid="false"> -->
 									<input type="file"
 										upload-image-model="carouselSlide.backGround"
 										data-ng-model="carouselSlide.backGround" />
 								</div>
-								<span> <md-button ng-click="uploadbackGroundImg()"
-										class="mdl-button mdl-js-button btn-secondary" title="Upload"
-										alt="Upload"> Upload </md-button>
-								</span>
-
 							</div>
 							<div class="help-inline">
 								<span class="text-green" ng-show="showSuccessBgImage">
@@ -2788,8 +2813,9 @@ limitations under the License.
 								<div class="drag-drop-files hide">
 									<p>doc.pdf</p>
 								</div>
-								<div file-droppable file=carouselSlide.infoGraphic>
-									<img src="images/upload-doc-vector.png"
+								<div file-droppable file=carouselSlide.infoGraphic
+									filepreview="infoImagePreview">
+									<img class="sa-dragdropimg" src="images/upload-doc-vector.png"
 										ng-src="{{infoImagePreview}}" alt="" title="" />
 									<div class="destext">Drag & Drop your file here!</div>
 								</div>
@@ -2809,8 +2835,6 @@ limitations under the License.
 												class="image-size" class="image-size" file-draggable
 												imgsrc="carouselSlide.infoGraphic"
 												imgpreview="infoImagePreview">
-											<!--<div class="selected"><i class="material-icons">check_circle</i></div> -->
-											<!-- commented for now, required later -->
 										</div>
 										<div class="image-Container">
 											<img src="../images/Layer_2.png" class="image-size"
@@ -2842,7 +2866,7 @@ limitations under the License.
 							</div>
 							</md-input-container>
 							<div class="upload-bg-image">
-								<div class="upload-image-input">
+								<div class="upload-image-input" style="width:100%">
 									<div>
 										<div file-upload uploadid="infographicUploadid"
 											id="uploadFile" filepreview="infoImagePreview"
@@ -2858,10 +2882,6 @@ limitations under the License.
 										upload-image-model="carouselSlide.infoGraphic"
 										data-ng-model="carouselSlide.infoGraphic" />
 								</div>
-								<span> <md-button ng-click="uploadinfoGraphic()"
-										class="mdl-button mdl-js-button btn-secondary" title="Upload"
-										alt="Upload"> Upload </md-button>
-								</span>
 							</div>
 							<div class="help-inline">
 								<span class="text-green" ng-show="showSuccessinfoImage">
@@ -3068,35 +3088,32 @@ limitations under the License.
 						<div class="mdl-cell mdl-cell--6-col add-document">
 							<md-input-container class="md-block"> <label>Main
 								Background</label>
-							<div class="drag-drop">
+							<div class="drag-drop" style="height:195px">
 								<div class="drag-drop-files hide">
 									<p>doc.pdf</p>
 								</div>
-								<div file-droppable filename="filename"
-									file=eventCarousel.backGround>
-									<img src="images/upload-doc-vector.png" alt="" title="" />
+								<div class="sa-dragdrop" file-droppable filename="filename"
+									file=eventCarousel.backGround filepreview="eventBgImagePreview">
+									<img class="sa-dragdropimg" src="images/upload-doc-vector.png"
+										ng-src="{{eventBgImagePreview}}" alt="" title=""/>
 									<div class="destext">Drag & Drop your file here!</div>
 								</div>
 							</div>
 							<div class="upload-bg-image">
-								<div class="upload-image-input">
+								<div class="upload-image-input" style="width:100%">
 									<div ng-model="backGround">
 										<div file-upload size="800000"
 											ng-click="imageSizeError = false"
 											uploadid="eventCarouselUploadid" id="uploadFile"
 											filename="filename" file="eventCarousel.backGround"
+											filepreview="eventBgImagePreview"
 											ng-model="eventCarousel.backGround" accept="" alt="Browse"
 											title="Browse" readonly></div>
 										<input class="mdl-textfield__input disabledClick"
 											placeholder="Upload File" type="text"
 											ng-model="eventCarousel.backGround.name" readonly />
 									</div>
-
 								</div>
-								<span> <md-button ng-click="uploadEventBGImg()"
-										class="mdl-button mdl-js-button btn-secondary" title="Upload"
-										alt="Upload"> Upload </md-button>
-								</span>
 
 							</div>
 							<div class="help-inline">
@@ -3129,19 +3146,22 @@ limitations under the License.
 									</span>
 								</div>
 							</div>
-							<div class="drag-drop">
+							<div class="drag-drop" style="height:195px">
 								<div class="drag-drop-files hide">
 									<p>doc.pdf</p>
 								</div>
-								<div file-droppable file=eventCarousel.infoGraphic>
-									<img src="images/upload-doc-vector.png" alt="" title="" />
+								<div class="sa-dragdrop" file-droppable file=eventCarousel.infoGraphic
+										filepreview="eventInfoImagePreview">
+									<img class="sa-dragdropimg" src="images/upload-doc-vector.png"
+										ng-src="{{eventInfoImagePreview}}" alt="" title=""/>
 									<div class="destext">Drag & Drop your file here!</div>
 								</div>
 							</div>
 							<div class="upload-bg-image">
-								<div class="upload-image-input">
+								<div class="upload-image-input" style="width:100%">
 									<div file-upload uploadid="eventInfographicUploadid"
 										id="uploadFile" file="eventCarousel.infoGraphic"
+										filepreview="eventInfoImagePreview"
 										ng-click="imageSizeError = false"
 										ng-model="eventCarousel.infoGraphic" accept="" alt="Browse"
 										title="Browse" readonly></div>
@@ -3149,10 +3169,6 @@ limitations under the License.
 										placeholder="Upload File" type="text"
 										ng-model="eventCarousel.infoGraphic.name" readonly />
 								</div>
-								<span> <md-button ng-click="uploadEventInfoGraphic()"
-										class="mdl-button mdl-js-button btn-secondary" title="Upload"
-										alt="Upload"> Upload </md-button>
-								</span>
 							</div>
 							<div class="help-inline">
 								<span class="text-green" ng-show="showSuccessEventInfoImage">
@@ -3248,125 +3264,6 @@ limitations under the License.
 								</md-input-container>
 						</div>
 					</div>
-					<!-- <div class="mdl-grid">
-						<div class="mdl-cell mdl-cell--6-col add-document">
-							<md-input-container class="md-block"> <label>Main
-								Background Image/Color</label>
-							<div class="drag-drop">
-								<div class="drag-drop-files hide">
-									<p>doc.pdf</p>
-								</div>
-								<div file-droppable filename="filename"
-									file=successCarousel.backGround>
-									<img src="images/upload-doc-vector.png" alt="" title="" />
-									<div class="destext">Drag & Drop your file here!</div>
-								</div>
-							</div>
-							<div class="upload-bg-image">
-								<div class="upload-image-input">
-									<div ng-model="backGround">
-										<div file-upload size="800000"
-											ng-click="imageSizeError = false"
-											uploadid="successCarouselUploadid" id="uploadFile"
-											filename="filename" file="successCarousel.backGround"
-											ng-model="successCarousel.backGround" accept="" alt="Browse"
-											title="Browse" readonly></div>
-										<input class="mdl-textfield__input disabledClick"
-											placeholder="Upload File" type="text"
-											ng-model="successCarousel.backGround.name" readonly />
-									</div>
-								</div>
-								<span> <md-button ng-click="uploadsuccessBGImg()"
-										class="mdl-button mdl-js-button btn-secondary" title="Upload"
-										alt="Upload"> Upload </md-button>
-								</span>
-							</div>
-							<div class="help-inline">
-								<span class="text-green" ng-show="showSuccessStoryBgImage">
-									Image Uploaded Successfully.</span>
-							</div>
-							<div class="help-inline validation-msgs">
-								<span ng-show="imageError" aria-hidden="true" class="ng-hide">Image
-									should be max size of 800KB.</span>
-							</div>
-							<span class="modal-note"> Please upload background image
-								(png,gif,jpeg). Background size should be less than 2560px X
-								524px. </span> </md-input-container>
-						</div>
-						<div class="mdl-cell mdl-cell--6-col add-document">
-							<md-input-container class="md-block">
-							<div class="infographics">
-								<div>
-									<label>Add Infographics</label>
-								</div>
-								<div>
-									<span> <md-switch ng-model="successIgImg"
-											aria-label="Switch 1" class="md-warn"> <span
-											class="text-xsmall text-green"
-											ng-show="successCarousel.eventIgImg == true">Enabled</span> <span
-											class="text-xsmall text-red"
-											ng-show="successCarousel.eventIgImg == false || successCarousel.eventIgImg == null ">Disabled</span>
-										</md-switch>
-									</span>
-								</div>
-							</div>
-							<div class="drag-drop">
-								<div class="drag-drop-files hide">
-									<p>doc.pdf</p>
-								</div>
-								<div file-droppable filename="filename"
-									file=successCarousel.infoGraphic>
-									<img src="images/upload-doc-vector.png" alt="" title="" />
-									<div class="destext">Drag & Drop your file here!</div>
-								</div>
-							</div>
-							<div class="upload-bg-image">
-								<div class="upload-image-input">
-									<div>
-										<div ng-model="backGround">
-											<div file-upload size="800000"
-												ng-click="imageSizeError = false"
-												uploadid="successCarouselUploadid" id="uploadFile"
-												filename="filename" file="successCarousel.infoGraphic"
-												ng-model="successCarousel.infoGraphic" accept=""
-												alt="Browse" title="Browse" readonly></div>
-											<input class="mdl-textfield__input disabledClick"
-												placeholder="Upload File" type="text"
-												ng-model="successCarousel.infoGraphic.name" readonly />
-										</div>
-									</div>
-
-								</div>
-								<span> <md-button ng-click="uploadsuccessInfoGraphic()"
-										class="mdl-button mdl-js-button btn-secondary" title="Upload"
-										alt="Upload"> Upload </md-button>
-								</span>
-							</div>
-							<div class="help-inline">
-								<span class="text-green" ng-show="showSuccessStoryInfoImage">
-									Image Uploaded Successfully.</span>
-							</div>
-							<div class="help-inline validation-msgs">
-								<span ng-show="imageError" aria-hidden="true" class="ng-hide">Image
-									should be max size of 800KB.</span>
-							</div>
-							<span class="modal-note"> Please upload background image
-								(png,gif,jpeg). Background size should be less than 372px X
-								260px. </span> </md-input-container>
-						</div>
-					</div>
-
-					<div class="md-grid">
-						<div class="mdl-cell mdl-cell--6-col infographics-align"
-							style="float: left">
-							<md-input-container class="md-block"> <label
-								class="md-required">Infographics and text alignment</label> </md-input-container>
-							<md-radio-group ng-model="successCarousel.textAling">
-							<md-radio-button value="left">Text align left,
-							Infographics align right</md-radio-button> <md-radio-button value="right">Text
-							align right, Infographics align left</md-radio-button> </md-radio-group>
-						</div>
-					</div> -->
 				</div>
 			</form>
 			</md-dialog-content> <md-dialog-actions>

@@ -74,6 +74,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
         .antMatchers("/auth/validateToken").permitAll()
         .antMatchers("/users/register").permitAll()
         .antMatchers("/solutions").permitAll()
+        .antMatchers("/solutions/{solutionId}/picture").permitAll()
         .antMatchers("/portal/solutions").permitAll()
         .antMatchers("/searchSolutionBykeyword").permitAll()
         .antMatchers("/solutions/{solutionId}").permitAll()
@@ -109,6 +110,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
         .antMatchers(HttpMethod.GET, "/admin/signup/enabled").permitAll()
         .antMatchers(HttpMethod.GET, "/getProtoFile").permitAll()
         .antMatchers(HttpMethod.GET, "/solution/{solutionId}/revision/{revisionId}/authors").permitAll()
+        .antMatchers(HttpMethod.GET, "/solution/{solutionId}/revision/{revisionId}/publisher").permitAll()
         .antMatchers(HttpMethod.GET, "/cloudEnabled").permitAll()
         .antMatchers(HttpMethod.POST, "/users/verifyUser").permitAll()
         .antMatchers(HttpMethod.POST, "/users/resendVerifyToken").permitAll()
@@ -116,6 +118,11 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
         .antMatchers(HttpMethod.GET, "/solution/{solutionId}/revision/{revisionId}/{accessType}/document").permitAll()
         .antMatchers(HttpMethod.GET, "/solution/revision/{revisionId}/{accessType}/description").permitAll()
         .antMatchers(HttpMethod.GET, "/users/k8s/docs/help").permitAll()
+        .antMatchers(HttpMethod.GET, "/users/jupyterUrl").permitAll()
+        .antMatchers(HttpMethod.GET, "/site/content/global/termsConditions").permitAll()
+        .antMatchers(HttpMethod.GET, "/site/content/global/footer/contactinfo").permitAll()
+        .antMatchers(HttpMethod.GET, "/site/content/global/coBrandLogo").permitAll()
+        .antMatchers(HttpMethod.GET, "/site/content/carouselImages/{key}").permitAll()
         
         
         .anyRequest().authenticated();

@@ -394,7 +394,7 @@ angular
 								+ $scope.solutionId;
 					} else {
 						$scope.apiUrl = '/api/solutions/'
-								+ $stateParams.solutionId
+								+ $stateParams.solutionId + '/' + $stateParams.revisionId;
 					}
 					
 					$scope.getModelDetails = function() {
@@ -964,31 +964,6 @@ angular
 						}
 						$scope.getSolPublicDesc();
 						
-						$scope.getSolutionImages = function(){
-	                       	 var getSolutionImagesReq = {
-										method : 'GET',
-										url : '/site/api-manual/Solution/solutionImages/'+$scope.solutionId
-								};
-
-	                       	 $http(getSolutionImagesReq)
-									.success(
-											function(data, status, headers,
-													config) {
-												if(data.response_body.length > 0) {
-													$scope.showSolutionImage = true;
-													$scope.solutionImageName = data[0];
-													$scope.imgURLdefault = "/site/binaries/content/gallery/acumoscms/solution/" + $scope.solutionId + "/" + data.response_body[0];
-
-													$scope.previewImage = $scope.imgURLdefault;
-												
-												}
-											}).error(
-													function(data, status, headers,
-															config) {
-														$scope.showSolutionImage = false;
-													});
-							}
-							$scope.getSolutionImages();
 							
 							/**********************************END*****************************/
 						
@@ -1125,8 +1100,10 @@ angular
 							if($scope.solution.tookitType != "CP") {
                                 var reqObject = '';
                                 if($scope.exportTo == 'azure'){
+                                	
                                       var url = '/azure/singleImageAzureDeployment';
                                       reqObject = {
+                                    	
                                                         'acrName': $scope.acrName,
                                                         'client': $scope.applicationId,
                                                         'key': $scope.secretKey,
@@ -1138,6 +1115,8 @@ angular
                                                         'tenant': $scope.tenantId,
                                                         'imagetag': imageTagUri,
                                                         'userId':  $scope.loginUserID
+                                                        
+                                                        
                                       }
                                 }
                                 else if($scope.exportTo == 'rackspace'){
@@ -1341,27 +1320,6 @@ angular
 						$scope.imgURLChat = "images/ChatBot.png";
 						$scope.imgURLSensitive = "images/Sensitive.png";
 						$scope.imgURLdefault ="images/default-model.png";
-						
-						$scope.getSolutionImages = function(){
-	                       	 var getSolutionImagesReq = {
-										method : 'GET',
-										url : '/site/api-manual/Solution/solutionImages/'+$scope.solutionId
-								};
-	                       	 $http(getSolutionImagesReq)
-									.success(
-											function(data, status, headers,
-													config) {
-												if(data.response_body.length > 0)
-													$scope.imgURLdefault = "/site/binaries/content/gallery/acumoscms/solution/" + $scope.solutionId + "/" + data.response_body[0];
-												else
-													$scope.imgURLdefault = "images/default-model.png";
-											}).error(
-													function(data, status, headers,
-															config) {
-														return "No Contents Available"
-													});
-							}
-							$scope.getSolutionImages();
 						
 							$scope.getPublicSolutionDocuments = function(type){
 								var accessType;
@@ -1634,9 +1592,17 @@ angular
 								
 									
 							}
-							
+							 $scope.showazurePopup = function(ev){
+								  $mdDialog.show({
+									  contentElement: '#deploy',
+									  parent: angular.element(document.body),
+									  targetEvent: ev,
+									  clickOutsideToClose: true
+								  });
+							 }	
 							
 					}
+
 
 				});
 angular.module('angular-star-rating', []).directive('angularStarRating',
@@ -1709,7 +1675,4 @@ function linkFunc(scope, element, attrs, ctrl) {
 			renderValue();
 		}
 	});
-	
-	
-
 }

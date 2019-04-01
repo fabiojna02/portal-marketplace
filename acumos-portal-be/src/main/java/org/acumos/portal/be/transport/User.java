@@ -20,7 +20,7 @@
 
 package org.acumos.portal.be.transport;
 
-import java.util.Date;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -37,9 +37,9 @@ public class User extends AbstractResponseObject {
 	private String username;
 	private String password;
 	private String active;
-	private Date lastLogin;
-	private Date created;
-	private Date modified;
+	private Instant lastLogin;
+	private Instant created;
+	private Instant modified;
 	private String userId;
 	private String loginName;
 	private String orgName;
@@ -58,6 +58,7 @@ public class User extends AbstractResponseObject {
 	private String verifyToken;
 	private String status;
 	private Set<MLPTag> tags;
+	private String apiToken;
 
 
 	public String getBulkUpdate() {
@@ -196,37 +197,37 @@ public class User extends AbstractResponseObject {
 	/**
 	 * @return the lastLogin
 	 */
-	public Date getLastLogin() {
+	public Instant getLastLogin() {
 		return lastLogin;
 	}
 	/**
 	 * @param lastLogin the lastLogin to set
 	 */
-	public void setLastLogin(Date lastLogin) {
+	public void setLastLogin(Instant lastLogin) {
 		this.lastLogin = lastLogin;
 	}
 	/**
 	 * @return the created
 	 */
-	public Date getCreated() {
+	public Instant getCreated() {
 		return created;
 	}
 	/**
 	 * @param created the created to set
 	 */
-	public void setCreated(Date created) {
+	public void setCreated(Instant created) {
 		this.created = created;
 	}
 	/**
 	 * @return the modified
 	 */
-	public Date getModified() {
+	public Instant getModified() {
 		return modified;
 	}
 	/**
 	 * @param modified the modified to set
 	 */
-	public void setModified(Date modified) {
+	public void setModified(Instant modified) {
 		this.modified = modified;
 	}
 	
@@ -333,6 +334,14 @@ public class User extends AbstractResponseObject {
 	 */
 	public void setTags(Set<MLPTag> tags) {
 		this.tags = tags;
+	}
+
+	public String getApiToken() {
+		return apiToken;
+	}
+
+	public void setApiToken(String apiToken) {
+		this.apiToken = apiToken;
 	}
 }
 
