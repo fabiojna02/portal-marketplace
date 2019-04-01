@@ -21,7 +21,8 @@ package org.acumos.be.test.controller;
 
 import static org.springframework.test.web.servlet.setup.MockMvcBuilders.standaloneSetup;
 
-import java.util.Date;
+import java.lang.invoke.MethodHandles;
+import java.time.Instant;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -29,7 +30,6 @@ import javax.servlet.http.HttpServletResponse;
 import org.acumos.cds.domain.MLPRole;
 import org.acumos.cds.domain.MLPUser;
 import org.acumos.portal.be.common.exception.UserServiceException;
-import org.acumos.portal.be.controller.MarketPlaceCatalogServiceController;
 import org.acumos.portal.be.controller.OauthUserServiceController;
 import org.acumos.portal.be.security.jwt.JwtTokenUtil;
 import org.acumos.portal.be.service.UserRoleService;
@@ -38,7 +38,6 @@ import org.acumos.portal.be.transport.AbstractResponseObject;
 import org.acumos.portal.be.transport.MLRole;
 import org.acumos.portal.be.transport.User;
 import org.acumos.portal.be.transport.UserMasterObject;
-import org.acumos.portal.be.util.EELFLoggerDelegate;
 import org.acumos.portal.be.util.PortalUtils;
 import org.junit.Assert;
 import org.junit.Before;
@@ -48,7 +47,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.web.servlet.MockMvc;
@@ -56,7 +56,7 @@ import org.springframework.test.web.servlet.MockMvc;
 @RunWith(MockitoJUnitRunner.class)
 public class OauthUserServiceControllerTest {
 
-	private static final EELFLoggerDelegate logger = EELFLoggerDelegate.getLogger(OauthUserServiceControllerTest.class);
+	private static final Logger logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());	
 
 	final HttpServletResponse response = new MockHttpServletResponse();
 	final HttpServletRequest request = new MockHttpServletRequest();
@@ -84,7 +84,7 @@ public class OauthUserServiceControllerTest {
 	@Test
 	public void createUserTest() {
 		UserMasterObject userMasterObject = new UserMasterObject();
-		Date created = new Date();
+		Instant created = Instant.now();
 		try {
 			userMasterObject.setUserId("09514016-2f24-4a0c-8587-f0f0d2ff03b3");
 			userMasterObject.setActive(true);
@@ -120,7 +120,7 @@ public class OauthUserServiceControllerTest {
 	@Test
 	public void loginTest() {
 		User user = new User();
-		Date created = new Date();
+		Instant created = Instant.now();
 		try {
 			MLPUser mlpUser = getMLPUser();
 			user.setUserId("09514016-2f24-4a0c-8587-f0f0d2ff03b3");
@@ -187,7 +187,7 @@ public class OauthUserServiceControllerTest {
 	private MLPRole getMLPRole(){
 		MLPRole mlpRole = new MLPRole();
 		mlpRole.setName("Admin");
-		Date created = new Date();
+		Instant created = Instant.now();
 		mlpRole.setCreated(created);
 		mlpRole.setRoleId("12345678-abcd-90ab-cdef-1234567890ab");
 		return mlpRole;

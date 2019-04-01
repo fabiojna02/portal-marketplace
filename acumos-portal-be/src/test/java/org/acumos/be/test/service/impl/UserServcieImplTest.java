@@ -20,6 +20,8 @@
 
 package org.acumos.be.test.service.impl;
 
+import java.lang.invoke.MethodHandles;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -31,7 +33,6 @@ import org.acumos.cds.transport.RestPageRequest;
 import org.acumos.portal.be.service.impl.UserServiceImpl;
 import org.acumos.portal.be.transport.MLRole;
 import org.acumos.portal.be.transport.User;
-import org.acumos.portal.be.util.EELFLoggerDelegate;
 import org.acumos.portal.be.util.PortalUtils;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -40,10 +41,13 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.web.client.HttpClientErrorException;
 import org.junit.Assert;
 import org.mockito.Mockito;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import static org.mockito.Mockito.*;
 
 public class UserServcieImplTest {
-	private static final EELFLoggerDelegate logger = EELFLoggerDelegate.getLogger(UserServcieImplTest.class);
+	private static final Logger logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());	
 
 	final HttpServletResponse response = new MockHttpServletResponse();
 	final HttpServletRequest request = new MockHttpServletRequest();
@@ -350,7 +354,7 @@ public class UserServcieImplTest {
 			
 			MLPRole mlpRole = new MLPRole();
 			mlpRole.setName("Admin");
-			Date created = new Date();
+			Instant created = Instant.now();
 			mlpRole.setCreated(created);
 			mlpRole.setRoleId("12345678-abcd-90ab-cdef-1234567890ab");
 			
@@ -440,7 +444,7 @@ public class UserServcieImplTest {
 			MLRole mlRole = new MLRole();
 			mlRole.setActive(true);
 			mlRole.setName("Admin");
-			Date created = new Date();
+			Instant created = Instant.now();
 			mlRole.setCreated(created);
 			mlRole.setRoleId("12345678-abcd-90ab-cdef-1234567890ab");
 			

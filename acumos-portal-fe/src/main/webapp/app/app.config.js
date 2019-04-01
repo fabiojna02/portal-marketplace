@@ -34,6 +34,10 @@ app.config(function($stateProvider, $urlRouterProvider, $httpProvider, $location
 	         url: '/404Error',
 	         templateUrl: '/app/error-page/error-404.template.html',
 	     })
+	     .state('403Error', {
+	         url: '/403Error',
+	         templateUrl: '/app/error-page/error-403.template.html',
+	     })
 		.state('home', {
 			url: '/home',
 			component: 'marketHome'
@@ -80,7 +84,8 @@ app.config(function($stateProvider, $urlRouterProvider, $httpProvider, $location
 			component: 'modelEdit',
 			params: {solutionId: null,
 				revisionId: null,
-				deployStatus:null}
+				deployStatus:null,
+				deployValue:null}
          })
 		.state('modularResource', {
 			url: '/modelerResource?ONAP=?solutionId=?revisionId=?',
@@ -117,6 +122,10 @@ app.config(function($stateProvider, $urlRouterProvider, $httpProvider, $location
 		.state('publishRequest',{
 			url: '/publishRequest',
 			component: 'publishRequest'
+		})
+		.state('onboardingHistory',{
+			url: '/onboardingHistory',
+			component: 'onboardingHistory'
 		})
 		;
 	

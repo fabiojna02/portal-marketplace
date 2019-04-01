@@ -19,8 +19,8 @@
  */
 package org.acumos.be.test.transport;
 
+import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 import org.acumos.cds.domain.MLPSolutionRevision;
@@ -37,14 +37,13 @@ public class MLSolutionTest {
 	public void testMLSolutionParameter(){
 		String solutionId = "02a87750-7ba3-4ea7-8c20-c1286930f57c";
 		String name = "Test1";
-		String description = "ImageMoodClassifier";
 		String ownerId = "83d5259f-48b7-4fe1-9fd6-d1166f8f3691";
 		String ownerName = "abc";
 		String metadata = "sffsf";
 		boolean active = true;
 		String accessType = "PR";
-		Date created = new Date();
-		Date modified = new Date();
+		Instant created = Instant.now();
+		Instant modified = Instant.now();
 		String tookitType = "SK";
 		String tookitTypeName = "sfs";
 		List<MLPSolutionRevision> revisions = new ArrayList<MLPSolutionRevision>();
@@ -69,12 +68,13 @@ public class MLSolutionTest {
 		 String commentId="cm2001";
 		 List<MLPThread> threadList = new ArrayList<MLPThread>();
 		  float solutionRatingAvg=3;
+		  Instant lastDownload = Instant.now();
+		  boolean featured = false;
 				
 		MLPSolutionRevision mlPSolutionRevision = new MLPSolutionRevision();
-		mlPSolutionRevision.setCreated(new Date());
-		mlPSolutionRevision.setDescription("fafaf");
+		mlPSolutionRevision.setCreated(Instant.now());
 		mlPSolutionRevision.setMetadata("sfsfs");
-		mlPSolutionRevision.setModified(new Date());
+		mlPSolutionRevision.setModified(Instant.now());
 		mlPSolutionRevision.setUserId("83d5259f-48b7-4fe1-9fd6-d1166f8f3691");
 		mlPSolutionRevision.setRevisionId("fsf24");
 		mlPSolutionRevision.setSolutionId("02a87750-7ba3-4ea7-8c20-c1286930f57c");
@@ -88,7 +88,6 @@ public class MLSolutionTest {
 		mlRole.setAccessType(accessType);
 		mlRole.setActive(active);
 		mlRole.setCreated(created);
-		mlRole.setDescription(description);
 		mlRole.setDownloadCount(downloadCount);
 		mlRole.setLoginName(loginName);
 		mlRole.setMetadata(metadata);
@@ -120,6 +119,8 @@ public class MLSolutionTest {
 		mlRole.setOwnerListForSol(ownerListForSol);
 		mlRole.setThreadList(threadList);
 		mlRole.setSolutionRatingAvg(solutionRatingAvg);
+		mlRole.setLastDownload(lastDownload);
+		mlRole.setFeatured(featured);
 		
 		Assert.assertEquals(privateModelCount, mlRole.getPrivateModelCount());
 		Assert.assertEquals(publicModelCount, mlRole.getPublicModelCount());
@@ -134,7 +135,6 @@ public class MLSolutionTest {
 		Assert.assertEquals(accessType, mlRole.getAccessType());
 		Assert.assertEquals(created, mlRole.getCreated());
 		Assert.assertEquals(modified, mlRole.getModified());
-		Assert.assertEquals(description, mlRole.getDescription());
 		Assert.assertEquals(downloadCount, mlRole.getDownloadCount());
 		Assert.assertEquals(loginName, mlRole.getLoginName());
 		Assert.assertEquals(metadata, mlRole.getMetadata());		
@@ -157,5 +157,7 @@ public class MLSolutionTest {
 		Assert.assertEquals(viewCount, mlRole.getViewCount());
 		Assert.assertEquals(tookitTypeName, mlRole.getTookitTypeName());
 		Assert.assertEquals(active, mlRole.isActive());
+		Assert.assertEquals(lastDownload, mlRole.getLastDownload());
+		Assert.assertEquals(featured, mlRole.isFeatured());
 	}
 }

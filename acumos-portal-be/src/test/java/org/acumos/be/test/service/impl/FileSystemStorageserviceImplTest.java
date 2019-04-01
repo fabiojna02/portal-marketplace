@@ -23,9 +23,10 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.acumos.portal.be.service.impl.FileSystemStorageService;
-import org.acumos.portal.be.util.EELFLoggerDelegate;
 import org.junit.Test;
 import org.mockito.Mock;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.web.multipart.MultipartFile;
@@ -33,9 +34,11 @@ import org.junit.Assert;
 
 import static org.mockito.Mockito.*;
 
+import java.lang.invoke.MethodHandles;
+
 public class FileSystemStorageserviceImplTest {
 
-	private static final EELFLoggerDelegate logger = EELFLoggerDelegate.getLogger(FileSystemStorageserviceImplTest.class);
+	private static final Logger logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());	
 
 	final HttpServletResponse response = new MockHttpServletResponse();
 	final HttpServletRequest request = new MockHttpServletRequest();
@@ -49,7 +52,7 @@ public class FileSystemStorageserviceImplTest {
 		String userId = "1810f833-8698-4233-add4-091e34b8703c";
 		try{
 			FileSystemStorageService mockimpl = mock(FileSystemStorageService.class);
-			mockimpl.store(file, userId);
+			mockimpl.store(file, userId, true);
 			Assert.assertEquals(mockimpl, mockimpl);
 		} catch (Exception e) {
 			logger.error("Exception occured while store: " + e);	

@@ -23,6 +23,8 @@ import static org.mockito.Mockito.mock;
 import static org.springframework.test.web.servlet.setup.MockMvcBuilders.standaloneSetup;
 
 import java.io.InputStream;
+import java.lang.invoke.MethodHandles;
+import java.time.Instant;
 import java.util.Date;
 
 import javax.servlet.http.HttpServletRequest;
@@ -36,7 +38,6 @@ import org.acumos.portal.be.service.AdminService;
 import org.acumos.portal.be.service.PushAndPullSolutionService;
 import org.acumos.portal.be.transport.MLSolution;
 import org.acumos.portal.be.transport.User;
-import org.acumos.portal.be.util.EELFLoggerDelegate;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -45,6 +46,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.web.servlet.MockMvc;
@@ -53,7 +56,7 @@ import org.springframework.web.multipart.MultipartFile;
 @RunWith(MockitoJUnitRunner.class)
 public class PushAndPullSolutionServiceControllerTest {
 	
-	private static final EELFLoggerDelegate logger = EELFLoggerDelegate.getLogger(PushAndPullSolutionServiceControllerTest.class);
+	private static final Logger logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());	
 	final HttpServletResponse response = new MockHttpServletResponse();
 	final HttpServletRequest request = new MockHttpServletRequest();
 	
@@ -113,13 +116,13 @@ public class PushAndPullSolutionServiceControllerTest {
 			MLPSiteConfig mlPSiteConfig = new MLPSiteConfig();
 			mlPSiteConfig.setConfigKey("configKey");
 			mlPSiteConfig.setConfigValue("configValue");
-			mlPSiteConfig.setCreated(new Date(System.currentTimeMillis()));
+			mlPSiteConfig.setCreated(Instant.now());
 			mlPSiteConfig.setUserId(userId);
 			MultipartFile dfsdf = null;
 			MultipartFile file = dfsdf ;
 			Mockito.when(adminService.getSiteConfig("site_config")).thenReturn(mlPSiteConfig);
 			//PushAndPullSolutionServiceController mockController = mock(PushAndPullSolutionServiceController.class);
-			pushPullController.uploadModel(file, userId, request, response);
+			pushPullController.uploadModel(file, userId, true, request, response);
 			Assert.assertNotNull(userId);
 			logger.error("Successfully uploaded models");
 		}catch (Exception e) {
@@ -143,7 +146,6 @@ public class PushAndPullSolutionServiceControllerTest {
 		MLSolution mlsolution = new MLSolution();
 		mlsolution.setSolutionId("Solution1");
 		mlsolution.setName("Test_Solution data");
-		mlsolution.setDescription("Test data");
 		mlsolution.setOwnerId("41058105-67f4-4461-a192-f4cb7fdafd34");
 		mlsolution.setAccessType("PB");
 		mlsolution.setActive(true);
@@ -158,7 +160,6 @@ public class PushAndPullSolutionServiceControllerTest {
 		mlpSolRev.setRevisionId("REV2");
 		mlpSolRev.setUserId("41058105-67f4-4461-a192-f4cb7fdafd34");
 		mlpSolRev.setVersion("v.0.0");
-		mlpSolRev.setDescription("test data for revision");
 		mlpSolRev.setSolutionId(mlsolution.getSolutionId());
 		return mlpSolRev;
 	}

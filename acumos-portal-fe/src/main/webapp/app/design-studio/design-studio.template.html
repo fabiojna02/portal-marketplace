@@ -236,10 +236,10 @@ limitations under the License.
 							</button>
 							<ul	class="mdl-menu mdl-menu--bottom-left mdl-js-menu mdl-js-ripple-effect deploy-cloud-list"
 								for="demo-menu-lower-right4">
-								<li class="mdl-menu__item dc-microsoft-azure" ng-repeat = "deployVal in checkDeployToCloudResponse track by $index" value="{{deployVal.cloudName}}" alt="{{deployVal.cloudDisplayText}}"
+								<li class="mdl-menu__item deploy-to-cloud" ng-repeat = "deployVal in checkDeployToCloudResponse track by $index" value="{{deployVal.cloudName}}" alt="{{deployVal.cloudDisplayText}}"
                            		title="{{deployVal.cloudDisplayText}}"
-                           		style="background:#fff url({{deployVal.imageUrl}}) no-repeat 10px center"
-                           		ng-disabled="deployVal.cloudEnabled=='false'" ui-sref="modelEdit ({solutionId: solutionIdDeploy,deployStatus: true})">
+                           		style="background:#fff url({{deployVal.imageUrl}}) no-repeat 10px center !important; border-bottom: 1px solid #d5d5d5;"
+                           		ng-disabled="deployVal.cloudEnabled=='false'" ui-sref="modelEdit ({solutionId: solutionIdDeploy,deployStatus: true,deployValue: deployVal.cloudName})">
                            		</li>
 								
 							</ul>
@@ -266,7 +266,7 @@ limitations under the License.
 							</div>
 						</div>
 						<div class="console-outer-container" ng-class="down?'console-container-hide':''">
-							<div class="ds-version-container">Composition Engine 1.40.1</div>
+							<div class="ds-version-container">Composition Engine {{dsceVersion}}</div>
 							<div class="bottom-drawer-handle" ng-init="down='true'" ng-click="down = !down"><span class="bottom-handle"><i class="material-icons">keyboard_arrow_up</i></span></div>
 								<div class="ds-section" ng-hide="down">
 									<div class="ds-section-heading">
@@ -552,7 +552,7 @@ limitations under the License.
 												      <!-- Use floating label instead of placeholder -->
 												      <label>Description</label>												      
 												      
-												       <input ng-model="solutionDescription" type="text" id="address" maxlength="256">
+												       <input ng-model="solutionDescription" type="text" id="address" maxlength="256" ng-disabled="true" style="background: #B3B3B3;">
 												 </md-input-container></div>	 								
 									  </div>
 									</md-dialog-content>
@@ -1161,6 +1161,11 @@ limitations under the License.
 										<div class="md-dialog-content">
 											<div class="dsmt-container">
 												<div class="dsmt-cell">
+													<div class="help-inline" ng-show="collateSourceMapTable.length < collateTargetMapTable.length">
+														<span style="color: #ff0000;">
+														*Source parameters should be greater than or equal to target parameters
+														</span>
+													</div>
 														<div class="dsmt-chitable">
 															<table class="mdl-data-table ds-table1" cellpadding="0" cellspacing="0" >
 																<thead>
@@ -1221,7 +1226,7 @@ limitations under the License.
 																		<td>{{collateSourceMapTable[$index].tag}}</td>
 																		<td>
 																		<div ng-if="!readSolution && collateSourceMapTable[$index].tag" class="select-control">																	
-																			<md-select ng-model="collateMapTag" name="collateMapTag" placeholder="Select Tag" ng-change="collateMappingTag($index)">
+																			<md-select ng-disabled="collateSourceMapTable.length < collateTargetMapTable.length" ng-model="collateMapTag" name="collateMapTag" placeholder="Select Tag" ng-change="collateMappingTag($index)">
 																					<md-option value="null">Select Tag</md-option>
 																					<md-option value="{{targetMap.tag}}" ng-repeat="targetMap in collateTargetMapTable">{{targetMap.tag}}</md-option>	
 																			</md-select>
@@ -1255,7 +1260,7 @@ limitations under the License.
 											<md-button ng-click="closeMappingCollatorPopup()" class="mdl-button mdl-js-button btn-secondary" title="Cancel">
 												Cancel
 											</md-button>
-											<md-button type="submit" ng-click="collateMappingsSave()" class="mdl-button mdl-js-button btn-primary" title="Confirm" ng-disabled="collateSourceTargetTable.$invalid">
+											<md-button type="submit" ng-click="collateMappingsSave()" class="mdl-button mdl-js-button btn-primary" title="Confirm" ng-disabled="collateSourceTargetTable.$invalid || collateSourceMapTable.length < collateTargetMapTable.length">
 												Done
 											</md-button>
 									    </div>
@@ -1326,7 +1331,7 @@ limitations under the License.
 																		</td>
 																		<td>
 																		<label ng-if="splitTargetMapTable[$index].tag && (splitErrorMap.get($index) === 'True' || splitErrorMap.get($index) === 'true')"><i class="material-icons dsicon-true">done</i></label>
-																		<label ng-if="splitTargetMapTable[$index].tag && (splitErrorMap.get($index) === undefined || splitErrorMap.get($index) === 'false' || splitErrorMap.get($index) === 'False' || splitErrorMap.get($index) === null"><i class="material-icons dsicon-false">close</i></label>
+																		<label ng-if="splitTargetMapTable[$index].tag && (splitErrorMap.get($index) === undefined || splitErrorMap.get($index) === 'false' || splitErrorMap.get($index) === 'False' || splitErrorMap.get($index) === null)"><i class="material-icons dsicon-false">close</i></label>
 																		</td>
 																		<td>{{splitTargetMapTable[$index].tag}}</td>
 																		<td>{{splitTargetMapTable[$index].name}}</td>

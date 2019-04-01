@@ -20,15 +20,14 @@
 
 package org.acumos.portal.be.service.impl;
 
+import java.lang.invoke.MethodHandles;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.acumos.cds.NotificationDeliveryMechanismCode;
-import org.acumos.cds.client.CommonDataServiceRestClientImpl;
 import org.acumos.cds.client.ICommonDataServiceRestClient;
 import org.acumos.cds.domain.MLPNotification;
 import org.acumos.cds.domain.MLPUser;
@@ -46,8 +45,9 @@ import org.acumos.portal.be.transport.MLNotification;
 import org.acumos.portal.be.transport.MLUserNotifPref;
 import org.acumos.portal.be.transport.MailData;
 import org.acumos.portal.be.transport.NotificationRequestObject;
-import org.acumos.portal.be.util.EELFLoggerDelegate;
 import org.acumos.portal.be.util.PortalUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.mail.MailException;
@@ -56,7 +56,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class NotificationServiceImpl extends AbstractServiceImpl implements NotificationService {
 
-	private static final EELFLoggerDelegate log = EELFLoggerDelegate.getLogger(NotificationServiceImpl.class);
+	private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());	
  
 	@Autowired
 	private Environment env;
@@ -77,7 +77,7 @@ public class NotificationServiceImpl extends AbstractServiceImpl implements Noti
 
 	@Override
 	public MLNotification createNotification(MLPNotification mlpNotification) {
-		log.debug(EELFLoggerDelegate.debugLogger, "createNotification`");
+		log.debug("createNotification`");
 		ICommonDataServiceRestClient dataServiceRestClient = getClient();
 		MLNotification mlNotification = PortalUtils.convertToMLNotification(dataServiceRestClient.createNotification(mlpNotification));
 		return mlNotification;
@@ -85,7 +85,7 @@ public class NotificationServiceImpl extends AbstractServiceImpl implements Noti
 
 	@Override
 	public List<MLNotification> getNotifications() {
-		log.debug(EELFLoggerDelegate.debugLogger, "getNotifications`");
+		log.debug("getNotifications`");
 		ICommonDataServiceRestClient dataServiceRestClient = getClient(); 
 		RestPageResponse<MLPNotification> mlpSolutionsPaged = null;
 		RestPageRequest pageRequest = new RestPageRequest();
@@ -105,7 +105,7 @@ public class NotificationServiceImpl extends AbstractServiceImpl implements Noti
 
 	@Override
 	public List<MLPUserNotification> getUserNotifications(String userId, RestPageRequest restPageRequest) {
-		log.debug(EELFLoggerDelegate.debugLogger, "getUserNotifications`");
+		log.debug("getUserNotifications`");
 		ICommonDataServiceRestClient dataServiceRestClient = getClient(); 
 		RestPageResponse<MLPUserNotification> mlpNotificationList = dataServiceRestClient.getUserNotifications(userId,restPageRequest);	
 		return mlpNotificationList.getContent();
@@ -113,14 +113,14 @@ public class NotificationServiceImpl extends AbstractServiceImpl implements Noti
 
 	@Override
 	public void addNotificationUser(String notificationId, String userId) {
-		log.debug(EELFLoggerDelegate.debugLogger, "addNotificationUser`");
+		log.debug("addNotificationUser`");
 		ICommonDataServiceRestClient dataServiceRestClient = getClient();
 		dataServiceRestClient.addUserToNotification(notificationId,userId);
 	}
 
 	@Override 
 	public void dropNotificationUser(String notificationId, String userId) {
-		log.debug(EELFLoggerDelegate.debugLogger, "dropNotificationUser`");
+		log.debug("dropNotificationUser`");
 		ICommonDataServiceRestClient dataServiceRestClient = getClient();
 		dataServiceRestClient.dropUserFromNotification(notificationId,userId);
 		dataServiceRestClient.deleteNotification(notificationId);
@@ -128,21 +128,21 @@ public class NotificationServiceImpl extends AbstractServiceImpl implements Noti
 
 	@Override 
 	public void setNotificationUserViewed(String notificationId, String userId) {
-		log.debug(EELFLoggerDelegate.debugLogger, "dropNotificationUser`");
+		log.debug("dropNotificationUser`");
 		ICommonDataServiceRestClient dataServiceRestClient = getClient();
 		dataServiceRestClient.setUserViewedNotification(notificationId,userId);
 	}
 	
 	@Override
 	public void deleteNotification(String notificationId) {
-		log.debug(EELFLoggerDelegate.debugLogger, "deleteNotification`");
+		log.debug("deleteNotification`");
 		ICommonDataServiceRestClient dataServiceRestClient = getClient();
 		dataServiceRestClient.deleteNotification(notificationId);
 	}
 
 	@Override
 	public int getNotificationCount() {
-		log.debug(EELFLoggerDelegate.debugLogger, "getNotificationCount");
+		log.debug("getNotificationCount");
 		ICommonDataServiceRestClient dataServiceRestClient = getClient();
 		Long count = dataServiceRestClient.getNotificationCount();
 		return count.intValue();
@@ -150,13 +150,11 @@ public class NotificationServiceImpl extends AbstractServiceImpl implements Noti
 	
 	@Override
 	public void generateNotification(MLPNotification notification, String userId) {
-		log.debug(EELFLoggerDelegate.debugLogger, "generateNotification");
+		log.debug("generateNotification");
 		try {
 			if (notification != null) {
-				Calendar cal = Calendar.getInstance();
-				Date startDate = cal.getTime();
-				cal.add(Calendar.YEAR, 1);
-				Date endDate = cal.getTime();
+				Instant startDate = Instant.now();
+				Instant endDate = startDate.plus(365, ChronoUnit.DAYS);
 
 				notification.setStart(startDate);
 				notification.setEnd(endDate);
@@ -166,17 +164,17 @@ public class NotificationServiceImpl extends AbstractServiceImpl implements Noti
 					addNotificationUser(mlNotification.getNotificationId(), userId);
 				}
 			} else {
-				log.error(EELFLoggerDelegate.errorLogger,
+				log.error(
 						"Notification message can not be null: generateNotification()");
 			}
 		} catch (Exception e) {
-			log.error(EELFLoggerDelegate.errorLogger, "Exception Occurred while getNotifications", e);
+			log.error( "Exception Occurred while getNotifications", e);
 		}
 	}
 	
 	@Override
 	public List<MLUserNotifPref> getUserNotifPrefByUserId(String userId) {
-		log.debug(EELFLoggerDelegate.debugLogger, "getUserNotificationPreferences`");
+		log.debug("getUserNotificationPreferences`");
 		ICommonDataServiceRestClient dataServiceRestClient = getClient();
 		List<MLPUserNotifPref> mlpNotificationList = dataServiceRestClient.getUserNotificationPreferences(userId);
 		List<MLUserNotifPref> mlNotificationList = new ArrayList<>(mlpNotificationList.size());
@@ -188,7 +186,7 @@ public class NotificationServiceImpl extends AbstractServiceImpl implements Noti
 
 	@Override
 	public MLUserNotifPref createUserNotificationPreference(MLUserNotifPref mlUserNotifPref) {
-		log.debug(EELFLoggerDelegate.debugLogger, "createUserNotificationPreference`");
+		log.debug("createUserNotificationPreference`");
 		ICommonDataServiceRestClient dataServiceRestClient = getClient();
 		MLPUserNotifPref mlpUserNotifPref = PortalUtils.convertToMLPUserNotifPref(mlUserNotifPref);
 		mlpUserNotifPref = dataServiceRestClient.createUserNotificationPreference(mlpUserNotifPref);
@@ -198,7 +196,7 @@ public class NotificationServiceImpl extends AbstractServiceImpl implements Noti
 	
 	@Override
 	public void updateUserNotificationPreference(MLUserNotifPref mlUserNotifPref) {
-		log.debug(EELFLoggerDelegate.debugLogger, "updateUserNotificationPreference`");
+		log.debug("updateUserNotificationPreference`");
 		ICommonDataServiceRestClient dataServiceRestClient = getClient();
 		MLPUserNotifPref mlpUserNotifPref = PortalUtils.convertToMLPUserNotifPref(mlUserNotifPref);
 		dataServiceRestClient.updateUserNotificationPreference(mlpUserNotifPref);
@@ -209,7 +207,7 @@ public class NotificationServiceImpl extends AbstractServiceImpl implements Noti
 	@Override
 	public void sendUserNotification(NotificationRequestObject notificationRequest) throws AcumosServiceException {
 		
-		log.debug(EELFLoggerDelegate.debugLogger, "Notify User ={}", notificationRequest);
+		log.debug("Notify User ={}", notificationRequest);
 		ICommonDataServiceRestClient dataServiceRestClient = getClient();
 
 		if (PortalUtils.isEmptyOrNullString(notificationRequest.getUserId())) {
@@ -237,7 +235,7 @@ public class NotificationServiceImpl extends AbstractServiceImpl implements Noti
 		for (MLPUserNotifPref mlpUserNotifPref : mlpNotificationList) {
 			if (mlpUserNotifPref.getMsgSeverityCode().equals(notificationRequest.getSeverity())) {
 				
-				if(NotificationDeliveryMechanismCode.EM.toString().equals(mlpUserNotifPref.getNotfDelvMechCode())) {
+				if("Email".equals(mlpUserNotifPref.getNotfDelvMechCode())) {
 					MailData mailData = new MailData();
 			        mailData.setSubject(notificationRequest.getSubject());
 			        mailData.setFrom(env.getProperty(ConfigConstants.portal_feature_email_from));
@@ -250,24 +248,33 @@ public class NotificationServiceImpl extends AbstractServiceImpl implements Noti
 			        model.put("notificationData", notificationRequest.getNotificationData());
 			        mailData.setModel(model);
 
-			        try {
-			        	if(!PortalUtils.isEmptyOrNullString(env.getProperty(ConfigConstants.portal_feature_email_service)) 
-			        		&& env.getProperty(ConfigConstants.portal_feature_email_service).equalsIgnoreCase("smtp")) {
-			        	
-			        		//Use SMTP setup
-			                mailservice.sendMail(mailData);
-			        		}else {
-			        			if(!PortalUtils.isEmptyOrNullString(env.getProperty(ConfigConstants.portal_feature_email_service)) 
-			                    		&& env.getProperty(ConfigConstants.portal_feature_email_service).equalsIgnoreCase("mailjet")) 
-			            			mailJet.sendMail(mailData);
-			        		}
-			            } catch (MailException ex) {
-			                log.error(EELFLoggerDelegate.errorLogger, "Exception Occurred while Sending Mail to user ={}", ex);
-			            }
+					try {
+						if (!PortalUtils
+								.isEmptyOrNullString(env.getProperty(ConfigConstants.portal_feature_email_service))
+								&& env.getProperty(ConfigConstants.portal_feature_email_service)
+										.equalsIgnoreCase("smtp")) {
+							log.debug("sendUserNotification: using SMTP service");
+							mailservice.sendMail(mailData);
+						} else if (!PortalUtils
+								.isEmptyOrNullString(env.getProperty(ConfigConstants.portal_feature_email_service))
+								&& env.getProperty(ConfigConstants.portal_feature_email_service)
+										.equalsIgnoreCase("mailjet")) {
+							log.debug("sendUserNotification: using MailJet service");
+							mailJet.sendMail(mailData);
+						} else {
+							log.debug(
+									"sendUserNotification: no email service configured in key "
+											+ ConfigConstants.portal_feature_email_service);
+						}
+					} catch (MailException ex) {
+						log.error(
+								"sendUserNotification: failed to send mail to user " + user.getEmail(), ex);
+					}
+					
 				} else {
 					//If notification Delivery mechanism is not found or if the mechanism is not present then log error 
 					//and iterate to next Mechanism if present with same severity.
-					log.error(EELFLoggerDelegate.errorLogger, "Delivery Mechanism is not present. Cannot send notification for Code : " + mlpUserNotifPref.getNotfDelvMechCode());
+					log.error( "Delivery Mechanism is not present. Cannot send notification for Code : " + mlpUserNotifPref.getNotfDelvMechCode());
 				}
 			}
 		}
@@ -286,5 +293,13 @@ public class NotificationServiceImpl extends AbstractServiceImpl implements Noti
 		}
 		return template;
 	}
+	
+	@Override
+    public int getUserUnreadNotificationCount(String userId){
+        log.debug("getUserUnreadNotificationCount");
+        ICommonDataServiceRestClient dataServiceRestClient = getClient();
+        Long count=dataServiceRestClient.getUserUnreadNotificationCount(userId);
+        return count.intValue();
+    }
 
 }

@@ -29,12 +29,10 @@ angular
                     templateUrl : '/app/terms-condition/terms-condition.template.html',
                     controller : function($scope, $uibModal, sharedProperties, apiService) {
                         
-                        apiService
-                                    .getTermsCondition()
+                        apiService.getTermsConditions()
                                     .then(
                                             function(response){
-                                                $scope.termsCondition = response.data.description;
-                                                console.log(response);
+                                            	$scope.termsConditions = (response.data.response_body);
                                             },
                                             function(error){
                                             	console.log(error);

@@ -20,13 +20,16 @@
 
 package org.acumos.portal.be.common;
 
+import java.lang.invoke.MethodHandles;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-import org.acumos.portal.be.util.EELFLoggerDelegate;
 import org.apache.http.client.HttpClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
+import org.springframework.util.function.SingletonSupplier;
 import org.springframework.web.client.RestTemplate;
 /**
  * 
@@ -36,7 +39,7 @@ import org.springframework.web.client.RestTemplate;
  */
 public abstract class AbstractClient {
 
-	protected static final EELFLoggerDelegate log = EELFLoggerDelegate.getLogger(AbstractClient.class);	
+	protected static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());	
 	
 	protected final String baseUrl;
 	protected final RestTemplate restTemplate;
@@ -65,9 +68,8 @@ public abstract class AbstractClient {
 		}
 
 		this.restTemplate = new RestTemplateBuilder()
-														.requestFactory(
-															new HttpComponentsClientHttpRequestFactory(theClient))	
-														.rootUri(this.baseUrl)
-														.build();
+				.requestFactory(SingletonSupplier.of(
+					new HttpComponentsClientHttpRequestFactory(theClient)))	
+				.rootUri(this.baseUrl).build();
 	}
 }	

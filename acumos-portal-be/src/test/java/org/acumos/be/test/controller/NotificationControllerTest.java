@@ -22,8 +22,9 @@ package org.acumos.be.test.controller;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.lang.invoke.MethodHandles;
+import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
@@ -40,7 +41,6 @@ import org.acumos.portal.be.service.NotificationService;
 import org.acumos.portal.be.service.impl.NotificationServiceImpl;
 import org.acumos.portal.be.transport.MLNotification;
 import org.acumos.portal.be.transport.MLUserNotifPref;
-import org.acumos.portal.be.util.EELFLoggerDelegate;
 import org.acumos.portal.be.util.PortalUtils;
 import org.junit.Assert;
 import org.junit.Rule;
@@ -49,12 +49,14 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 
 public class NotificationControllerTest {
 
-	private static final EELFLoggerDelegate logger = EELFLoggerDelegate.getLogger(NotificationControllerTest.class);
+	private static final Logger logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());	
 
 	@Rule
 	public MockitoRule mockitoRule = MockitoJUnit.rule();
@@ -73,10 +75,10 @@ public class NotificationControllerTest {
 
 		MLPNotification mlpNotification = new MLPNotification();
 		JsonResponse<MLNotification> data = new JsonResponse<>();
-		Date created = new Date();
+		Instant created = Instant.now();
 		mlpNotification.setCreated(created);
 		mlpNotification.setMessage("notification created");
-		Date modified = new Date();
+		Instant modified = Instant.now();
 		mlpNotification.setModified(modified);
 		mlpNotification.setNotificationId("037ad773-3ae2-472b-89d3-9e185a2cbfc9");
 		mlpNotification.setTitle("Notification");
@@ -94,10 +96,9 @@ public class NotificationControllerTest {
 		data.setResponseBody(value);
 
 		if (data != null) {
-			logger.debug(EELFLoggerDelegate.debugLogger,
-					"Notification created Successfully :  " + data.getResponseBody());
+			logger.debug("Notification created Successfully :  " + data.getResponseBody());
 		} else {
-			logger.error(EELFLoggerDelegate.errorLogger, "Error Occurred createNotification :");
+			logger.error("Error Occurred createNotification :");
 		}
 	}
 
@@ -126,15 +127,15 @@ public class NotificationControllerTest {
 	@Test
 	public void getUserNotifications() {
 		MLPUserNotification mlpUserNotification = new MLPUserNotification();
-		Date created = new Date();
+		Instant created = Instant.now();
 		mlpUserNotification.setCreated(created);
 		mlpUserNotification.setMessage("notification created");
-		Date modified = new Date();
+		Instant modified = Instant.now();
 		mlpUserNotification.setModified(modified);
 		mlpUserNotification.setNotificationId("037ad773-3ae2-472b-89d3-9e185a2cbfc9");
 		mlpUserNotification.setTitle("Notification");
 		mlpUserNotification.setUrl("http://notify.com");
-		Date viewed = new Date();
+		Instant viewed = Instant.now();
 		mlpUserNotification.setViewed(viewed);
 		Assert.assertNotNull(mlpUserNotification);
 		MLPNotifUserMap mlpNotificationUserMap = new MLPNotifUserMap();

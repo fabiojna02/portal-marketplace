@@ -1477,7 +1477,9 @@ position:relative;
 .disabled-title {cursor: not-allowed;	color: red;	pointer-events: none;}
 .timeline-version label  {padding-bottom:15px; line-height:30px;}
 .timeline-version select{height: 26px;padding-bottom: 3px; margin-bottom:15px;}
+.timeline-version div.error_msg{margin-top:-17px; color:#ff0000; font-size:12px;}
 .model-description .md-dialog-content .deploy-grid.midcontent{margin-bottom:20px;}
+.waiting{cursor:wait;}
 /*drag and drop*/
 .drag-drop{border: 1px dashed #d5d5d5; border-radius: 5px; width:100%; padding:15px; text-align:left;}
 .drag-drop img{display:block; margin:auto;}
@@ -1491,6 +1493,9 @@ position:relative;
     border-color: #d3d1d1;
     cursor: not-allowed;
 }
+
+.mdl-transparent-background{background: transparent !important;}
+
 .popovers .progress-bar {margin: 5px 0 3px;}
 .model-detail md-input-container .md-errors-spacer{float:left; color:#FF0000; font-size:12px;}
 .ql-size-huge{font-size: 2.5em;}
@@ -1622,6 +1627,15 @@ md-menu-content {webkit-box-shadow: 2px 0px 5px 3px rgba(0,0,0,0.1);
 #solImage .upload-txtbox{width: 100%;}
 .profileimageholder{width:27px; height:27px; display: inline-block;}
 .profileimageholder img{width:100%;}
+.uploaded-file .md-chip-input-container input.md-input{display:none;}
+
+.team-user-box{border: 1px solid #e0e0e0; display: inline-block; float: left; min-width: 60px; margin-right:9px; border-radius:3px; width:80px;}
+.team-user .team-user-box i{width: 100%; text-align: center; margin:3px 0 0;}
+.team-user .team-user-box i img{width: 30px;}
+.team-user-box div{padding: 0 5px;  overflow: hidden; text-align:center; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; color:666; font-weight:600}
+
+.timeline-label h2{background:none; font-family: 'Open Sans', sans-serif ;}
+
 /*---- media query start ----------*/
 @media(max-width:2560px){
 /*.initialVal.hasClass .company-market ul li{width:80px;}

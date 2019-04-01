@@ -26,8 +26,9 @@ limitations under the License.
 	<section class="pageheadsection gray-bg" id="md-model-detail-template">
 		<div class="md-head-container1">
 			<div class="md-head-containerinner1">
-				<span class="md-headline2 mob-disblock" title="{{solution.name}}">
-					<img class="solutions-img" src="../images/solutions/R.png" />{{solution.name}}</span>				
+				<span  class="md-headline4 mob-disblock" title="{{solution.name}}">
+					<img class="solutions-img" ng-src="/api/solutions/{{solution.solutionId}}/picture"
+						onerror="this.onerror=null;this.src='images/default-model.png'"/>{{solution.name}}	</span>				
 				<div class="md-head-container3">
 					<div class="md-head-containerinner-seperator"></div>
 					<div class="version-container">
@@ -137,7 +138,7 @@ limitations under the License.
 			<div>
 				<div>
 					<span class="text-medium font600"><span
-						class="md-created-label" style="text-overflow: unset; max-width: none;">Created by {{solution.ownerName}}</span></span>
+						class="md-created-label" style="text-overflow: unset; max-width: none;">Created by {{(authorList) ? authorList[0].name: solution.ownerName}}</span></span>
 					| <span class="text-xsmall">Created on {{solution.created |
 						date:'MM/dd/yyyy'}} </span><span ng-if="!audit">|
 					<button
@@ -297,19 +298,14 @@ limitations under the License.
 				<div class="mdl-cell md-right-container model-details-tabwrapper">
 					<div class="mdl-tabs__panel is-active" id="tab1-panel">
 						<div class="md-intro-container">
-							<h6 class="sectiontitle9">INTRODUCTION</h6>							
+							<div ng-if="solution.modelTypeName && version.accessTypeCode != 'PR'"><h6 class="sectiontitle9">INTRODUCTION | CATEGORY:{{solution.modelTypeName}}</h6></div>
+							<div ng-if="!solution.modelTypeName || version.accessTypeCode =='PR'"><h6 class="sectiontitle9">INTRODUCTION</h6></div>
 						</div>
 
 						<div class="description-img-container">
-							<!-- <img class="modelimg1" src="images/imagegallery2.jpg" /> -->
-
 							<!-- images changed for demo  -->
-							<!-- <img
-								ng-src="{{previewImage}}" class="modelimg1"
-								style="max-width: 400px; margin: 0 auto; display: block;"> -->
-								<img ng-show="solution.picture" ng-src="data:image/JPEG;base64,{{solution.picture}}" class="modelimg1" style="max-width: 400px; margin: 0 auto; display: block;">
-								<img ng-hide="solution.picture" ng-src="images/default-model.png" class="modelimg1" style="max-width: 400px; margin: 0 auto; display: block;">
-
+								<img ng-src="/api/solutions/{{solution.solutionId}}/picture" class="modelimg1" style="max-width: 400px; margin: 0 auto; display: block;"
+									onerror="this.onerror=null;this.src='images/default-model.png'"/>
 						</div>
 						<!-- <p>Parsey McParseface is a language parsing tool that is fantastic at tagging word meaning within sentences and forming a parse tree (in Tree or Conll format) for other NLP algorithms to use</p> -->
 							<div ng-bind-html="solutionPublicDesc1" ng-show="showPBDescription"></div>
@@ -340,17 +336,17 @@ limitations under the License.
 							</thead>
 							<tbody>
 								<!-- ng-repeat = "value in downloadData" -->
-								<tr ng-repeat="supportingDoc in supportingDocsPB" ng-show="showPBDocs">
+								<tr class="supporting-doc" ng-repeat="supportingDoc in supportingDocsPB" ng-show="showPBDocs">
 									<td><span class="file-type">
-											<i class="far fa-file-word" ng-if="supportingDoc.ext == 'docx'" aria-hidden="true"></i>
-											<i class="far fa-file-image" ng-if="supportingDoc.ext == 'png'" aria-hidden="true"></i>
-											<i class="far fa-file-image" ng-if="supportingDoc.ext == 'jpg'" aria-hidden="true"></i>
-											<i class="far fa-file-pdf" ng-if="supportingDoc.ext == 'pdf'" aria-hidden="true"></i>
-											<i class="far fa-file-powerpoint" ng-if="supportingDoc.ext == 'pptx'" aria-hidden="true"></i>
-											<i class="far fa-file-excel" ng-if="supportingDoc.ext == 'xlsx'" aria-hidden="true"></i>
-											<i class="far fa-file-excel" ng-if="supportingDoc.ext == 'csv'" aria-hidden="true"></i>
-											<i class="far fa-file-alt" ng-if="supportingDoc.ext == 'txt'" aria-hidden="true"></i>
-											<i class="far fa-file-archive" ng-if="supportingDoc.ext == 'zip'" aria-hidden="true"></i>
+											<i class="far fa-file-word" ng-if="(supportingDoc.ext | lowercase) == 'docx'" aria-hidden="true"></i>
+											<i class="far fa-file-image" ng-if="(supportingDoc.ext | lowercase) == 'png'" aria-hidden="true"></i>
+											<i class="far fa-file-image" ng-if="(supportingDoc.ext | lowercase) == 'jpg'" aria-hidden="true"></i>
+											<i class="far fa-file-pdf" ng-if="(supportingDoc.ext | lowercase) == 'pdf'" aria-hidden="true"></i>
+											<i class="far fa-file-powerpoint" ng-if="(supportingDoc.ext | lowercase) == 'pptx'" aria-hidden="true"></i>
+											<i class="far fa-file-excel" ng-if="(supportingDoc.ext | lowercase) == 'xlsx'" aria-hidden="true"></i>
+											<i class="far fa-file-excel" ng-if="(supportingDoc.ext | lowercase) == 'csv'" aria-hidden="true"></i>
+											<i class="far fa-file-alt" ng-if="(supportingDoc.ext | lowercase) == 'txt'" aria-hidden="true"></i>
+											<i class="far fa-file-archive" ng-if="(supportingDoc.ext | lowercase) == 'zip'" aria-hidden="true"></i>
 									</span><span>{{supportingDoc.name}}</span></td>
 									<td>{{versionId}}</td>
 									<td>{{solution.modified | date:'MM/dd/yyyy' }}</td>
@@ -359,19 +355,18 @@ limitations under the License.
 									</a></td>
 								</tr>
 								
-								<tr ng-repeat="supportingDoc in supportingDocsOR" ng-show="showORDocs">
+								<tr class="supporting-doc" ng-repeat="supportingDoc in supportingDocsOR" ng-show="showORDocs">
 									<td><span class="file-type">
-											<i class="far fa-file-word" ng-if="supportingDoc.ext == 'docx'" aria-hidden="true"></i>
-											<i class="far fa-file-image" ng-if="supportingDoc.ext == 'png'" aria-hidden="true"></i>
-											<i class="far fa-file-image" ng-if="supportingDoc.ext == 'jpg'" aria-hidden="true"></i>
-											<i class="far fa-file-pdf" ng-if="supportingDoc.ext == 'pdf'" aria-hidden="true"></i>
-											<i class="far fa-file-powerpoint" ng-if="supportingDoc.ext == 'pptx'" aria-hidden="true"></i>
-											<i class="far fa-file-excel" ng-if="supportingDoc.ext == 'xlsx'" aria-hidden="true"></i>
-											<i class="far fa-file-excel" ng-if="supportingDoc.ext == 'csv'" aria-hidden="true"></i>
-											<i class="far fa-file-alt" ng-if="supportingDoc.ext == 'txt'" aria-hidden="true"></i>
-											<i class="far fa-file-archive" ng-if="supportingDoc.ext == 'zip'" aria-hidden="true"></i>
-									</span><a
-										class="link-blue">{{supportingDoc.name}}</a></td>
+											<i class="far fa-file-word" ng-if="(supportingDoc.ext | lowercase) == 'docx'" aria-hidden="true"></i>
+											<i class="far fa-file-image" ng-if="(supportingDoc.ext | lowercase) == 'png'" aria-hidden="true"></i>
+											<i class="far fa-file-image" ng-if="(supportingDoc.ext | lowercase) == 'jpg'" aria-hidden="true"></i>
+											<i class="far fa-file-pdf" ng-if="(supportingDoc.ext | lowercase) == 'pdf'" aria-hidden="true"></i>
+											<i class="far fa-file-powerpoint" ng-if="(supportingDoc.ext | lowercase) == 'pptx'" aria-hidden="true"></i>
+											<i class="far fa-file-excel" ng-if="(supportingDoc.ext | lowercase) == 'xlsx'" aria-hidden="true"></i>
+											<i class="far fa-file-excel" ng-if="(supportingDoc.ext | lowercase) == 'csv'" aria-hidden="true"></i>
+											<i class="far fa-file-alt" ng-if="(supportingDoc.ext | lowercase)== 'txt'" aria-hidden="true"></i>
+											<i class="far fa-file-archive" ng-if="(supportingDoc.ext | lowercase) == 'zip'" aria-hidden="true"></i>
+									</span><span>{{supportingDoc.name}}</span></td>
 									<td>{{versionId}}</td>
 									<td>{{solution.modified | date:'MM/dd/yyyy' }}</td>
 									<td><a href="/api/solution/revision/document/{{supportingDoc.documentId}}?jwtToken={{auth}}" alt="Download" title="Download">
@@ -458,14 +453,14 @@ limitations under the License.
 					
 					<div class="mdl-tabs__panel" id="tab5-panel">Content 5</div>
 					<div class="md-lower-container1" ng-hide="version.accessTypeCode == 'PR' || audit">
-						<div class="mdl-grid mdl-grid--no-spacing bdr-bottom">
+						<div class="md-rate-grid">
 							<div
-								class="mdl-cell mdl-cell--7-col mdl-cell--4-col-tablet mdl-cell--4-col-phone">
+								class="rate-grid-cell1">
 								<h6 class="sectiontitle9 rate-title" title="{{solution.name}}">RATE:
 									{{solution.name}}</h6>
 							</div>
 							<div  ng-show="version.accessTypeCode == 'PB'"
-								class="mdl-cell mdl-cell--5-col mdl-cell--4-col-tablet mdl-cell--4-col-phone">
+								class="rate-grid-cell2">
 								<div flex class="text-right" >
 									<ul class="horizontal-list2 md-social-icons">
                                         <li><h6 class="sharetitle">Share with</h6></li>
@@ -858,7 +853,7 @@ limitations under the License.
 				</div>
 				<div layout="row" class="pull-right">
 						<md-button class="mdl-button mdl-js-button btn-primary"
-								ng-disabled="deploy.$invalid" ng-click="authenticateAnddeployToAzure();">Deploy
+								ng-disabled="deploy.$invalid" ng-click="showazurePopup()">Deploy
 						</md-button>
 				</div>
 				</form>
@@ -1239,4 +1234,32 @@ limitations under the License.
 				</md-dialog>
 			</div>
 			<!-- Modal box end -->
+		
+		
+		<!--  deploy to Microsoft Azure dialog starts -->
+		<div class="md-dialog-container" id="deploy" style="height: 0;">
+		<md-dialog aria-label="deploy" class="cg-dialog-admin1">
+			<md-toolbar>
+		      <div class="md-toolbar-tools">
+				<h2>Deploy to Microsoft Azure</h2>
+				<span flex></span>
+				<md-button class="md-icon-button" ng-click='closePoup()'>
+				<i class="material-icons">close</i> </md-button>
+				</div>
+			</md-toolbar>
+		 	<md-dialog-content>		
+			 	<div class="md-dialog-content">
+					<p class="wrap_text">Deploying this model outside the Acumos system may expose its information to third parties. Please click OK to confirm this deployment is being done in compliance with all local policies.
+					</p>
+			 	</div>		 
+		  	</md-dialog-content>		
+		
+			<md-dialog-actions>		  
+		   		<div class="dialog-footer-container1">	   
+					<button ng-click='closePoup()' class="mdl-button mdl-js-button btn-secondary">Cancel</button>
+					<button ng-click="authenticateAnddeployToAzure();closePoup();" class="mdl-button mdl-js-button btn-primary">OK</button>	        
+			</md-dialog-actions>
+		  </md-dialog>
+		  </div>
+		    <!--deploy to Microsoft Azure dialog end -->
 	

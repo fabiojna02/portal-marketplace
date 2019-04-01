@@ -20,12 +20,12 @@
 package org.acumos.be.test.service.impl;
 
 import java.io.InputStream;
-import java.util.Date;
+import java.lang.invoke.MethodHandles;
+import java.time.Instant;
 
 import org.acumos.cds.domain.MLPArtifact;
 import org.acumos.portal.be.docker.cmd.SaveImageCommand;
 import org.acumos.portal.be.service.impl.PullAndPushSolutionServiceImpl;
-import org.acumos.portal.be.util.EELFLoggerDelegate;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -33,11 +33,13 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import static org.mockito.Mockito.*;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @RunWith(MockitoJUnitRunner.class)
 public class PullAndPushSolutionServiceImplTest {
 
-	private static final EELFLoggerDelegate logger = EELFLoggerDelegate.getLogger(PullAndPushSolutionServiceImplTest.class);
+	private static final Logger logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());	
 
 	@Mock
 	PullAndPushSolutionServiceImpl impl = new PullAndPushSolutionServiceImpl();
@@ -48,7 +50,7 @@ public class PullAndPushSolutionServiceImplTest {
 		MLPArtifact mlpArtifact = new MLPArtifact();
 		mlpArtifact.setArtifactId(artifactId);
 		mlpArtifact.setArtifactTypeCode("BP");
-		mlpArtifact.setCreated(new Date());
+		mlpArtifact.setCreated(Instant.now());
 		mlpArtifact.setDescription("Artifact");
 		mlpArtifact.setUri("http://abc.com");
 
@@ -59,7 +61,6 @@ public class PullAndPushSolutionServiceImplTest {
 			Mockito.when(impl.downloadModelArtifact(artifactId)).thenReturn(inputStream);
 			Assert.assertEquals(inputStream, inputStream);
 			logger.info("Successfully return downloadModelArtifact");
-
 		}
 	}
 }

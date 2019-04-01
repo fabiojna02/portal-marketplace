@@ -25,24 +25,24 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Date;
+import java.lang.invoke.MethodHandles;
+import java.time.Instant;
 
 import javax.servlet.http.HttpServletResponse;
 
-import org.acumos.cds.ArtifactTypeCode;
 import org.acumos.cds.client.ICommonDataServiceRestClient;
 import org.acumos.cds.domain.MLPArtifact;
 import org.acumos.cds.domain.MLPDocument;
 import org.acumos.cds.domain.MLPSolutionDownload;
 import org.acumos.nexus.client.NexusArtifactClient;
-import org.acumos.nexus.client.RepositoryLocation;
 import org.acumos.portal.be.docker.DockerClientFactory;
 import org.acumos.portal.be.docker.DockerConfiguration;
 import org.acumos.portal.be.docker.cmd.SaveImageCommand;
 import org.acumos.portal.be.service.PushAndPullSolutionService;
 import org.acumos.portal.be.transport.MLSolutionDownload;
-import org.acumos.portal.be.util.EELFLoggerDelegate;
 import org.acumos.portal.be.util.PortalUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
@@ -53,18 +53,20 @@ import com.github.dockerjava.api.DockerClient;
 @Service
 public class PullAndPushSolutionServiceImpl extends AbstractServiceImpl implements PushAndPullSolutionService {
 
-	private static final EELFLoggerDelegate log = EELFLoggerDelegate.getLogger(PullAndPushSolutionServiceImpl.class);
+	private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());	
 
 	@Autowired
 	private Environment env;
 	
 	@Autowired
 	private DockerConfiguration dockerConfiguration;
+	
+	private static final String ARTIFACT_TYPE_DI = "DI";
 
 	@Override
 	public File downloadModelDockerImage(String modelName, String imageName, String version) {
 
-		log.debug(EELFLoggerDelegate.debugLogger, "downloadModelDockerImage ={}", imageName);
+		log.debug("downloadModelDockerImage ={}", imageName);
 		/**
 		 * Steps for downloading a DockerImage
 		 * a. Save the Docker Image in a File
@@ -90,7 +92,7 @@ public class PullAndPushSolutionServiceImpl extends AbstractServiceImpl implemen
 				}
 			}
 		} catch (Exception e) {
-			log.error(EELFLoggerDelegate.errorLogger, "Exception Occurred while Downloading Docker Image ={}", e);
+			log.error("Exception Occurred while Downloading Docker Image ={}", e);
 		} */
 		return imageFile;
 	}
@@ -100,7 +102,7 @@ public class PullAndPushSolutionServiceImpl extends AbstractServiceImpl implemen
 	 */
 	@Override
 	public InputStream downloadModelArtifact(String artifactId) {
-		log.debug(EELFLoggerDelegate.debugLogger, "downloadModelArtifact.1 begins for artifact {}",
+		log.debug("downloadModelArtifact.1 begins for artifact {}",
 				artifactId);
 		InputStream inputStream = null;
 		ByteArrayOutputStream byteArrayOutputStream = null;
@@ -108,17 +110,17 @@ public class PullAndPushSolutionServiceImpl extends AbstractServiceImpl implemen
 			ICommonDataServiceRestClient dataServiceRestClient = getClient();
 			MLPArtifact mlpArtifact = dataServiceRestClient.getArtifact(artifactId);
 			if (mlpArtifact != null && !mlpArtifact.getUri().isEmpty()) {
-				if (mlpArtifact.getArtifactTypeCode().equalsIgnoreCase(ArtifactTypeCode.DI.toString())) {
+				if (mlpArtifact.getArtifactTypeCode().equalsIgnoreCase(ARTIFACT_TYPE_DI)) {
 					DockerClient dockerClient = DockerClientFactory.getDockerClient(dockerConfiguration);
 					try {
 						SaveImageCommand saveImageCommand = new SaveImageCommand(mlpArtifact.getUri(), null, null, null,
 								true);
 						saveImageCommand.setClient(dockerClient);
 						inputStream = saveImageCommand.getDockerImageStream();
-						log.debug(EELFLoggerDelegate.debugLogger,
+						log.debug(
 								"downloadModelArtifact.1 received stream for artifact {}", artifactId);
 					} catch (Exception e) {
-						log.error(EELFLoggerDelegate.errorLogger, "downloadModelArtifact.1 inner failed", e);
+						log.error("downloadModelArtifact.1 inner failed", e);
 					} finally {
 						try {
 							dockerClient.close();
@@ -129,7 +131,7 @@ public class PullAndPushSolutionServiceImpl extends AbstractServiceImpl implemen
 				} else {
 					NexusArtifactClient artifactClient = getNexusClient();
 					byteArrayOutputStream = artifactClient.getArtifact(mlpArtifact.getUri());
-					log.debug(EELFLoggerDelegate.debugLogger,
+					log.debug(
 							"downloadModelArtifact.1 received content for artifact {}", artifactId);
 					inputStream = new ByteArrayInputStream(byteArrayOutputStream.toByteArray());
 					if (byteArrayOutputStream != null) {
@@ -138,7 +140,7 @@ public class PullAndPushSolutionServiceImpl extends AbstractServiceImpl implemen
 				}
 			}
 		} catch (Exception e) {
-			log.error(EELFLoggerDelegate.errorLogger, "downloadModelArtifact.1 outer failed", e);
+			log.error("downloadModelArtifact.1 outer failed", e);
 		}
 		return inputStream;
 	}
@@ -150,13 +152,13 @@ public class PullAndPushSolutionServiceImpl extends AbstractServiceImpl implemen
 	 */
 	@Override
 	public void downloadModelArtifact(String artifactId, HttpServletResponse response) {
-		log.debug(EELFLoggerDelegate.debugLogger, "downloadModelArtifact.2 begins for artifact {}",
+		log.debug("downloadModelArtifact.2 begins for artifact {}",
 				artifactId);
 		try {
 			ICommonDataServiceRestClient dataServiceRestClient = getClient();
 			MLPArtifact mlpArtifact = dataServiceRestClient.getArtifact(artifactId);
 			if (mlpArtifact != null && !mlpArtifact.getUri().isEmpty()) {
-				if (mlpArtifact.getArtifactTypeCode().equalsIgnoreCase(ArtifactTypeCode.DI.toString())) {
+				if (mlpArtifact.getArtifactTypeCode().equalsIgnoreCase(ARTIFACT_TYPE_DI)) {
 					DockerClient dockerClient = DockerClientFactory.getDockerClient(dockerConfiguration);
 					try {
 						SaveImageCommand saveImageCommand = new SaveImageCommand(mlpArtifact.getUri(), null, null, null,
@@ -167,11 +169,11 @@ public class PullAndPushSolutionServiceImpl extends AbstractServiceImpl implemen
 						if (buffer <= 0) {
 							buffer = 8;
 						}
-						log.debug(EELFLoggerDelegate.debugLogger,
+						log.debug(
 								"downloadModelArtifact.2 directing docker stream to response for artifact {}", artifactId);
 						saveImageCommand.getDockerImageStream(response, buffer);
 					} catch (Exception e) {
-						log.error(EELFLoggerDelegate.errorLogger, "downloadModelArtifact.2 inner failed", e);
+						log.error("downloadModelArtifact.2 inner failed", e);
 					} finally {
 						try {
 							dockerClient.close();
@@ -182,7 +184,7 @@ public class PullAndPushSolutionServiceImpl extends AbstractServiceImpl implemen
 				} else {
 					NexusArtifactClient artifactClient = getNexusClient();
 					ByteArrayOutputStream byteArrayOutputStream = artifactClient.getArtifact(mlpArtifact.getUri());
-					log.debug(EELFLoggerDelegate.debugLogger,
+					log.debug(
 							"downloadModelArtifact.2 copying content stream for artifact {}", artifactId);
 					byteArrayOutputStream.writeTo(response.getOutputStream());
 					response.flushBuffer();
@@ -192,13 +194,13 @@ public class PullAndPushSolutionServiceImpl extends AbstractServiceImpl implemen
 				}
 			}
 		} catch (Exception e) {
-			log.error(EELFLoggerDelegate.errorLogger, "downloadModelArtifact.2 outer failed", e);
+			log.error("downloadModelArtifact.2 outer failed", e);
 		}
 	}
 
 	@Override
 	public String getFileNameByArtifactId(String artifactId) {
-        log.debug(EELFLoggerDelegate.debugLogger, "getArtifactById for artifact ID {}", artifactId);
+        log.debug("getArtifactById for artifact ID {}", artifactId);
 
         String artifactFileName = null;
         ICommonDataServiceRestClient dataServiceRestClient = getClient();
@@ -207,7 +209,7 @@ public class PullAndPushSolutionServiceImpl extends AbstractServiceImpl implemen
             String uri = mlpArtifact.getUri();
             if (!uri.isEmpty()) {
                 artifactFileName = uri.substring(uri.lastIndexOf("/") + 1, uri.length());
-                if(mlpArtifact.getArtifactTypeCode().equalsIgnoreCase(ArtifactTypeCode.DI.toString())) {
+                if(mlpArtifact.getArtifactTypeCode().equalsIgnoreCase(ARTIFACT_TYPE_DI)) {
                 	artifactFileName += ".tar";
                 	}
                 }
@@ -216,7 +218,7 @@ public class PullAndPushSolutionServiceImpl extends AbstractServiceImpl implemen
 	}
 
 	public String getFileNameByDocumentId(String documentId) {
-        log.debug(EELFLoggerDelegate.debugLogger, "getDocumentNameById for document ID {}", documentId);
+        log.debug("getDocumentNameById for document ID {}", documentId);
 
         String artifactFileName = null;
         ICommonDataServiceRestClient dataServiceRestClient = getClient();
@@ -232,7 +234,7 @@ public class PullAndPushSolutionServiceImpl extends AbstractServiceImpl implemen
 	 */
 	@Override
 	public void downloadModelDocument(String documentId, HttpServletResponse response) {
-		log.debug(EELFLoggerDelegate.debugLogger, "downloadModelDocument.2 begins for document {}",
+		log.debug("downloadModelDocument.2 begins for document {}",
 				documentId);
 		try {
 			ICommonDataServiceRestClient dataServiceRestClient = getClient();
@@ -240,8 +242,7 @@ public class PullAndPushSolutionServiceImpl extends AbstractServiceImpl implemen
 			if (mlpDocument != null && !mlpDocument.getUri().isEmpty()) {
 				NexusArtifactClient nexusClient = getNexusClient();
 				ByteArrayOutputStream byteArrayOutputStream = nexusClient.getArtifact(mlpDocument.getUri());
-				log.debug(EELFLoggerDelegate.debugLogger,
-						"downloadModelDocument.2 copying content stream for document {}", mlpDocument);
+				log.debug("downloadModelDocument.2 copying content stream for document {}", mlpDocument);
 				byteArrayOutputStream.writeTo(response.getOutputStream());
 				response.flushBuffer();
 				if (byteArrayOutputStream != null) {
@@ -249,19 +250,19 @@ public class PullAndPushSolutionServiceImpl extends AbstractServiceImpl implemen
 				}
 			}
 		} catch (Exception e) {
-			log.error(EELFLoggerDelegate.errorLogger, "downloadModelDocument.2 outer failed", e);
+			log.error("downloadModelDocument.2 outer failed", e);
 		}
 	}
 
 	@Override
 	public MLSolutionDownload getSolutionDownload(String solutionId, String artifactId, String userId) {
-		log.debug(EELFLoggerDelegate.debugLogger, "getSolutionDownload for solution ID {}", solutionId);
+		log.debug("getSolutionDownload for solution ID {}", solutionId);
 		ICommonDataServiceRestClient dataServiceRestClient = getClient();
 		MLPSolutionDownload download = new MLPSolutionDownload();
 		download.setSolutionId(solutionId);
 		download.setArtifactId(artifactId);
 		download.setUserId(userId);
-		download.setDownloadDate(new Date());
+		download.setDownloadDate(Instant.now());
 		MLSolutionDownload mlSolutionDownload = PortalUtils
 				.convertToMLSolutionDownload(dataServiceRestClient.createSolutionDownload(download));
 		return mlSolutionDownload;

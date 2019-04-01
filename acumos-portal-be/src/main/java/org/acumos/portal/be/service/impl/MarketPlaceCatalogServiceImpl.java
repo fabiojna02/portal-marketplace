@@ -22,12 +22,12 @@ package org.acumos.portal.be.service.impl;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -35,23 +35,20 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.stream.Collectors;
-
-import org.acumos.cds.AccessTypeCode;
 import org.acumos.cds.CodeNameType;
-import org.acumos.cds.StepStatusCode;
-import org.acumos.cds.ValidationStatusCode;
 import org.acumos.cds.client.ICommonDataServiceRestClient;
 import org.acumos.cds.domain.MLPArtifact;
 import org.acumos.cds.domain.MLPCodeNamePair;
 import org.acumos.cds.domain.MLPDocument;
 import org.acumos.cds.domain.MLPRevisionDescription;
+import org.acumos.cds.domain.MLPSiteConfig;
 import org.acumos.cds.domain.MLPSolution;
 import org.acumos.cds.domain.MLPSolutionFavorite;
 import org.acumos.cds.domain.MLPSolutionRating;
 import org.acumos.cds.domain.MLPSolutionRevision;
-import org.acumos.cds.domain.MLPSolutionWeb;
-import org.acumos.cds.domain.MLPStepResult;
+import org.acumos.cds.domain.MLPTaskStepResult;
 import org.acumos.cds.domain.MLPTag;
+import org.acumos.cds.domain.MLPTask;
 import org.acumos.cds.domain.MLPUser;
 import org.acumos.cds.transport.AuthorTransport;
 import org.acumos.cds.transport.RestPageRequest;
@@ -64,8 +61,11 @@ import org.acumos.portal.be.common.JsonRequest;
 import org.acumos.portal.be.common.RestPageRequestBE;
 import org.acumos.portal.be.common.RestPageResponseBE;
 import org.acumos.portal.be.common.exception.AcumosServiceException;
+import org.acumos.portal.be.docker.DockerClientFactory;
+import org.acumos.portal.be.docker.DockerConfiguration;
+import org.acumos.portal.be.docker.cmd.DeleteImageCommand;
 import org.acumos.portal.be.service.MarketPlaceCatalogService;
-import org.acumos.portal.be.service.NotificationService;
+import org.acumos.portal.be.service.AdminService;
 import org.acumos.portal.be.service.UserService;
 import org.acumos.portal.be.transport.Author;
 import org.acumos.portal.be.transport.MLSolution;
@@ -75,23 +75,25 @@ import org.acumos.portal.be.transport.MLSolutionWeb;
 import org.acumos.portal.be.transport.RestPageRequestPortal;
 import org.acumos.portal.be.transport.RevisionDescription;
 import org.acumos.portal.be.transport.User;
-import org.acumos.portal.be.util.EELFLoggerDelegate;
-import org.acumos.portal.be.util.PortalConstants;
+import org.acumos.portal.be.util.JsonUtils;
 import org.acumos.portal.be.util.PortalUtils;
 import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.lang.ArrayUtils;
 import org.apache.maven.wagon.ConnectionException;
 import org.apache.maven.wagon.ResourceDoesNotExistException;
 import org.apache.maven.wagon.TransferFailedException;
 import org.apache.maven.wagon.authentication.AuthenticationException;
 import org.apache.maven.wagon.authorization.AuthorizationException;
-import org.joda.time.DateTime;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.multipart.MultipartFile;
+
+import com.github.dockerjava.api.DockerClient;
 
 /**
  * Service to Support Market Place Catalog and Manage models modules
@@ -99,7 +101,7 @@ import org.springframework.web.multipart.MultipartFile;
 @Service
 public class MarketPlaceCatalogServiceImpl extends AbstractServiceImpl implements MarketPlaceCatalogService {
 
-	private static final EELFLoggerDelegate log = EELFLoggerDelegate.getLogger(MarketPlaceCatalogServiceImpl.class);
+	private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
 	@Autowired
 	private Environment env;
@@ -108,10 +110,12 @@ public class MarketPlaceCatalogServiceImpl extends AbstractServiceImpl implement
 	private UserService userService;
 	
 	@Autowired
-	private MarketPlaceCatalogService catalogService;
-	
+	private AdminService adminService;
+
 	@Autowired
-	private NotificationService notificationService;
+	private DockerConfiguration dockerConfiguration;
+
+	private static final String STEP_STATUS_FAILED = "FA";
 
 	/*
 	 * No
@@ -123,7 +127,7 @@ public class MarketPlaceCatalogServiceImpl extends AbstractServiceImpl implement
 	@Override
 	public RestPageResponse<MLPSolution> getAllPaginatedSolutions(Integer page, Integer size, String sortingOrder)
 			throws AcumosServiceException {
-		log.debug(EELFLoggerDelegate.debugLogger, "getAllPaginatedSolutions");
+		log.debug("getAllPaginatedSolutions");
 		RestPageResponse<MLPSolution> mlpSolutionsPaged = null;
 		List<MLSolution> mlSolutions = null;
 		try {
@@ -131,11 +135,7 @@ public class MarketPlaceCatalogServiceImpl extends AbstractServiceImpl implement
 			// TODO: revisit this code to pass query parameters to CCDS Service
 			Map<String, Object> queryParameters = new HashMap<>();
 			queryParameters.put("active", "Y"); // Fetch all active solutions
-			queryParameters.put("accessTypeCode", AccessTypeCode.PB.toString()); // Assuming
-																					// 1
-																					// is
-																					// public
-			queryParameters.put("validationStatusCode", ValidationStatusCode.PS.toString());
+			queryParameters.put("accessTypeCode", CommonConstants.PUBLIC);
 			List<MLPSolution> mlpSolutions = new ArrayList<MLPSolution>();
 			// dataServiceRestClient.searchSolutions(queryParameters, false);
 			///////////////////////////////////////
@@ -172,22 +172,18 @@ public class MarketPlaceCatalogServiceImpl extends AbstractServiceImpl implement
 
 	@Override
 	public List<MLSolution> getAllPublishedSolutions() throws AcumosServiceException {
-		log.debug(EELFLoggerDelegate.debugLogger, "getAllPublishedSolutions");
+		log.debug("getAllPublishedSolutions");
 		List<MLSolution> mlSolutions = null;
 		try {
 			ICommonDataServiceRestClient dataServiceRestClient = getClient();
 			Map<String, Object> queryParameters = new HashMap<>();
 			// queryParameters.put("active", "Y"); //Fetch all active solutions
-			queryParameters.put("accessTypeCode", AccessTypeCode.PB.toString()); // Assuming
-																					// 1
-																					// is
-																					// public
-			queryParameters.put("validationStatusCode", ValidationStatusCode.PS.toString());
+			queryParameters.put("accessTypeCode", CommonConstants.PUBLIC);
 			// TODO Lets keep it simple by using List for now. Need to modify
 			// this to use Pagination by providing page number and result fetch
 			// size
 			List<MLPSolution> mlpSolutions = new ArrayList<MLPSolution>();// dataServiceRestClient.searchSolutions(queryParameters,
-																			// false);
+			// false);
 			if (!PortalUtils.isEmptyList(mlpSolutions)) {
 				mlSolutions = new ArrayList<>();
 				for (MLPSolution mlpSolution : mlpSolutions) {
@@ -206,26 +202,27 @@ public class MarketPlaceCatalogServiceImpl extends AbstractServiceImpl implement
 		}
 		return mlSolutions;
 	}
-	
+
 	@Override
 	public MLSolution getSolution(String solutionId, String loginUserId) throws AcumosServiceException {
-		log.debug(EELFLoggerDelegate.debugLogger, "getSolution");
+		log.debug("getSolution");
 		ICommonDataServiceRestClient dataServiceRestClient = getClient();
 		MLSolution mlSolution = null;
 		try {
 			MLPSolution mlpSolution = dataServiceRestClient.getSolution(solutionId);
 			if (mlpSolution != null) {
 				mlSolution = PortalUtils.convertToMLSolution(mlpSolution);
-				List<MLPCodeNamePair> toolkitTypeList = dataServiceRestClient.getCodeNamePairs(CodeNameType.TOOLKIT_TYPE);
+				List<MLPCodeNamePair> toolkitTypeList = dataServiceRestClient
+						.getCodeNamePairs(CodeNameType.TOOLKIT_TYPE);
 				if (toolkitTypeList.size() > 0) {
 					for (MLPCodeNamePair toolkitType : toolkitTypeList) {
 						if (toolkitType.getCode() != null) {
 							if (toolkitType.getCode().equalsIgnoreCase(mlpSolution.getToolkitTypeCode())) {
 								mlSolution.setTookitTypeName(toolkitType.getName());
- 								break;
- 							}
- 						}
- 					}
+								break;
+							}
+						}
+					}
 				}
 				List<MLPCodeNamePair> modelTypeList = dataServiceRestClient.getCodeNamePairs(CodeNameType.MODEL_TYPE);
 				if (modelTypeList.size() > 0) {
@@ -233,9 +230,9 @@ public class MarketPlaceCatalogServiceImpl extends AbstractServiceImpl implement
 						if (modelType.getCode() != null) {
 							if (modelType.getCode().equalsIgnoreCase(mlpSolution.getModelTypeCode())) {
 								mlSolution.setModelTypeName(modelType.getName());
- 								break;
- 							}
- 						}
+								break;
+							}
+						}
 					}
 				}
 
@@ -244,28 +241,15 @@ public class MarketPlaceCatalogServiceImpl extends AbstractServiceImpl implement
 					mlSolution.setOwnerName(mlpUser.getFirstName().concat(" " + mlpUser.getLastName()));
 				}
 
-				// fetch download count, rating count
-				try {
-					MLPSolutionWeb solutionStats = dataServiceRestClient
-							.getSolutionWebMetadata(mlSolution.getSolutionId());
-					mlSolution.setDownloadCount(solutionStats.getDownloadCount().intValue());
-					mlSolution.setRatingCount(solutionStats.getRatingCount().intValue());
-					mlSolution.setViewCount(solutionStats.getViewCount().intValue());
-					mlSolution.setSolutionRatingAvg(solutionStats.getRatingAverageTenths().intValue() / 10);
-				} catch (Exception e) {
-					log.error(EELFLoggerDelegate.errorLogger, "No stats found for SolutionId={}",
-							mlSolution.getSolutionId());
-				}
-
 				List<MLPTag> tagList = dataServiceRestClient.getSolutionTags(solutionId);
 				if (tagList.size() > 0) {
 					mlSolution.setSolutionTagList(tagList);
 				}
 
 				List<User> users = null;
-				//Set co-owners list for model
+				// Set co-owners list for model
 				try {
-					
+
 					List<MLPUser> mlpUsersList = dataServiceRestClient
 							.getSolutionAccessUsers(mlSolution.getSolutionId());
 					if (!PortalUtils.isEmptyList(mlpUsersList)) {
@@ -277,35 +261,41 @@ public class MarketPlaceCatalogServiceImpl extends AbstractServiceImpl implement
 					}
 					mlSolution.setOwnerListForSol(users);
 				} catch (Exception e) {
-					log.error(EELFLoggerDelegate.errorLogger, "No co-owner for SolutionId={}",
-							mlSolution.getSolutionId());
+					log.error("No co-owner for SolutionId={}", mlSolution.getSolutionId());
 				}
 
 				List<String> co_owners_Id = new ArrayList<String>();
-				if(users != null) {
-					co_owners_Id = users.stream().map(User :: getUserId).collect(Collectors.toList());
+				if (users != null) {
+					co_owners_Id = users.stream().map(User::getUserId).collect(Collectors.toList());
 				}
 				List<MLPSolutionRevision> revisionList = dataServiceRestClient.getSolutionRevisions(solutionId);
 				List<MLPSolutionRevision> filterRevisionList = new ArrayList<>();
 				if (revisionList.size() > 0) {
-					//filter the private versions if loggedIn User is not the owner of solution
+					// filter the private versions if loggedIn User is not the
+					// owner of solution
 					List<String> accessCodes = new ArrayList<String>();
 					accessCodes.add(CommonConstants.PUBLIC);
 					if (loginUserId != null) {
-						//if logged In user is owner/co-owner then add private revisions
-						if (loginUserId.equals(mlpSolution.getUserId()) || co_owners_Id.contains(loginUserId) || userService.isPublisherRole(loginUserId)) {
+						// if logged In user is owner/co-owner then add private
+						// revisions
+						if (loginUserId.equals(mlpSolution.getUserId()) || co_owners_Id.contains(loginUserId)
+								|| userService.isPublisherRole(loginUserId)) {
 							accessCodes.add(CommonConstants.PRIVATE);
 							accessCodes.add(CommonConstants.ORGANIZATION);
 						} else {
-							//if user is logged in but he not the owner/co-owner then add Company revisions
+							// if user is logged in but he not the
+							// owner/co-owner then add Company revisions
 							accessCodes.add(CommonConstants.ORGANIZATION);
 						}
 					}
 
-					filterRevisionList = revisionList.stream().filter(revision -> accessCodes.contains(revision.getAccessTypeCode())).collect(Collectors.toList());
-					if(filterRevisionList.size() > 0) {
+					filterRevisionList = revisionList.stream()
+							.filter(revision -> accessCodes.contains(revision.getAccessTypeCode()))
+							.collect(Collectors.toList());
+					if (filterRevisionList.size() > 0) {
 						mlSolution.setRevisions(filterRevisionList);
-						//Add the access Type code for the latest revision for the categorization while display
+						// Add the access Type code for the latest revision for
+						// the categorization while display
 						mlSolution.setAccessType(filterRevisionList.get(0).getAccessTypeCode());
 					}
 				}
@@ -333,12 +323,11 @@ public class MarketPlaceCatalogServiceImpl extends AbstractServiceImpl implement
 
 	@Override
 	public List<MLSolution> getSearchSolution(String search) throws AcumosServiceException {
-		log.debug(EELFLoggerDelegate.debugLogger, "getSearchedSolutions");
+		log.debug("getSearchedSolutions");
 		List<MLSolution> mlSolutions = null;
 
 		return mlSolutions;
 	}
-
 
 	@Override
 	public MLSolution deleteSolution(MLSolution mlSolution) {
@@ -348,18 +337,9 @@ public class MarketPlaceCatalogServiceImpl extends AbstractServiceImpl implement
 
 	@Override
 	public MLSolution updateSolution(MLSolution mlSolution, String solutionId) throws AcumosServiceException {
-		log.debug(EELFLoggerDelegate.debugLogger, "updateSolution");
+		log.debug("updateSolution");
 		try {
 			ICommonDataServiceRestClient dataServiceRestClient = getClient();
-
-			// fetch the solution to populate the solution picture so that it does not get wiped off
-			//Check if Image is present in the object. if not then fetch the solution image and then populate it
-			if (mlSolution.getPicture() == null) {
-				MLPSolution oldSolObj = dataServiceRestClient.getSolution(solutionId);
-				if(oldSolObj.getPicture() !=null) {
-					mlSolution.setPicture(oldSolObj.getPicture());
-				}
-			}
 			MLPSolution solution = PortalUtils.convertToMLPSolution(mlSolution);
 			try {
 				List<MLPTag> taglist = dataServiceRestClient.getSolutionTags(solutionId);
@@ -368,7 +348,7 @@ public class MarketPlaceCatalogServiceImpl extends AbstractServiceImpl implement
 					tags.add(tag);
 				solution.setTags(tags);
 			} catch (HttpStatusCodeException e) {
-				log.error(EELFLoggerDelegate.errorLogger, "Could not fetch tag list for update solution: " + e.getMessage());
+				log.error("Could not fetch tag list for update solution: " + e.getMessage());
 			} finally {
 				dataServiceRestClient.updateSolution(solution);
 			}
@@ -381,8 +361,114 @@ public class MarketPlaceCatalogServiceImpl extends AbstractServiceImpl implement
 	}
 
 	@Override
+	public MLSolution deleteSolutionArtifacts(MLSolution mlSolution, String solutionId, String revisionId)
+			throws AcumosServiceException, URISyntaxException {
+		log.debug("deleteSolutionArtifacts");
+		try {
+			ICommonDataServiceRestClient dataServiceRestClient = getClient();
+
+			// fetch the solution to populate the solution picture so that it
+			// does not get wiped off
+			// Check if Image is present in the object. if not then fetch the
+			// solution image and then populate it
+
+			MLPSolution solution = PortalUtils.convertToMLPSolution(mlSolution);
+			try {
+				List<MLPTag> taglist = dataServiceRestClient.getSolutionTags(solutionId);
+				HashSet<MLPTag> tags = new HashSet<MLPTag>(taglist.size());
+				for (MLPTag tag : taglist)
+					tags.add(tag);
+				solution.setTags(tags);
+			} catch (HttpStatusCodeException e) {
+				log.error("Could not fetch tag list for delete solution artifacts: " + e.getMessage());
+			} finally {
+				// start
+
+				if (revisionId != null) {
+					List<MLPArtifact> mlpArtifactsList = dataServiceRestClient.getSolutionRevisionArtifacts(solutionId,
+							revisionId);
+
+					MLPArtifact mlpArtifactClone = new MLPArtifact();
+					for (MLPArtifact mlp : mlpArtifactsList) {
+						boolean deleteNexus = false;
+						// Delete the file from the Nexus
+						log.info("mlp.getUri ----->>" + mlp.getUri());
+						log.info("mlp.getArtifactTypeCode ----->>" + mlp.getArtifactTypeCode());
+
+						if ("DI".equals(mlp.getArtifactTypeCode())) {
+							DockerClient dockerClient = DockerClientFactory.getDockerClient(dockerConfiguration);
+							DeleteImageCommand deleteImg = new DeleteImageCommand(mlp.getUri());
+							deleteImg.setClient(dockerClient);
+							deleteImg.execute();
+							deleteNexus = true;
+						} else {
+							// Delete the file from the Nexus
+							String nexusUrl = env.getProperty("nexus.url");
+							String nexusUserName = env.getProperty("nexus.username");
+							String nexusPd = env.getProperty("nexus.password");
+							log.info("nexusUrl ----->>" + nexusUrl);
+							log.info("nexusUserName ----->>" + nexusUserName);
+							log.info("nexusPd ----->>" + nexusPd);
+							NexusArtifactClient nexusArtifactClient = nexusArtifactClient(nexusUrl, nexusUserName,
+									nexusPd);
+							nexusArtifactClient.deleteArtifact(mlp.getUri());
+							deleteNexus = true;
+						}
+
+						if (deleteNexus) {
+							String mlpArtifactTypeCode = mlp.getArtifactTypeCode();
+							String artifactId = mlp.getArtifactId();
+							// Delete SolutionRevisionArtifact
+							dataServiceRestClient.dropSolutionRevisionArtifact(solutionId, revisionId, artifactId);
+							log.debug(" Successfully Deleted the SolutionRevisionArtifact ");
+							// Delete Artifact from CDS
+							dataServiceRestClient.deleteArtifact(artifactId);
+							log.debug(" Successfully Deleted the CDump Artifact ");
+						} else {
+							throw new AcumosServiceException(AcumosServiceException.ErrorCode.INVALID_PARAMETER,
+									"Unable to delete  solution from Database");
+						}
+
+					}
+				}
+
+				// end
+
+				dataServiceRestClient.updateSolution(solution);
+			}
+		} catch (IllegalArgumentException e) {
+			throw new AcumosServiceException(AcumosServiceException.ErrorCode.INVALID_PARAMETER, e.getMessage());
+		} catch (HttpClientErrorException e) {
+			throw new AcumosServiceException(AcumosServiceException.ErrorCode.INTERNAL_SERVER_ERROR, e.getMessage());
+		}
+		return mlSolution;
+	}
+
+	public NexusArtifactClient nexusArtifactClient(String nexusUrl, String nexusUserName, String nexusPd) {
+
+		log.debug("nexusArtifactClient start");
+
+		RepositoryLocation repositoryLocation = new RepositoryLocation();
+
+		repositoryLocation.setId("1");
+
+		repositoryLocation.setUrl(nexusUrl);
+
+		repositoryLocation.setUsername(nexusUserName);
+
+		repositoryLocation.setPassword(nexusPd);
+
+		NexusArtifactClient nexusArtifactClient = new NexusArtifactClient(repositoryLocation);
+
+		log.debug("nexusArtifactClient End");
+
+		return nexusArtifactClient;
+
+	}
+
+	@Override
 	public List<MLPSolutionRevision> getSolutionRevision(String solutionId) throws AcumosServiceException {
-		log.debug(EELFLoggerDelegate.debugLogger, "getSolutionRevision`");
+		log.debug("getSolutionRevision`");
 		List<MLPSolutionRevision> mlpSolutionRevisions = null;
 		try {
 			ICommonDataServiceRestClient dataServiceRestClient = getClient();
@@ -397,16 +483,16 @@ public class MarketPlaceCatalogServiceImpl extends AbstractServiceImpl implement
 
 	@Override
 	public List<MLPArtifact> getSolutionArtifacts(String solutionId, String revisionId) throws AcumosServiceException {
-		log.debug(EELFLoggerDelegate.debugLogger, "getSolutionArtifacts`");
+		log.debug("getSolutionArtifacts`");
 		List<MLPArtifact> mlpSolutionRevisions = null;
 		List<MLPArtifact> artifactList = new ArrayList<MLPArtifact>();
 		try {
 			ICommonDataServiceRestClient dataServiceRestClient = getClient();
 			mlpSolutionRevisions = dataServiceRestClient.getSolutionRevisionArtifacts(solutionId, revisionId);
-			if(mlpSolutionRevisions != null) {
+			if (mlpSolutionRevisions != null) {
 				for (MLPArtifact artifact : mlpSolutionRevisions) {
 					String[] st = artifact.getUri().split("/");
-					String name = st[st.length-1];
+					String name = st[st.length - 1];
 					artifact.setName(name);
 					artifactList.add(artifact);
 				}
@@ -421,7 +507,7 @@ public class MarketPlaceCatalogServiceImpl extends AbstractServiceImpl implement
 
 	@Override
 	public void addSolutionTag(String solutionId, String tag) throws AcumosServiceException {
-		log.debug(EELFLoggerDelegate.debugLogger, "addSolutionTag`");
+		log.debug("addSolutionTag`");
 		try {
 			ICommonDataServiceRestClient dataServiceRestClient = getClient();
 			dataServiceRestClient.addSolutionTag(solutionId, tag);
@@ -434,7 +520,7 @@ public class MarketPlaceCatalogServiceImpl extends AbstractServiceImpl implement
 
 	@Override
 	public void dropSolutionTag(String solutionId, String tag) throws AcumosServiceException {
-		log.debug(EELFLoggerDelegate.debugLogger, "addSolutionTag`");
+		log.debug("addSolutionTag`");
 		try {
 			ICommonDataServiceRestClient dataServiceRestClient = getClient();
 			dataServiceRestClient.dropSolutionTag(solutionId, tag);
@@ -453,12 +539,13 @@ public class MarketPlaceCatalogServiceImpl extends AbstractServiceImpl implement
 			ICommonDataServiceRestClient dataServiceRestClient = getClient();
 
 			RestPageResponse<MLPTag> mlpTagsList = dataServiceRestClient.getTags(null);
-			//check if there are more tags then default size of 20, if yes then get all again
-			if(mlpTagsList.getSize() < mlpTagsList.getTotalElements()) {
+			// check if there are more tags then default size of 20, if yes then
+			// get all again
+			if (mlpTagsList.getSize() < mlpTagsList.getTotalElements()) {
 				restPageReq.getBody().setPage(0);
-				restPageReq.getBody().setSize((int)mlpTagsList.getTotalElements());
+				restPageReq.getBody().setSize((int) mlpTagsList.getTotalElements());
 				mlpTagsList = dataServiceRestClient.getTags(restPageReq.getBody());
-				
+
 			}
 			if (mlpTagsList != null && !PortalUtils.isEmptyList(mlpTagsList.getContent())) {
 				tagsList = mlpTagsList.getContent();
@@ -473,37 +560,38 @@ public class MarketPlaceCatalogServiceImpl extends AbstractServiceImpl implement
 		}
 		return mlTagsList;
 	}
-	
+
 	@Override
-	public List<Map<String, String>> getPreferredTagsList(JsonRequest<RestPageRequest> restPageReq, String userId) throws AcumosServiceException {
+	public List<Map<String, String>> getPreferredTagsList(JsonRequest<RestPageRequest> restPageReq, String userId)
+			throws AcumosServiceException {
 		List<Map<String, String>> prefTags = new ArrayList<>();
 		try {
 			Long startTime = System.currentTimeMillis();
-			//System.out.println(startTime);
-			List<String> userTagsList = new ArrayList<>();	
+			// System.out.println(startTime);
+			List<String> userTagsList = new ArrayList<>();
 			ICommonDataServiceRestClient dataServiceRestClient = getClient();
 			List<String> mlTagsList = getTags(restPageReq);
 			MLPUser userDetails = dataServiceRestClient.getUser(userId);
 			Set<MLPTag> userTagSet = userDetails.getTags();
-			for(MLPTag userTags : userTagSet){
+			for (MLPTag userTags : userTagSet) {
 				userTagsList.add(userTags.getTag());
 				Map<String, String> map = new HashMap<>();
 				map.put("tagName", userTags.getTag());
 				map.put("preferred", "Yes");
 				prefTags.add(map);
-			}			 
+			}
 			for (String tag : mlTagsList) {
 				Map<String, String> map = new HashMap<>();
 				map.put("tagName", tag);
-				//Simplifying the code
-					if (!userTagsList.contains(tag)) {
-						map.put("preferred", "No");
-						prefTags.add(map);
-					}
-					
-			}			
+				// Simplifying the code
+				if (!userTagsList.contains(tag)) {
+					map.put("preferred", "No");
+					prefTags.add(map);
+				}
+
+			}
 			Long endTime = System.currentTimeMillis();
-			log.debug("getPreferredTagsList total time took "+(endTime - startTime));
+			log.debug("getPreferredTagsList total time took " + (endTime - startTime));
 		} catch (IllegalArgumentException e) {
 			throw new AcumosServiceException(AcumosServiceException.ErrorCode.INVALID_PARAMETER, e.getMessage());
 		} catch (HttpClientErrorException e) {
@@ -513,30 +601,32 @@ public class MarketPlaceCatalogServiceImpl extends AbstractServiceImpl implement
 	}
 
 	@Override
-	public void createUserTag(String userId, List<String> tagList, List<String> dropTagList) throws AcumosServiceException {
+	public void createUserTag(String userId, List<String> tagList, List<String> dropTagList)
+			throws AcumosServiceException {
 		try {
-			log.debug(EELFLoggerDelegate.debugLogger, "createUserTag");
+			log.debug("createUserTag");
 			ICommonDataServiceRestClient dataServiceRestClient = getClient();
-			if(dropTagList.size()!=0){
-				for(String dropTag : dropTagList){ 
+			if (dropTagList.size() != 0) {
+				for (String dropTag : dropTagList) {
 					dataServiceRestClient.dropUserTag(userId, dropTag);
 				}
 			}
-			if(tagList.size()!=0){
-				for(String tag : tagList){ 
+			if (tagList.size() != 0) {
+				for (String tag : tagList) {
 					dataServiceRestClient.addUserTag(userId, tag);
-				}			
+				}
 			}
-		} catch (IllegalArgumentException e) { 
+		} catch (IllegalArgumentException e) {
 			throw new AcumosServiceException(AcumosServiceException.ErrorCode.INVALID_PARAMETER, e.getMessage());
 		} catch (HttpClientErrorException e) {
 			throw new AcumosServiceException(AcumosServiceException.ErrorCode.INTERNAL_SERVER_ERROR, e.getMessage());
 		}
 	}
+
 	@Override
 	public List<User> getSolutionUserAccess(String solutionId) throws AcumosServiceException {
 		List<User> users = null;
-		log.debug(EELFLoggerDelegate.debugLogger, "getSolutionUserAccess");
+		log.debug("getSolutionUserAccess");
 		try {
 			ICommonDataServiceRestClient dataServiceRestClient = getClient();
 			List<MLPUser> mlpUsers = dataServiceRestClient.getSolutionAccessUsers(solutionId);
@@ -557,7 +647,7 @@ public class MarketPlaceCatalogServiceImpl extends AbstractServiceImpl implement
 
 	@Override
 	public void dropSolutionUserAccess(String solutionId, String userId) throws AcumosServiceException {
-		log.debug(EELFLoggerDelegate.debugLogger, "addSolutionUserAccess");
+		log.debug("addSolutionUserAccess");
 		try {
 			ICommonDataServiceRestClient dataServiceRestClient = getClient();
 			dataServiceRestClient.dropSolutionUserAccess(solutionId, userId);
@@ -571,7 +661,7 @@ public class MarketPlaceCatalogServiceImpl extends AbstractServiceImpl implement
 	@Override
 	public void incrementSolutionViewCount(String solutionId) throws AcumosServiceException {
 		try {
-			log.debug(EELFLoggerDelegate.debugLogger, "incrementSolutionViewCount");
+			log.debug("incrementSolutionViewCount");
 			ICommonDataServiceRestClient dataServiceRestClient = getClient();
 			dataServiceRestClient.incrementSolutionViewCount(solutionId);
 		} catch (IllegalArgumentException e) {
@@ -585,7 +675,7 @@ public class MarketPlaceCatalogServiceImpl extends AbstractServiceImpl implement
 	public MLSolutionRating createSolutionrating(MLPSolutionRating mlpSolutionRating) throws AcumosServiceException {
 		MLSolutionRating mlSolutionRating = null;
 		try {
-			log.debug(EELFLoggerDelegate.debugLogger, "createSolutionrating");
+			log.debug("createSolutionrating");
 			ICommonDataServiceRestClient dataServiceRestClient = getClient();
 			mlSolutionRating = PortalUtils
 					.convertToMLSolutionRating(dataServiceRestClient.createSolutionRating(mlpSolutionRating));
@@ -601,7 +691,7 @@ public class MarketPlaceCatalogServiceImpl extends AbstractServiceImpl implement
 	@Override
 	public void updateSolutionRating(MLPSolutionRating mlpSolutionRating) throws AcumosServiceException {
 		try {
-			log.debug(EELFLoggerDelegate.debugLogger, "updateSolutionRating");
+			log.debug("updateSolutionRating");
 			ICommonDataServiceRestClient dataServiceRestClient = getClient();
 			dataServiceRestClient.updateSolutionRating(mlpSolutionRating);
 		} catch (IllegalArgumentException e) {
@@ -616,7 +706,7 @@ public class MarketPlaceCatalogServiceImpl extends AbstractServiceImpl implement
 			throws AcumosServiceException {
 		RestPageResponse<MLPSolutionRating> mlpSolutionRating = null;
 		try {
-			log.debug(EELFLoggerDelegate.debugLogger, "getSolutionRating");
+			log.debug("getSolutionRating");
 			ICommonDataServiceRestClient dataServiceRestClient = getClient();
 			mlpSolutionRating = dataServiceRestClient.getSolutionRatings(solutionId, pageRequest);
 		} catch (IllegalArgumentException e) {
@@ -631,7 +721,7 @@ public class MarketPlaceCatalogServiceImpl extends AbstractServiceImpl implement
 	public List<MLSolution> getMySharedModels(String userId, RestPageRequest restPageReq)
 			throws AcumosServiceException {
 		List<MLSolution> mlSolutionList = null;
-		log.debug(EELFLoggerDelegate.debugLogger, "getSolutionUserAccess");
+		log.debug("getSolutionUserAccess");
 		try {
 			ICommonDataServiceRestClient dataServiceRestClient = getClient();
 			RestPageResponse<MLPSolution> mlpSolutions = dataServiceRestClient.getSolutions(restPageReq);
@@ -661,8 +751,7 @@ public class MarketPlaceCatalogServiceImpl extends AbstractServiceImpl implement
 		RestPageResponseBE<MLPSolution> mlpSolutionsRest = new RestPageResponseBE<MLPSolution>(content);
 		try {
 			if (!PortalUtils.isEmptyOrNullString(tag)) {
-				log.debug(EELFLoggerDelegate.debugLogger, "getTagSearchedSolutions: searching Solutions with tags:",
-						tag);
+				log.debug("getTagSearchedSolutions: searching Solutions with tags:", tag);
 				RestPageRequest pageRequest = new RestPageRequest();
 				RestPageResponse<MLPSolution> pageResponse = new RestPageResponse<>();
 				// RestPageRequest pageRequest = restPageReqBe.getBody();
@@ -687,7 +776,7 @@ public class MarketPlaceCatalogServiceImpl extends AbstractServiceImpl implement
 			throws AcumosServiceException {
 		MLSolutionFavorite mlSolutionFavorite = null;
 		try {
-			log.debug(EELFLoggerDelegate.debugLogger, "createSolutionFavorite");
+			log.debug("createSolutionFavorite");
 			ICommonDataServiceRestClient dataServiceRestClient = getClient();
 			mlSolutionFavorite = PortalUtils
 					.convertToMLSolutionFavorite(dataServiceRestClient.createSolutionFavorite(mlpSolutionFavorite));
@@ -703,7 +792,7 @@ public class MarketPlaceCatalogServiceImpl extends AbstractServiceImpl implement
 	@Override
 	public void deleteSolutionFavorite(MLPSolutionFavorite mlpSolutionFavorite) throws AcumosServiceException {
 		try {
-			log.debug(EELFLoggerDelegate.debugLogger, "deleteSolutionFavorite");
+			log.debug("deleteSolutionFavorite");
 			ICommonDataServiceRestClient dataServiceRestClient = getClient();
 			dataServiceRestClient.deleteSolutionFavorite(mlpSolutionFavorite);
 		} catch (IllegalArgumentException e) {
@@ -718,7 +807,7 @@ public class MarketPlaceCatalogServiceImpl extends AbstractServiceImpl implement
 			throws AcumosServiceException {
 		List<MLSolution> mlSolutionList = new ArrayList<>();
 		try {
-			log.debug(EELFLoggerDelegate.debugLogger, "getFavoriteSolutions : ");
+			log.debug("getFavoriteSolutions : ");
 			ICommonDataServiceRestClient dataServiceRestClient = getClient();
 			RestPageResponse<MLPSolution> mlpSolutionsFav = dataServiceRestClient.getFavoriteSolutions(userId,
 					restPageReq);
@@ -741,7 +830,7 @@ public class MarketPlaceCatalogServiceImpl extends AbstractServiceImpl implement
 	@Override
 	public RestPageResponseBE<MLSolution> getRelatedMySolutions(JsonRequest<RestPageRequestBE> restPageReqBe)
 			throws AcumosServiceException {
-		log.debug(EELFLoggerDelegate.debugLogger, "getRealtedMySolutions");
+		log.debug("getRealtedMySolutions");
 		ICommonDataServiceRestClient dataServiceRestClient = getClient();
 		Map<String, String> queryParameters = new HashMap<>();
 		RestPageResponse<MLPSolution> mlpSolutionsRest = null;
@@ -763,8 +852,9 @@ public class MarketPlaceCatalogServiceImpl extends AbstractServiceImpl implement
 					pageSize = pageSize + restPageReqBe.getBody().getPage();
 
 					/*
-					 * if(restPageReqBe.getBody().getPage()!=null) { pageRequest.setPage(pageSize);
-					 * } else { //default to 0 pageRequest.setPage(0); }
+					 * if(restPageReqBe.getBody().getPage()!=null) {
+					 * pageRequest.setPage(pageSize); } else { //default to 0
+					 * pageRequest.setPage(0); }
 					 * if(restPageReqBe.getBody().getSize()!=null &&
 					 * restPageReqBe.getBody().getSize() > 0) {
 					 * pageRequest.setSize(restPageReqBe.getBody().getSize()); }
@@ -782,8 +872,7 @@ public class MarketPlaceCatalogServiceImpl extends AbstractServiceImpl implement
 					// 1. Check if searchTerm exists, if yes then use
 					// findSolutionsBySearchTerm
 					if (!PortalUtils.isEmptyOrNullString(restPageReqBe.getBody().getSearchTerm())) {
-						log.debug(EELFLoggerDelegate.debugLogger,
-								"getSearchedSolutions: searching Solutions with searcTerm:",
+						log.debug("getSearchedSolutions: searching Solutions with searcTerm:",
 								restPageReqBe.getBody().getSearchTerm());
 						mlpSolutionsRest = dataServiceRestClient.findSolutionsBySearchTerm(
 								restPageReqBe.getBody().getSearchTerm(),
@@ -812,21 +901,27 @@ public class MarketPlaceCatalogServiceImpl extends AbstractServiceImpl implement
 					// userId.equalsIgnoreCase(mlpSolution.getOwnerId()))).collect(Collectors.toList());
 
 					/*
-					 * if(!PortalUtils.isEmptyOrNullString(restPageReqBe.getBody ().
-					 * getAccessType())) { filteredMLPSolutionsTemp =
+					 * if(!PortalUtils.isEmptyOrNullString(restPageReqBe.getBody
+					 * (). getAccessType())) { filteredMLPSolutionsTemp =
 					 * filteredMLPSolutionsTemp.stream().filter(mlpSolution ->
-					 * (PortalUtils.isEmptyOrNullString(mlpSolution. getAccessTypeCode())
-					 * ||(!PortalUtils.isEmptyOrNullString(mlpSolution. getAccessTypeCode()) &&
-					 * restPageReqBe.getBody().getAccessType().contains( mlpSolution.
-					 * getAccessTypeCode()))) ).collect(Collectors.toList()); }
+					 * (PortalUtils.isEmptyOrNullString(mlpSolution.
+					 * getAccessTypeCode())
+					 * ||(!PortalUtils.isEmptyOrNullString(mlpSolution.
+					 * getAccessTypeCode()) &&
+					 * restPageReqBe.getBody().getAccessType().contains(
+					 * mlpSolution. getAccessTypeCode())))
+					 * ).collect(Collectors.toList()); }
 					 * 
-					 * if(!PortalUtils.isEmptyOrNullString(restPageReqBe.getBody ().
-					 * getModelToolkitType())) { filteredMLPSolutionsTemp =
+					 * if(!PortalUtils.isEmptyOrNullString(restPageReqBe.getBody
+					 * (). getModelToolkitType())) { filteredMLPSolutionsTemp =
 					 * filteredMLPSolutionsTemp.stream().filter(mlpSolution ->
-					 * (PortalUtils.isEmptyOrNullString(mlpSolution. getToolkitTypeCode())
-					 * ||(!PortalUtils.isEmptyOrNullString(mlpSolution. getToolkitTypeCode()) &&
+					 * (PortalUtils.isEmptyOrNullString(mlpSolution.
+					 * getToolkitTypeCode())
+					 * ||(!PortalUtils.isEmptyOrNullString(mlpSolution.
+					 * getToolkitTypeCode()) &&
 					 * restPageReqBe.getBody().getModelToolkitType().contains(
-					 * mlpSolution.getToolkitTypeCode())))).collect(Collectors. toList()); }
+					 * mlpSolution.getToolkitTypeCode())))).collect(Collectors.
+					 * toList()); }
 					 */
 
 					if (!PortalUtils.isEmptyOrNullString(restPageReqBe.getBody().getModelType())) {
@@ -838,20 +933,24 @@ public class MarketPlaceCatalogServiceImpl extends AbstractServiceImpl implement
 					}
 
 					/*
-					 * if(!PortalUtils.isEmptyOrNullString(restPageReqBe.getBody ().
-					 * getActiveType())) { Boolean isActive =false;
-					 * if(restPageReqBe.getBody().getActiveType(). equalsIgnoreCase( "Y")){ isActive
-					 * = true; }else if(restPageReqBe.getBody().getActiveType(). equalsIgnoreCase(
-					 * "N")){ isActive = false; } filteredMLPSolutionsTemp =
+					 * if(!PortalUtils.isEmptyOrNullString(restPageReqBe.getBody
+					 * (). getActiveType())) { Boolean isActive =false;
+					 * if(restPageReqBe.getBody().getActiveType().
+					 * equalsIgnoreCase( "Y")){ isActive = true; }else
+					 * if(restPageReqBe.getBody().getActiveType().
+					 * equalsIgnoreCase( "N")){ isActive = false; }
+					 * filteredMLPSolutionsTemp =
 					 * filteredMLPSolutionsTemp.stream().filter(mlpSolution ->
 					 * Boolean.compare(restPageReqBe.getBody().getActiveType().
 					 * equalsIgnoreCase("Y"),
-					 * mlpSolution.isActive())==0).collect(Collectors.toList()); }
+					 * mlpSolution.isActive())==0).collect(Collectors.toList());
+					 * }
 					 */
 
 					/*
-					 * for(int k=0;k<filteredMLPSolutionsTemp.size()&& index<9;k++){
-					 * filteredMLPSolutions.add(index, filteredMLPSolutionsTemp.get(k)); index++;
+					 * for(int k=0;k<filteredMLPSolutionsTemp.size()&&
+					 * index<9;k++){ filteredMLPSolutions.add(index,
+					 * filteredMLPSolutionsTemp.get(k)); index++;
 					 * if(filteredMLPSolutionsTemp.size()==index) break; }
 					 */
 
@@ -931,17 +1030,6 @@ public class MarketPlaceCatalogServiceImpl extends AbstractServiceImpl implement
 
 							mlSolution.setOwnerName(userName);
 						}
-						try {
-							MLPSolutionWeb solutionStats = dataServiceRestClient
-									.getSolutionWebMetadata(mlSolution.getSolutionId());
-							mlSolution.setDownloadCount(solutionStats.getDownloadCount().intValue());
-							mlSolution.setRatingCount(solutionStats.getRatingCount().intValue());
-							mlSolution.setViewCount(solutionStats.getViewCount().intValue());
-							mlSolution.setSolutionRatingAvg(solutionStats.getRatingAverageTenths().intValue() / 10);
-						} catch (Exception e) {
-							log.error(EELFLoggerDelegate.errorLogger, "No stats found for SolutionId={}",
-									mlSolution.getSolutionId());
-						}
 
 						List<MLPTag> tagList = dataServiceRestClient
 								.getSolutionTags(filteredMLPSolutions.get(i).getSolutionId());
@@ -954,9 +1042,9 @@ public class MarketPlaceCatalogServiceImpl extends AbstractServiceImpl implement
 						content.add(mlSolution);
 						i++;
 					}
-					mlSolutionsRest.setContent(content);
+					mlSolutionsRest = new RestPageResponseBE<>(content);
 				}
-				mlpSolutionsRest.setNumberOfElements(filteredMLPSolutions.size());
+				// mlpSolutionsRest.setNumberOfElements(filteredMLPSolutions.size());
 				mlSolutionsRest.setFilteredTagSet(filteredTagSet);
 			}
 		} catch (IllegalArgumentException e) {
@@ -970,7 +1058,7 @@ public class MarketPlaceCatalogServiceImpl extends AbstractServiceImpl implement
 	@Override
 	public void addSolutionUserAccess(String solutionId, List<String> userList) throws AcumosServiceException {
 		try {
-			log.debug(EELFLoggerDelegate.debugLogger, "addSolutionUserAccess");
+			log.debug("addSolutionUserAccess");
 			ICommonDataServiceRestClient dataServiceRestClient = getClient();
 			for (String userId : userList) {
 				dataServiceRestClient.addSolutionUserAccess(solutionId, userId);
@@ -986,7 +1074,7 @@ public class MarketPlaceCatalogServiceImpl extends AbstractServiceImpl implement
 	public MLPTag createTag(MLPTag tag) throws AcumosServiceException {
 		MLPTag mlpTag = null;
 		try {
-			log.debug(EELFLoggerDelegate.debugLogger, "createTag");
+			log.debug("createTag");
 			ICommonDataServiceRestClient dataServiceRestClient = getClient();
 			mlpTag = dataServiceRestClient.createTag(tag);
 		} catch (IllegalArgumentException e) {
@@ -999,41 +1087,42 @@ public class MarketPlaceCatalogServiceImpl extends AbstractServiceImpl implement
 
 	@Override
 	public MLPSolutionRating getUserRatings(String solutionId, String userId) {
-		log.debug(EELFLoggerDelegate.debugLogger, "addSolutionUserAccess");
+		log.debug("addSolutionUserAccess");
 		ICommonDataServiceRestClient dataServiceRestClient = getClient();
 		MLPSolutionRating rating = dataServiceRestClient.getSolutionRating(solutionId, userId);
 		return rating;
 	}
 
 	@Override
-	public RestPageResponseBE<MLSolution> findPortalSolutions(RestPageRequestPortal pageReqPortal, Set<MLPTag> preferredTags) {
-		log.debug(EELFLoggerDelegate.debugLogger, "findPortalSolutions(pageReqPortal, prefTags");
+	public RestPageResponseBE<MLSolution> findPortalSolutions(RestPageRequestPortal pageReqPortal,
+			Set<MLPTag> preferredTags) {
+		log.debug("findPortalSolutions(pageReqPortal, prefTags");
 
 		Set<String> mergedTags = new HashSet<>();
-		
-			if (pageReqPortal.getTags() != null && pageReqPortal.getTags().length > 0) {
-				mergedTags = new HashSet<String>(Arrays.asList(pageReqPortal.getTags()));
+
+		if (pageReqPortal.getTags() != null && pageReqPortal.getTags().length > 0) {
+			mergedTags = new HashSet<String>(Arrays.asList(pageReqPortal.getTags()));
+		}
+
+		if (preferredTags != null && !preferredTags.isEmpty()) {
+			for (MLPTag prefTag : preferredTags) {
+				mergedTags.add(prefTag.getTag());
 			}
-			
-			if (preferredTags != null && !preferredTags.isEmpty()) {
-				for (MLPTag prefTag : preferredTags) {
-					mergedTags.add(prefTag.getTag());
-				}
-			}
+		}
 		pageReqPortal.setTags(mergedTags.toArray(new String[mergedTags.size()]));
-		
+
 		return findPortalSolutions(pageReqPortal);
 	}
 
 	@Override
 	public RestPageResponseBE<MLSolution> findPortalSolutions(RestPageRequestPortal pageReqPortal) {
-		log.debug(EELFLoggerDelegate.debugLogger, "findPortalSolutions");
+		log.debug("findPortalSolutions");
 		ICommonDataServiceRestClient dataServiceRestClient = getClient();
 		String[] accessTypeCodes = pageReqPortal.getAccessTypeCodes();
 		RestPageResponse<MLPSolution> response = dataServiceRestClient.findPortalSolutions(
 				pageReqPortal.getNameKeyword(), pageReqPortal.getDescriptionKeyword(), pageReqPortal.isActive(),
 				pageReqPortal.getOwnerIds(), accessTypeCodes, pageReqPortal.getModelTypeCodes(),
-				pageReqPortal.getValidationStatusCodes(), pageReqPortal.getTags(), null, null, pageReqPortal.getPageRequest());
+				pageReqPortal.getTags(), null, null, pageReqPortal.getPageRequest());
 
 		List<MLSolution> content = new ArrayList<>();
 		RestPageResponseBE<MLSolution> mlSolutionsRest = new RestPageResponseBE<>(content);
@@ -1041,65 +1130,57 @@ public class MarketPlaceCatalogServiceImpl extends AbstractServiceImpl implement
 		if (response.getContent() != null) {
 			mlSolutionsRest = fetchDetailsForSolutions(response.getContent(), pageReqPortal);
 			mlSolutionsRest.setPageCount(response.getTotalPages());
-			mlSolutionsRest.setTotalElements((int)response.getTotalElements());
+			mlSolutionsRest.setTotalElements((int) response.getTotalElements());
 		}
 		return mlSolutionsRest;
 	}
 
 	@Override
 	public RestPageResponseBE<MLSolution> searchSolutionsByKeyword(RestPageRequestPortal pageReqPortal) {
-		log.debug(EELFLoggerDelegate.debugLogger, "findPortalSolutions");
+		log.debug("findPortalSolutions");
 		ICommonDataServiceRestClient dataServiceRestClient = getClient();
 		String[] accessTypeCodes = pageReqPortal.getAccessTypeCodes();
-		
-		/*RestPageResponse<MLPSolution> response = dataServiceRestClient.findPortalSolutionsByKw(pageReqPortal.getNameKeyword(), true, null,
-				accessTypeCodes, null, null, pageReqPortal.getPageRequest());*/
 
-		RestPageResponse<MLPSolution> response = dataServiceRestClient.findPortalSolutionsByKw(pageReqPortal.getNameKeyword(), 
-				pageReqPortal.isActive(), pageReqPortal.getOwnerIds(),
-				accessTypeCodes, pageReqPortal.getModelTypeCodes(), pageReqPortal.getTags(), pageReqPortal.getPageRequest());
-		
+		/*
+		 * RestPageResponse<MLPSolution> response =
+		 * dataServiceRestClient.findPortalSolutionsByKw(pageReqPortal.
+		 * getNameKeyword(), true, null, accessTypeCodes, null, null,
+		 * pageReqPortal.getPageRequest());
+		 */
+
+		RestPageResponse<MLPSolution> response = dataServiceRestClient.findPortalSolutionsByKwAndTags(
+				pageReqPortal.getNameKeyword(), pageReqPortal.isActive(), pageReqPortal.getOwnerIds(), accessTypeCodes,
+				pageReqPortal.getModelTypeCodes(), pageReqPortal.getTags(), null, null, pageReqPortal.getPageRequest());
+
 		List<MLSolution> content = new ArrayList<>();
 		RestPageResponseBE<MLSolution> mlSolutionsRest = new RestPageResponseBE<>(content);
 
 		if (response.getContent() != null) {
 			mlSolutionsRest = fetchDetailsForSolutions(response.getContent(), pageReqPortal);
 			mlSolutionsRest.setPageCount(response.getTotalPages());
-			mlSolutionsRest.setTotalElements((int)response.getTotalElements());
+			mlSolutionsRest.setTotalElements((int) response.getTotalElements());
 		}
 		return mlSolutionsRest;
 	}
 
-	private RestPageResponseBE<MLSolution> fetchDetailsForSolutions(List<MLPSolution> mlpSolList, RestPageRequestPortal pageReqPortal) {
-		log.debug(EELFLoggerDelegate.debugLogger, "fetchDetailsForSolution");
+	private RestPageResponseBE<MLSolution> fetchDetailsForSolutions(List<MLPSolution> mlpSolList,
+			RestPageRequestPortal pageReqPortal) {
+		log.debug("fetchDetailsForSolution");
 		ICommonDataServiceRestClient dataServiceRestClient = getClient();
 		List<MLSolution> content = new ArrayList<>();
 		RestPageResponseBE<MLSolution> mlSolutionsRest = new RestPageResponseBE<>(content);
 		Set<String> filteredTagSet = new HashSet<>();
 		List<MLPSolution> filteredSolList = new ArrayList<>();
 
-		//List<MLPSolution> mlpSolList = response.getContent();
+		// List<MLPSolution> mlpSolList = response.getContent();
 		filteredSolList.addAll(mlpSolList);
 
 		for (MLPSolution mlpSol : filteredSolList) {
 
-			//CDS does not return the picture in list of solution. So we need to fetch the solution separately and then populate the picture
+			// CDS does not return the picture in list of solution. So we need
+			// to fetch the solution separately and then populate the picture
 			MLPSolution sol = dataServiceRestClient.getSolution(mlpSol.getSolutionId());
 			MLSolution mlSolution = PortalUtils.convertToMLSolution(sol);
-
-			// set rating, view, download count for model
-			try {
-				MLPSolutionWeb solutionStats = dataServiceRestClient
-						.getSolutionWebMetadata(mlSolution.getSolutionId());
-				mlSolution.setDownloadCount(solutionStats.getDownloadCount().intValue());
-				mlSolution.setRatingCount(solutionStats.getRatingCount().intValue());
-				mlSolution.setViewCount(solutionStats.getViewCount().intValue());
-				mlSolution.setSolutionRating(solutionStats.getRatingCount().intValue());
-				mlSolution.setSolutionRatingAvg(solutionStats.getRatingAverageTenths().floatValue() / 10);
-			} catch (Exception e) {
-				log.error(EELFLoggerDelegate.errorLogger, "No stats found for SolutionId={}",
-						mlSolution.getSolutionId());
-			}
 
 			// add tags for models
 			List<MLPTag> tagList = dataServiceRestClient.getSolutionTags(mlSolution.getSolutionId());
@@ -1117,8 +1198,7 @@ public class MarketPlaceCatalogServiceImpl extends AbstractServiceImpl implement
 			// get shared users for model
 			try {
 				List<User> users = null;
-				List<MLPUser> mlpUsersList = dataServiceRestClient
-						.getSolutionAccessUsers(mlSolution.getSolutionId());
+				List<MLPUser> mlpUsersList = dataServiceRestClient.getSolutionAccessUsers(mlSolution.getSolutionId());
 				if (!PortalUtils.isEmptyList(mlpUsersList)) {
 					users = new ArrayList<>();
 					for (MLPUser mlpusers : mlpUsersList) {
@@ -1128,138 +1208,78 @@ public class MarketPlaceCatalogServiceImpl extends AbstractServiceImpl implement
 				}
 				mlSolution.setOwnerListForSol(users);
 			} catch (Exception e) {
-				log.error(EELFLoggerDelegate.errorLogger, "No co-owner for SolutionId={}",
-						mlSolution.getSolutionId());
+				log.error("No co-owner for SolutionId={}", mlSolution.getSolutionId());
 			}
 
-			//To categorize the solution on display fetch latest revision and add the access type code 
-			MLPSolutionRevision revision = getLatestSolRevision(mlpSol.getSolutionId(), pageReqPortal.getAccessTypeCodes());
+			// To categorize the solution on display fetch latest revision and
+			// add the access type code
+			MLPSolutionRevision revision = getLatestSolRevision(mlpSol.getSolutionId(),
+					pageReqPortal.getAccessTypeCodes());
 			if (revision != null) {
 				mlSolution.setAccessType(revision.getAccessTypeCode());
 				mlSolution.setLatestRevisionId(revision.getRevisionId());
-				mlSolution.setPublisher(revision.getPublisher());
-				long Count=dataServiceRestClient.getSolutionRevisionCommentCount(mlpSol.getSolutionId(), revision.getRevisionId());
-                		mlSolution.setCommentsCount(Count);
+				if (PortalUtils.isEmptyOrNullString(revision.getPublisher())) {
+					MLPSiteConfig siteConfig = adminService.getSiteConfig("site_config");
+					if (siteConfig != null && !PortalUtils.isEmptyOrNullString(siteConfig.getConfigValue())) {
+						Map<String, Object> mapSiteConfig = JsonUtils.serializer().mapFromJson(siteConfig.getConfigValue());
+						List<Map<String, String>> fields = (List<Map<String, String>>) mapSiteConfig.get("fields");
+						for (Map<String, String> field : fields) {
+							if (field.get("name").equals("siteInstanceName")) {
+								mlSolution.setPublisher(field.get("data"));
+								break;
+							}
+						}
+					}
+				} else {
+					mlSolution.setPublisher(revision.getPublisher());
+				}
+				List<Author> authors = PortalUtils.convertToAuthor(revision.getAuthors());
+				mlSolution.setAuthors(authors);
+				long Count = dataServiceRestClient.getSolutionRevisionCommentCount(mlpSol.getSolutionId(),
+						revision.getRevisionId());
+				mlSolution.setCommentsCount(Count);
 			}
 
 			// get latest step Result for solution
 			Boolean onboardingStatusFailed = false;
-			MLPStepResult stepResult = null;
 			Map<String, Object> stepResultCriteria = new HashMap<String, Object>();
 			stepResultCriteria.put("solutionId", mlpSol.getSolutionId());
-			
+
 			Map<String, String> queryParameters = new HashMap<>();
-			queryParameters.put("startDate", "DESC");
-			//Fetch latest step result for the solution to get the tracking id
-			RestPageResponse<MLPStepResult> stepResultResponse =  dataServiceRestClient.searchStepResults(stepResultCriteria, false, new RestPageRequest(0, 1, queryParameters));
-			List<MLPStepResult> stepResultList = stepResultResponse.getContent();
-			String errorStatusDetails = null;
-			if (stepResultList != null && !PortalUtils.isEmptyList(stepResultList)) {
-				stepResult = stepResultList.get(0);
-				String trackingId = stepResult.getTrackingId();
-				
-				//search all step results with the tracking id 
-				Map<String, String> fieldToDirmap = new HashMap<>();
-				
-				Map<String, Object> trackingResultCriteria = new HashMap<String, Object>();
-				trackingResultCriteria.put("trackingId", trackingId);
-				RestPageResponse<MLPStepResult> trackingStepResult =  dataServiceRestClient.searchStepResults(trackingResultCriteria, false, new RestPageRequest(0, 25, fieldToDirmap));
-				List<MLPStepResult> trackingStepResultList = trackingStepResult.getContent();
-				
-				
-				if (trackingStepResultList != null && !PortalUtils.isEmptyList(trackingStepResultList)) {
+			queryParameters.put("created", "DESC");
+			// Fetch latest step result for the solution to get the tracking id
+			RestPageResponse<MLPTask> taskResponse = dataServiceRestClient.searchTasks(stepResultCriteria, false,
+					new RestPageRequest(0, 1, queryParameters));
+			if (!PortalUtils.isEmptyList(taskResponse.getContent())) {
+				MLPTask task = taskResponse.getContent().get(0);
+				List<MLPTaskStepResult> stepResultList = dataServiceRestClient.getTaskStepResults(task.getTaskId());
+				String errorStatusDetails = null;
+				if (!PortalUtils.isEmptyList(stepResultList)) {
 					// check if any of the step result is Failed
-					for(MLPStepResult step : trackingStepResultList) {
-						if(StepStatusCode.FA.toString().equals(step.getStatusCode())) {
+					for (MLPTaskStepResult step : stepResultList) {
+						if (STEP_STATUS_FAILED.equals(step.getStatusCode())) {
 							onboardingStatusFailed = true;
-							errorStatusDetails=step.getResult();
+							errorStatusDetails = step.getResult();
 							break;
 						}
 					}
 				}
+				mlSolution.setOnboardingStatusFailed(onboardingStatusFailed);
+				if (errorStatusDetails != null) {
+					mlSolution.setErrorDetails(errorStatusDetails);
+				}
 			}
-			mlSolution.setOnboardingStatusFailed(onboardingStatusFailed);
-			if(errorStatusDetails!=null) {
-				mlSolution.setErrorDetails(errorStatusDetails);
+			// Search for pending Approvals
+			if (mlSolution.getSolutionId() != null && mlSolution.getLatestRevisionId() != null) {
+				boolean pendingApproval = dataServiceRestClient.isPublishRequestPending(mlSolution.getSolutionId(),
+						mlSolution.getLatestRevisionId());
+				mlSolution.setPendingApproval(pendingApproval);
 			}
-			//Search for pending Approvals
-			boolean pendingApproval = dataServiceRestClient.isPublishRequestPending(mlSolution.getSolutionId(), mlSolution.getLatestRevisionId());
-			mlSolution.setPendingApproval(pendingApproval);
 
 			content.add(mlSolution);
 		}
 
-		if (pageReqPortal.getSortBy() != null) {
-			// sort by Most Downloaded
-			if (pageReqPortal.getSortBy().equalsIgnoreCase("MD")) {
-				Collections.sort(content, new Comparator<MLSolution>() {
-					public int compare(MLSolution ms1, MLSolution ms2) {
-						return (int) (ms2.getDownloadCount() - ms1.getDownloadCount());
-					}
-				});
-				// sort by Least Downloaded
-			} else if (pageReqPortal.getSortBy().equalsIgnoreCase("FD")) {
-				Collections.sort(content, new Comparator<MLSolution>() {
-					public int compare(MLSolution ms1, MLSolution ms2) {
-						return (int) (ms1.getDownloadCount() - ms2.getDownloadCount());
-					}
-				});
-				// sort by Highest Reach
-			} else if (pageReqPortal.getSortBy().equalsIgnoreCase("HR")) {
-				Collections.sort(content, new Comparator<MLSolution>() {
-					public int compare(MLSolution ms1, MLSolution ms2) {
-						return (int) (ms2.getViewCount() - ms1.getViewCount());
-					}
-				});
-				// sort by Lowest Reach
-			} else if (pageReqPortal.getSortBy().equalsIgnoreCase("LR")) {
-				Collections.sort(content, new Comparator<MLSolution>() {
-					public int compare(MLSolution ms1, MLSolution ms2) {
-						return (int) (ms1.getViewCount() - ms2.getViewCount());
-					}
-				});
-				// sort by Most Like
-			} else if (pageReqPortal.getSortBy().equalsIgnoreCase("ML")) {
-				Collections.sort(content, new Comparator<MLSolution>() {
-					public int compare(MLSolution ms1, MLSolution ms2) {
-						return (int) (ms2.getSolutionRating() - ms1.getSolutionRating());
-					}
-				});
-				// sort by Fiewest like
-			} else if (pageReqPortal.getSortBy().equalsIgnoreCase("FL")) {
-				Collections.sort(content, new Comparator<MLSolution>() {
-					public int compare(MLSolution ms1, MLSolution ms2) {
-						return (int) (ms1.getSolutionRating() - ms2.getSolutionRating());
-					}
-				});
-			}
-			// sort for Older
-			else if (pageReqPortal.getSortBy().equalsIgnoreCase("OLD")) {
-				Collections.sort(content, new Comparator<MLSolution>() {
-					public int compare(MLSolution m1, MLSolution m2) {
-						return m1.getModified().compareTo(m2.getModified());
-					}
-				});
-			}
-			// sort by Most Recent
-			else if (pageReqPortal.getSortBy().equalsIgnoreCase("MR")) {
-				Collections.sort(content, new Comparator<MLSolution>() {
-					public int compare(MLSolution m1, MLSolution m2) {
-						return m2.getModified().compareTo(m1.getModified());
-					}
-				});
-			}
-			// sort by Owner Name / Author
-			else if (pageReqPortal.getSortBy().equalsIgnoreCase("ownerName")) {
-				Collections.sort(content, new Comparator<MLSolution>() {
-					public int compare(MLSolution m1, MLSolution m2) {
-						return m1.getOwnerName().compareTo(m2.getOwnerName());
-					}
-				});
-			}
-		}
-
-		mlSolutionsRest.setContent(content);
+		mlSolutionsRest = new RestPageResponseBE<>(content);
 		mlSolutionsRest.setFilteredTagSet(filteredTagSet);
 
 		return mlSolutionsRest;
@@ -1267,13 +1287,13 @@ public class MarketPlaceCatalogServiceImpl extends AbstractServiceImpl implement
 
 	@Override
 	public RestPageResponseBE<MLSolution> findUserSolutions(RestPageRequestPortal pageReqPortal) {
-		log.debug(EELFLoggerDelegate.debugLogger, "findUserSolutions");
+		log.debug("findUserSolutions");
 		ICommonDataServiceRestClient dataServiceRestClient = getClient();
 		String[] accessTypeCodes = pageReqPortal.getAccessTypeCodes();
-		RestPageResponse<MLPSolution> response = dataServiceRestClient.findUserSolutions(
-				pageReqPortal.getNameKeyword(), pageReqPortal.getDescriptionKeyword(), pageReqPortal.isActive(),
-				pageReqPortal.getUserId(), accessTypeCodes, pageReqPortal.getModelTypeCodes(),
-				pageReqPortal.getValidationStatusCodes(), pageReqPortal.getTags(), pageReqPortal.getPageRequest());
+		RestPageResponse<MLPSolution> response = dataServiceRestClient.findUserSolutions(pageReqPortal.getNameKeyword(),
+				pageReqPortal.getDescriptionKeyword(), pageReqPortal.isActive(), pageReqPortal.getUserId(),
+				accessTypeCodes, pageReqPortal.getModelTypeCodes(), pageReqPortal.getTags(),
+				pageReqPortal.getPageRequest());
 
 		List<MLSolution> content = new ArrayList<>();
 		RestPageResponseBE<MLSolution> mlSolutionsRest = new RestPageResponseBE<>(content);
@@ -1281,41 +1301,42 @@ public class MarketPlaceCatalogServiceImpl extends AbstractServiceImpl implement
 		if (response.getContent() != null) {
 			mlSolutionsRest = fetchDetailsForSolutions(response.getContent(), pageReqPortal);
 			mlSolutionsRest.setPageCount(response.getTotalPages());
-			mlSolutionsRest.setTotalElements((int)response.getTotalElements());
+			mlSolutionsRest.setTotalElements((int) response.getTotalElements());
 		}
 
 		return mlSolutionsRest;
 	}
 
 	private MLPSolutionRevision getLatestSolRevision(String solutionId, String[] accessTypeCode) {
-		log.debug(EELFLoggerDelegate.debugLogger, "getLatestSolRevision");
+		log.debug("getLatestSolRevision");
 		ICommonDataServiceRestClient dataServiceRestClient = getClient();
-		
-		//for inactive solutions no accessTypeCode is required
-		if(accessTypeCode == null) {
-			accessTypeCode = new String[]{};
+
+		// for inactive solutions no accessTypeCode is required
+		if (accessTypeCode == null) {
+			accessTypeCode = new String[] {};
 		}
 		List<String> category = Arrays.asList(accessTypeCode);
-		
+
 		MLPSolutionRevision revision = null;
 		List<MLPSolutionRevision> revisions = dataServiceRestClient.getSolutionRevisions(solutionId);
 		if (revisions != null) {
-			//Sort revision according to created date
+			// Sort revision according to created date
 			Collections.sort(revisions, new Comparator<MLPSolutionRevision>() {
 				public int compare(MLPSolutionRevision m1, MLPSolutionRevision m2) {
 					return m2.getCreated().compareTo(m1.getCreated());
 				}
 			});
-			//fetch the latest revision according to accessTypeCode
-			for(MLPSolutionRevision solutionRevision : revisions) {
-				if(category.contains(solutionRevision.getAccessTypeCode())) {
+			// fetch the latest revision according to accessTypeCode
+			for (MLPSolutionRevision solutionRevision : revisions) {
+				if (category.contains(solutionRevision.getAccessTypeCode())) {
 					revision = solutionRevision;
 					break;
 				}
 			}
 		}
-		//for deleted solutions no access type code is required from the front end. So assign the latest version
-		if(revision == null && revisions != null) {
+		// for deleted solutions no access type code is required from the front
+		// end. So assign the latest version
+		if (revision == null && revisions != null && revisions.size() > 0) {
 			revision = revisions.get(0);
 		}
 		return revision;
@@ -1323,7 +1344,7 @@ public class MarketPlaceCatalogServiceImpl extends AbstractServiceImpl implement
 
 	@Override
 	public RestPageResponse<MLPSolution> getUserAccessSolutions(String userId, RestPageRequest pageRequest) {
-		log.debug(EELFLoggerDelegate.debugLogger, "findPortalSolutions");
+		log.debug("findPortalSolutions");
 		ICommonDataServiceRestClient dataServiceRestClient = getClient();
 		RestPageResponse<MLPSolution> mlSolutions = dataServiceRestClient.getUserAccessSolutions(userId, pageRequest);
 		return mlSolutions;
@@ -1331,38 +1352,37 @@ public class MarketPlaceCatalogServiceImpl extends AbstractServiceImpl implement
 
 	@Override
 	public MLSolutionWeb getSolutionWebMetadata(String solutionId) {
-		log.debug(EELFLoggerDelegate.debugLogger, "getSolutionWebMetadata");
+		log.debug("getSolutionWebMetadata");
 		ICommonDataServiceRestClient dataServiceRestClient = getClient();
-		MLPSolutionWeb mlpSolutionweb = dataServiceRestClient.getSolutionWebMetadata(solutionId);
-				
-		MLSolutionWeb mlSolutionweb = PortalUtils.convertToMLSolutionWeb(mlpSolutionweb);
-		float avgRating = mlSolutionweb.getRatingAverageTenths() / 10;
-		mlSolutionweb.setRatingAverageTenths(avgRating);
-		
-		
+		MLPSolution sol = dataServiceRestClient.getSolution(solutionId);
+		MLSolution mlSolution = PortalUtils.convertToMLSolution(sol);
+		MLSolutionWeb mlSolutionweb = new MLSolutionWeb();
+		mlSolutionweb.setRatingAverageTenths(mlSolution.getSolutionRatingAvg());
 		return mlSolutionweb;
 	}
 
 	@Override
 	public List<Author> getSolutionRevisionAuthors(String solutionId, String revisionId) {
-		log.debug(EELFLoggerDelegate.debugLogger, "getSolutionRevisionAuthors");
+		log.debug("getSolutionRevisionAuthors");
 		ICommonDataServiceRestClient dataServiceRestClient = getClient();
 		MLPSolutionRevision revision = dataServiceRestClient.getSolutionRevision(solutionId, revisionId);
-		AuthorTransport[] authorTransport =  revision.getAuthors();
+		AuthorTransport[] authorTransport = revision.getAuthors();
 		List<Author> authors = PortalUtils.convertToAuthor(authorTransport);
 		return authors;
 	}
 
 	@Override
-	public List<Author> addSolutionRevisionAuthors(String solutionId, String revisionId, Author author) throws AcumosServiceException {
-		log.debug(EELFLoggerDelegate.debugLogger, "addSolutionRevisionAuthors");
+	public List<Author> addSolutionRevisionAuthors(String solutionId, String revisionId, Author author)
+			throws AcumosServiceException {
+		log.debug("addSolutionRevisionAuthors");
 		ICommonDataServiceRestClient dataServiceRestClient = getClient();
 		AuthorTransport newAuthor = new AuthorTransport(author.getName(), author.getContact());
 		MLPSolutionRevision revision = dataServiceRestClient.getSolutionRevision(solutionId, revisionId);
-		AuthorTransport[] authorTransport =  revision.getAuthors();
+		AuthorTransport[] authorTransport = revision.getAuthors();
 		for (AuthorTransport authorT : authorTransport) {
 			if (newAuthor.equals(authorT)) {
-				throw new AcumosServiceException(AcumosServiceException.ErrorCode.INTERNAL_SERVER_ERROR, "Author already exists in the list.");
+				throw new AcumosServiceException(AcumosServiceException.ErrorCode.INTERNAL_SERVER_ERROR,
+						"Author already exists in the list.");
 			}
 		}
 		ArrayList<AuthorTransport> authorTransportList = new ArrayList<AuthorTransport>(Arrays.asList(authorTransport));
@@ -1372,8 +1392,9 @@ public class MarketPlaceCatalogServiceImpl extends AbstractServiceImpl implement
 		try {
 			updatedAuthor = updateRevisionAuthors(revision, authorTransportList);
 		} catch (Exception e) {
-			log.error(EELFLoggerDelegate.errorLogger, e.getMessage(), e);
-			throw new AcumosServiceException(AcumosServiceException.ErrorCode.INTERNAL_SERVER_ERROR, "Internal Server Error");
+			log.error(e.getMessage(), e);
+			throw new AcumosServiceException(AcumosServiceException.ErrorCode.INTERNAL_SERVER_ERROR,
+					"Internal Server Error");
 		}
 
 		return updatedAuthor;
@@ -1381,12 +1402,12 @@ public class MarketPlaceCatalogServiceImpl extends AbstractServiceImpl implement
 
 	@Override
 	public List<Author> removeSolutionRevisionAuthors(String solutionId, String revisionId, Author author) {
-		log.debug(EELFLoggerDelegate.debugLogger, "removeSolutionRevisionAuthors");
+		log.debug("removeSolutionRevisionAuthors");
 		ICommonDataServiceRestClient dataServiceRestClient = getClient();
 		AuthorTransport removeAuthor = new AuthorTransport(author.getName(), author.getContact());
 		MLPSolutionRevision revision = dataServiceRestClient.getSolutionRevision(solutionId, revisionId);
-		AuthorTransport[] authorTransport =  revision.getAuthors();
-		
+		AuthorTransport[] authorTransport = revision.getAuthors();
+
 		ArrayList<AuthorTransport> authorTransportList = new ArrayList<AuthorTransport>();
 		for (AuthorTransport authorT : authorTransport) {
 			if (!removeAuthor.equals(authorT)) {
@@ -1397,9 +1418,32 @@ public class MarketPlaceCatalogServiceImpl extends AbstractServiceImpl implement
 		return updateRevisionAuthors(revision, authorTransportList);
 	}
 
-	private List<Author> updateRevisionAuthors(MLPSolutionRevision revision, ArrayList<AuthorTransport> authorTransportList) {
+	@Override
+	public String getSolutionRevisionPublisher(String solutionId, String revisionId) throws AcumosServiceException {
+		log.debug("getSolutionRevisionPublisher");
 		ICommonDataServiceRestClient dataServiceRestClient = getClient();
-		AuthorTransport[] authorData= authorTransportList.toArray(new AuthorTransport[0]);
+		MLPSolutionRevision revision = dataServiceRestClient.getSolutionRevision(solutionId, revisionId);
+		return revision.getPublisher();
+
+	}
+
+	@Override
+	public void addSolutionRevisionPublisher(String solutionId, String revisionId, String newPublisher)
+			throws AcumosServiceException {
+		log.debug("addSolutionRevisionPublisher");
+		ICommonDataServiceRestClient dataServiceRestClient = getClient();
+		MLPSolutionRevision revision = dataServiceRestClient.getSolutionRevision(solutionId, revisionId);
+
+		if (!newPublisher.isEmpty() && !newPublisher.equals("") && newPublisher != null)
+			revision.setPublisher(newPublisher);
+		dataServiceRestClient.updateSolutionRevision(revision);
+
+	}
+
+	private List<Author> updateRevisionAuthors(MLPSolutionRevision revision,
+			ArrayList<AuthorTransport> authorTransportList) {
+		ICommonDataServiceRestClient dataServiceRestClient = getClient();
+		AuthorTransport[] authorData = authorTransportList.toArray(new AuthorTransport[0]);
 		revision.setAuthors(authorData);
 		dataServiceRestClient.updateSolutionRevision(revision);
 		List<Author> authors = PortalUtils.convertToAuthor(authorData);
@@ -1409,22 +1453,23 @@ public class MarketPlaceCatalogServiceImpl extends AbstractServiceImpl implement
 	private ByteArrayOutputStream getPayload(String uri) throws AcumosServiceException {
 
 		NexusArtifactClient artifactClient = getNexusClient();
-		
+
 		ByteArrayOutputStream outputStream = null;
 		try {
 			outputStream = artifactClient.getArtifact(uri);
 		} catch (Exception ex) {
-			
-			log.error(EELFLoggerDelegate.errorLogger, " Exception in getPayload() ", ex);
+
+			log.error(" Exception in getPayload() ", ex);
 			throw new AcumosServiceException(AcumosServiceException.ErrorCode.OBJECT_STREAM_EXCEPTION, ex.getMessage());
-			
+
 		}
 		return outputStream;
 	}
-	
+
 	@Override
-	public String getProtoUrl(String solutionId, String version, String artifactType, String fileExtension) throws AcumosServiceException {
-		log.debug(EELFLoggerDelegate.debugLogger, "getProtoUrl() : Begin");
+	public String getProtoUrl(String solutionId, String version, String artifactType, String fileExtension)
+			throws AcumosServiceException {
+		log.debug("getProtoUrl() : Begin");
 
 		String result = "";
 
@@ -1441,18 +1486,16 @@ public class MarketPlaceCatalogServiceImpl extends AbstractServiceImpl implement
 			if (null != mlpSolutionRevisionList && !mlpSolutionRevisionList.isEmpty()) {
 				solutionRevisionId = mlpSolutionRevisionList.stream().filter(mlp -> mlp.getVersion().equals(version))
 						.findFirst().get().getRevisionId();
-				log.debug(EELFLoggerDelegate.debugLogger,
-						" SolutionRevisonId for Version :  {} ", solutionRevisionId );
+				log.debug(" SolutionRevisonId for Version :  {} ", solutionRevisionId);
 			}
 		} catch (NoSuchElementException | NullPointerException e) {
-			log.error(EELFLoggerDelegate.errorLogger,
-					"Error : Exception in getProtoUrl() : Failed to fetch the Solution Revision Id",
-					e);
+			log.error("Error : Exception in getProtoUrl() : Failed to fetch the Solution Revision Id", e);
 			throw new NoSuchElementException("Failed to fetch the Solution Revision Id of the solutionId for the user");
-		} 
-		
+		}
+
 		if (null != solutionRevisionId) {
-			// 3. Get the list of Artifact for the SolutionId and SolutionRevisionId.
+			// 3. Get the list of Artifact for the SolutionId and
+			// SolutionRevisionId.
 			mlpArtifactList = getSolutionArtifacts(solutionId, solutionRevisionId);
 			String nexusURI = "";
 			if (null != mlpArtifactList && !mlpArtifactList.isEmpty()) {
@@ -1460,26 +1503,25 @@ public class MarketPlaceCatalogServiceImpl extends AbstractServiceImpl implement
 					nexusURI = mlpArtifactList.stream()
 							.filter(mlpArt -> mlpArt.getArtifactTypeCode().equalsIgnoreCase(artifactType)).findFirst()
 							.get().getUri();
-					for(MLPArtifact mlpArt : mlpArtifactList){
-						if( null != fileExtension ){
-							if(mlpArt.getArtifactTypeCode().equalsIgnoreCase(artifactType) && mlpArt.getName().contains(fileExtension)){
+					for (MLPArtifact mlpArt : mlpArtifactList) {
+						if (null != fileExtension) {
+							if (mlpArt.getArtifactTypeCode().equalsIgnoreCase(artifactType)
+									&& mlpArt.getName().contains(fileExtension)) {
 								nexusURI = mlpArt.getUri();
 								break;
 							}
 						}
 					}
 
-					log.debug(EELFLoggerDelegate.debugLogger, " Nexus URI :  {} ", nexusURI );
+					log.debug(" Nexus URI :  {} ", nexusURI);
 
 					if (null != nexusURI) {
 						byteArrayOutputStream = getPayload(nexusURI);
-						log.debug(EELFLoggerDelegate.debugLogger,
-								" Response in String Format :  {} ", byteArrayOutputStream.toString() );
+						log.debug(" Response in String Format :  {} ", byteArrayOutputStream.toString());
 						result = byteArrayOutputStream.toString();
 					}
 				} catch (NoSuchElementException | NullPointerException e) {
-					log.error(EELFLoggerDelegate.errorLogger,
-							"Error : Exception in getProtoUrl() : Failed to fetch the artifact URI for artifactType",
+					log.error("Error : Exception in getProtoUrl() : Failed to fetch the artifact URI for artifactType",
 							e);
 					throw new NoSuchElementException(
 							"Could not search the artifact URI for artifactType " + artifactType);
@@ -1489,44 +1531,46 @@ public class MarketPlaceCatalogServiceImpl extends AbstractServiceImpl implement
 							byteArrayOutputStream.close();
 						}
 					} catch (IOException e) {
-						log.error(EELFLoggerDelegate.errorLogger,
-								"Error : Exception in getProtoUrl() : Failed to close the byteArrayOutputStream", e);
+						log.error("Error : Exception in getProtoUrl() : Failed to close the byteArrayOutputStream", e);
 						throw new AcumosServiceException(AcumosServiceException.ErrorCode.IO_EXCEPTION, e.getMessage());
 					}
 				}
 			}
 		}
-		log.debug(EELFLoggerDelegate.debugLogger, "getProtoUrl() : End");
-		
+		log.debug("getProtoUrl() : End");
+
 		return result;
 	}
-	
+
 	@Override
 	public boolean checkUniqueSolName(String solutionId, String solName) {
-		log.debug(EELFLoggerDelegate.debugLogger, "checkUniqueSolName ={}", solutionId);
+		log.debug("checkUniqueSolName ={}", solutionId);
 		ICommonDataServiceRestClient dataServiceRestClient = getClient();
-		String[] accessTypeCodes = { CommonConstants.PUBLIC/*, CommonConstants.ORGANIZATION*/ };
+		String[] accessTypeCodes = {
+				CommonConstants.PUBLIC/* , CommonConstants.ORGANIZATION */ };
 
-		//Check only if user tries to change the name or publish the solution from private to public /org
+		// Check only if user tries to change the name or publish the solution
+		// from private to public /org
 		MLPSolution oldSolution = dataServiceRestClient.getSolution(solutionId);
-		if(!solName.equalsIgnoreCase(oldSolution.getName())) {
+		if (!solName.equalsIgnoreCase(oldSolution.getName())) {
 			String[] name = { solName };
 
 			Map<String, String> queryParameters = new HashMap<>();
-			//Fetch the maximum possible records. Need an api that could return the exact match of names along with other nested filter criteria
-			RestPageResponse<MLPSolution> searchSolResp = dataServiceRestClient.findPortalSolutions(name, null, true, null,
-					accessTypeCodes, null, null, null, null, null, new RestPageRequest(0, 10000, queryParameters));
+			// Fetch the maximum possible records. Need an api that could return
+			// the exact match of names along with other nested filter criteria
+			RestPageResponse<MLPSolution> searchSolResp = dataServiceRestClient.findPortalSolutions(name, null, true,
+					null, accessTypeCodes, null, null, null, null, new RestPageRequest(0, 10000, queryParameters));
 			List<MLPSolution> searchSolList = searchSolResp.getContent();
-	
-			//removing the same solutionId from the list
+
+			// removing the same solutionId from the list
 			List<MLPSolution> filteredSolList1 = searchSolList.stream()
 					.filter(searchSol -> !searchSol.getSolutionId().equalsIgnoreCase(solutionId))
 					.collect(Collectors.toList());
-			
-			//Consider only those records that have exact match with the solution name
+
+			// Consider only those records that have exact match with the
+			// solution name
 			List<MLPSolution> filteredSolList = filteredSolList1.stream()
-					.filter(searchSol -> searchSol.getName().equalsIgnoreCase(solName))
-					.collect(Collectors.toList());
+					.filter(searchSol -> searchSol.getName().equalsIgnoreCase(solName)).collect(Collectors.toList());
 
 			if (!filteredSolList.isEmpty()) {
 				return false;
@@ -1545,46 +1589,56 @@ public class MarketPlaceCatalogServiceImpl extends AbstractServiceImpl implement
 		String extension = FilenameUtils.getExtension(file.getOriginalFilename());
 		ICommonDataServiceRestClient dataServiceRestClient = getClient();
 
-		if(PortalUtils.isEmptyOrNullString(extension))
+		if (PortalUtils.isEmptyOrNullString(extension))
 			throw new IllegalArgumentException("Incorrect file extension.");
 
-		//Check if docuemtn already exists with the same name
+		// Check if docuemtn already exists with the same name
 		List<MLPDocument> documents = dataServiceRestClient.getSolutionRevisionDocuments(revisionId, accessType);
 		for (MLPDocument doc : documents) {
 			if (doc.getName().equalsIgnoreCase(name)) {
-				log.error(EELFLoggerDelegate.errorLogger,
+				log.error("Document Already exists with the same name.");
+				throw new AcumosServiceException(AcumosServiceException.ErrorCode.IO_EXCEPTION,
 						"Document Already exists with the same name.");
-				throw new AcumosServiceException(AcumosServiceException.ErrorCode.IO_EXCEPTION, "Document Already exists with the same name.");
 			}
 		}
 
-		//first try to upload the file to nexus. If successful then only create the c_document record in db
+		// first try to upload the file to nexus. If successful then only create
+		// the c_document record in db
 		NexusArtifactClient nexusClient = getNexusClient();
 		UploadArtifactInfo uploadInfo = null;
 		MLPDocument document = null;
 		try {
-			uploadInfo = nexusClient.uploadArtifact(getNexusGroupId(solutionId, revisionId), name, accessType, extension, size, file.getInputStream());
-		} catch (ConnectionException | IOException | AuthenticationException | AuthorizationException | TransferFailedException | ResourceDoesNotExistException e) {
-			log.error(EELFLoggerDelegate.errorLogger,
-					"Failed to upload the document", e);
-			throw new AcumosServiceException(AcumosServiceException.ErrorCode.IO_EXCEPTION, e.getMessage());
-		}
-		
-		if (uploadInfo != null) {
-			/*document = new MLPDocument(null, name,
-					uploadInfo.getArtifactMvnPath(), (int) size, "1628acd3-37d6-4c53-a722-0396d0590235");*/
-			document = new MLPDocument();
-			document.setName(file.getOriginalFilename());
-			document.setUri(uploadInfo.getArtifactMvnPath());
-			document.setSize((int) size);
-			document.setUserId(userId);
-			document = dataServiceRestClient.createDocument(document);
-			
-			dataServiceRestClient.addSolutionRevisionDocument(revisionId, accessType, document.getDocumentId());
-		} else {
-			log.error(EELFLoggerDelegate.errorLogger,
-					"Cannot upload the Document to the specified path");
-			throw new AcumosServiceException(AcumosServiceException.ErrorCode.IO_EXCEPTION, "Cannot upload the Document to the specified path");
+			try {
+				uploadInfo = nexusClient.uploadArtifact(getNexusGroupId(solutionId, revisionId), name, accessType,
+						extension, size, file.getInputStream());
+			} catch (ConnectionException | IOException | AuthenticationException | AuthorizationException
+					| TransferFailedException | ResourceDoesNotExistException e) {
+				log.error("Failed to upload the document", e);
+				throw new AcumosServiceException(AcumosServiceException.ErrorCode.IO_EXCEPTION, e.getMessage());
+			}
+
+			if (uploadInfo != null) {
+				/*
+				 * document = new MLPDocument(null, name,
+				 * uploadInfo.getArtifactMvnPath(), (int) size,
+				 * "1628acd3-37d6-4c53-a722-0396d0590235");
+				 */
+				document = new MLPDocument();
+				document.setName(file.getOriginalFilename());
+				document.setUri(uploadInfo.getArtifactMvnPath());
+				document.setSize((int) size);
+				document.setUserId(userId);
+				document = dataServiceRestClient.createDocument(document);
+
+				dataServiceRestClient.addSolutionRevisionDocument(revisionId, accessType, document.getDocumentId());
+			} else {
+				log.error("Cannot upload the Document to the specified path");
+				throw new AcumosServiceException(AcumosServiceException.ErrorCode.IO_EXCEPTION,
+						"Cannot upload the Document to the specified path");
+			}
+		} catch (Exception e) {
+			log.error("Exception during addRevisionDocument ={}", e);
+			throw new AcumosServiceException(e.getMessage());
 		}
 		return document;
 	}
@@ -1596,50 +1650,55 @@ public class MarketPlaceCatalogServiceImpl extends AbstractServiceImpl implement
 		ICommonDataServiceRestClient dataServiceRestClient = getClient();
 		Boolean isSharedDoc = Boolean.FALSE;
 		List<MLPDocument> documentList = new ArrayList<MLPDocument>();
-		
+
 		MLPDocument document = dataServiceRestClient.getDocument(documentId);
-		if(document == null) {
-			log.error(EELFLoggerDelegate.errorLogger, "Failed to fetch document for revisionId : " + revisionId);
-			throw new AcumosServiceException(AcumosServiceException.ErrorCode.IO_EXCEPTION, "Failed to fetch document for revisionId : " + revisionId);
+		if (document == null) {
+			log.error("Failed to fetch document for revisionId : " + revisionId);
+			throw new AcumosServiceException(AcumosServiceException.ErrorCode.IO_EXCEPTION,
+					"Failed to fetch document for revisionId : " + revisionId);
 		}
 
 		List<MLPSolutionRevision> revisions = dataServiceRestClient.getSolutionRevisions(solutionId);
-		for(MLPSolutionRevision revision : revisions) {
+		for (MLPSolutionRevision revision : revisions) {
 			try {
 				List<MLPDocument> filteredDocList = new ArrayList<MLPDocument>();
-				List<MLPDocument> revDocList = dataServiceRestClient.getSolutionRevisionDocuments(revision.getRevisionId(), accessType);
-				if(!PortalUtils.isEmptyList(revDocList)) {
-					filteredDocList = revDocList.stream().filter(revDoc -> documentId.equalsIgnoreCase(revDoc.getDocumentId()) && !(revision.getRevisionId().equalsIgnoreCase(revisionId))).collect(Collectors.toList());
+				List<MLPDocument> revDocList = dataServiceRestClient
+						.getSolutionRevisionDocuments(revision.getRevisionId(), accessType);
+				if (!PortalUtils.isEmptyList(revDocList)) {
+					filteredDocList = revDocList.stream()
+							.filter(revDoc -> documentId.equalsIgnoreCase(revDoc.getDocumentId())
+									&& !(revision.getRevisionId().equalsIgnoreCase(revisionId)))
+							.collect(Collectors.toList());
 				}
-				
-				if(!PortalUtils.isEmptyList(filteredDocList)) {
+
+				if (!PortalUtils.isEmptyList(filteredDocList)) {
 					documentList.addAll(filteredDocList);
 				}
 			} catch (Exception e) {
-				//Log error and Do Nothing
-				log.error(EELFLoggerDelegate.errorLogger, "Failed to fetch document for revisionId : " + revision.getRevisionId(), e);
+				// Log error and Do Nothing
+				log.error("Failed to fetch document for revisionId : " + revision.getRevisionId(), e);
 			}
 		}
 
-		if(!PortalUtils.isEmptyList(documentList)) {
+		if (!PortalUtils.isEmptyList(documentList)) {
 			isSharedDoc = Boolean.TRUE;
 		}
 
 		NexusArtifactClient nexusClient = getNexusClient();
-		if(!isSharedDoc) {
+		if (!isSharedDoc) {
 			try {
 				nexusClient.deleteArtifact(document.getUri());
 			} catch (URISyntaxException e) {
-				log.error(EELFLoggerDelegate.errorLogger,
-						"Failed to delete the document from Nexus with documentId : " + document.getDocumentId(), e);
+				log.error("Failed to delete the document from Nexus with documentId : " + document.getDocumentId(), e);
 				throw new AcumosServiceException(AcumosServiceException.ErrorCode.IO_EXCEPTION, e.getMessage());
 			}
 		}
 
-		//Remove the mapping between revision and solution with the access type code
+		// Remove the mapping between revision and solution with the access type
+		// code
 		dataServiceRestClient.dropSolutionRevisionDocument(revisionId, accessType, documentId);
 
-		//If not a shared doc then remove the document record from DB also.
+		// If not a shared doc then remove the document record from DB also.
 		if (!isSharedDoc) {
 			dataServiceRestClient.deleteDocument(documentId);
 		}
@@ -1648,9 +1707,11 @@ public class MarketPlaceCatalogServiceImpl extends AbstractServiceImpl implement
 
 	private String getNexusGroupId(String solutionId, String revisionId) {
 		String group = env.getProperty("nexus.groupId");
-		if(PortalUtils.isEmptyOrNullString(group))
+		if (PortalUtils.isEmptyOrNullString(group))
 			throw new IllegalArgumentException("Missing property value for nexus groupId.");
-		//This will created the nexus file upload path as groupId/solutionId/revisionId. Ex.. "org/acumos/solutionId/revisionId".
+		// This will created the nexus file upload path as
+		// groupId/solutionId/revisionId. Ex..
+		// "org/acumos/solutionId/revisionId".
 		return String.join(".", group, solutionId, revisionId);
 	}
 
@@ -1669,7 +1730,7 @@ public class MarketPlaceCatalogServiceImpl extends AbstractServiceImpl implement
 		ICommonDataServiceRestClient dataServiceRestClient = getClient();
 		List<MLPDocument> revDocList = dataServiceRestClient.getSolutionRevisionDocuments(fromRevisionId, accessType);
 
-		for(MLPDocument revDocument : revDocList) {
+		for (MLPDocument revDocument : revDocList) {
 			dataServiceRestClient.addSolutionRevisionDocument(revisionId, accessType, revDocument.getDocumentId());
 		}
 
@@ -1680,10 +1741,10 @@ public class MarketPlaceCatalogServiceImpl extends AbstractServiceImpl implement
 	public RevisionDescription getRevisionDescription(String revisionId, String accessType)
 			throws AcumosServiceException {
 		ICommonDataServiceRestClient dataServiceRestClient = getClient();
-		MLPRevisionDescription  description = dataServiceRestClient.getRevisionDescription(revisionId, accessType);
-		
-		if(description == null) {
-			log.error(EELFLoggerDelegate.errorLogger, "No description Found.");
+		MLPRevisionDescription description = dataServiceRestClient.getRevisionDescription(revisionId, accessType);
+
+		if (description == null) {
+			log.error("No description Found.");
 			throw new AcumosServiceException(AcumosServiceException.ErrorCode.IO_EXCEPTION, "No description Found.");
 		}
 		return PortalUtils.convertToRevisionDescription(description);
@@ -1697,17 +1758,17 @@ public class MarketPlaceCatalogServiceImpl extends AbstractServiceImpl implement
 		String accessCode = null;
 		List<MLPCodeNamePair> codeNamePairList = dataServiceRestClient.getCodeNamePairs(CodeNameType.ACCESS_TYPE);
 		for (MLPCodeNamePair accessTypeCode : codeNamePairList) {
-			if(accessTypeCode.getCode().equals(accessType))
+			if (accessTypeCode.getCode().equals(accessType))
 				accessCode = accessTypeCode.getCode();
 		}
 
 		if (accessCode == null) {
-			log.error(EELFLoggerDelegate.errorLogger, "Cannot Recognize the accessTypeCode");
+			log.error("Cannot Recognize the accessTypeCode");
 			throw new AcumosServiceException(AcumosServiceException.ErrorCode.IO_EXCEPTION, "Invalid Access Type Code");
 		}
-		
-		if(PortalUtils.isEmptyOrNullString(description.getDescription())) {
-			log.error(EELFLoggerDelegate.errorLogger, "Description is Empty");
+
+		if (PortalUtils.isEmptyOrNullString(description.getDescription())) {
+			log.error("Description is Empty");
 			throw new AcumosServiceException(AcumosServiceException.ErrorCode.IO_EXCEPTION, "Description is Empty");
 		}
 
@@ -1715,29 +1776,173 @@ public class MarketPlaceCatalogServiceImpl extends AbstractServiceImpl implement
 		RevisionDescription revisionDescription = null;
 		try {
 			revisionDescription = getRevisionDescription(revisionId, accessCode);
-			if(revisionDescription != null)
+			if (revisionDescription != null)
 				isDescriptionExists = Boolean.TRUE;
-		}catch(Exception e) {
-			//Do nothing. Create a new description if cannot find the existing description
+		} catch (Exception e) {
+			// Do nothing. Create a new description if cannot find the existing
+			// description
 		}
 
 		MLPRevisionDescription mlpRevDesc = new MLPRevisionDescription();
 		mlpRevDesc.setRevisionId(revisionId);
 		mlpRevDesc.setAccessTypeCode(accessCode);
-		if(isDescriptionExists) {
-			//Update the existing Description
+		if (isDescriptionExists) {
+			// Update the existing Description
 			mlpRevDesc.setDescription(description.getDescription());
 			dataServiceRestClient.updateRevisionDescription(mlpRevDesc);
 		} else {
-			//Create a new description in db
+			// Create a new description in db
 			mlpRevDesc.setDescription(description.getDescription());
 			mlpRevDesc = dataServiceRestClient.createRevisionDescription(mlpRevDesc);
 		}
 
-		if(mlpRevDesc!= null)
+		if (mlpRevDesc != null)
 			description = PortalUtils.convertToRevisionDescription(mlpRevDesc);
 
 		return description;
+	}
+
+	@Override
+	public byte[] getSolutionPicture(String solutionId) {
+		log.debug("getSolutionPicture");
+		ICommonDataServiceRestClient dataServiceRestClient = getClient();
+		return dataServiceRestClient.getSolutionPicture(solutionId);
+	}
+
+	@Override
+	public void updateSolutionPicture(String solutionId, byte[] image) {
+		log.debug("updateSolutionPicture");
+		ICommonDataServiceRestClient dataServiceRestClient = getClient();
+		dataServiceRestClient.saveSolutionPicture(solutionId, image);
+	}
+
+	@Override
+	public MLSolution getSolution(String solutionId, String revisionId, String loginUserId)
+			throws AcumosServiceException {
+		log.debug("getSolution");
+		ICommonDataServiceRestClient dataServiceRestClient = getClient();
+		MLSolution mlSolution = null;
+		try {
+			MLPSolution mlpSolution = dataServiceRestClient.getSolution(solutionId);
+			MLPSolutionRevision mlpSolutionRevision = dataServiceRestClient.getSolutionRevision(solutionId, revisionId);
+			if (mlpSolution != null) {
+				if (mlpSolutionRevision != null) {
+					if (((loginUserId == null || loginUserId.length() == 0)
+							&& !CommonConstants.PRIVATE.equalsIgnoreCase(mlpSolutionRevision.getAccessTypeCode()))
+							|| ((loginUserId != null && loginUserId.length() != 0)
+									&& (CommonConstants.PUBLIC.equalsIgnoreCase(mlpSolutionRevision.getAccessTypeCode())
+											|| CommonConstants.ORGANIZATION
+											.equalsIgnoreCase(mlpSolutionRevision.getAccessTypeCode())))
+							|| ((loginUserId != null && loginUserId.length() != 0) && (CommonConstants.PRIVATE
+									.equalsIgnoreCase(mlpSolutionRevision.getAccessTypeCode())
+									&& (loginUserId.equals(mlpSolution.getUserId()))))) {
+
+						mlSolution = PortalUtils.convertToMLSolution(mlpSolution);
+						List<MLPCodeNamePair> toolkitTypeList = dataServiceRestClient
+								.getCodeNamePairs(CodeNameType.TOOLKIT_TYPE);
+						if (toolkitTypeList.size() > 0) {
+							for (MLPCodeNamePair toolkitType : toolkitTypeList) {
+								if (toolkitType.getCode() != null) {
+									if (toolkitType.getCode()
+											.equalsIgnoreCase(mlpSolution.getToolkitTypeCode())) {
+										mlSolution.setTookitTypeName(toolkitType.getName());
+										break;
+									}
+								}
+							}
+						}
+						List<MLPCodeNamePair> modelTypeList = dataServiceRestClient
+								.getCodeNamePairs(CodeNameType.MODEL_TYPE);
+						if (modelTypeList.size() > 0) {
+							for (MLPCodeNamePair modelType : modelTypeList) {
+								if (modelType.getCode() != null) {
+									if (modelType.getCode().equalsIgnoreCase(mlpSolution.getModelTypeCode())) {
+										mlSolution.setModelTypeName(modelType.getName());
+										break;
+									}
+								}
+							}
+						}
+
+						MLPUser mlpUser = dataServiceRestClient.getUser(mlpSolution.getUserId());
+						if (mlpUser != null) {
+							mlSolution.setOwnerName(mlpUser.getFirstName().concat(" " + mlpUser.getLastName()));
+						}
+
+						List<MLPTag> tagList = dataServiceRestClient.getSolutionTags(solutionId);
+						if (tagList.size() > 0) {
+							mlSolution.setSolutionTagList(tagList);
+						}
+
+						List<User> users = null;
+						// Set co-owners list for model
+						try {
+
+							List<MLPUser> mlpUsersList = dataServiceRestClient
+									.getSolutionAccessUsers(mlSolution.getSolutionId());
+							if (!PortalUtils.isEmptyList(mlpUsersList)) {
+								users = new ArrayList<>();
+								for (MLPUser mlpusers : mlpUsersList) {
+									User user = PortalUtils.convertToMLPuser(mlpusers);
+									users.add(user);
+								}
+							}
+							mlSolution.setOwnerListForSol(users);
+						} catch (Exception e) {
+							log.error("No co-owner for SolutionId={}", mlSolution.getSolutionId());
+						}
+
+						List<String> co_owners_Id = new ArrayList<String>();
+						if (users != null) {
+							co_owners_Id = users.stream().map(User::getUserId).collect(Collectors.toList());
+						}
+						List<MLPSolutionRevision> revisionList = dataServiceRestClient.getSolutionRevisions(solutionId);
+						List<MLPSolutionRevision> filterRevisionList = new ArrayList<>();
+						if (revisionList.size() > 0) {
+							// filter the private versions if loggedIn User is
+							// not the owner of solution
+							List<String> accessCodes = new ArrayList<String>();
+							accessCodes.add(CommonConstants.PUBLIC);
+							if (loginUserId != null) {
+								// if logged In user is owner/co-owner then add
+								// private revisions
+								if (loginUserId.equals(mlpSolution.getUserId()) || co_owners_Id.contains(loginUserId)
+										|| userService.isPublisherRole(loginUserId)) {
+									accessCodes.add(CommonConstants.PRIVATE);
+									accessCodes.add(CommonConstants.ORGANIZATION);
+								} else {
+									// if user is logged in but he not the
+									// owner/co-owner then add Company revisions
+									accessCodes.add(CommonConstants.ORGANIZATION);
+								}
+							}
+
+							filterRevisionList = revisionList.stream()
+									.filter(revision -> accessCodes.contains(revision.getAccessTypeCode()))
+									.collect(Collectors.toList());
+							if (filterRevisionList.size() > 0) {
+								mlSolution.setRevisions(filterRevisionList);
+								// Add the access Type code for the latest
+								// revision for the categorization while display
+								mlSolution.setAccessType(filterRevisionList.get(0).getAccessTypeCode());
+							}
+						}
+					} else {
+						throw new AcumosServiceException(AcumosServiceException.ErrorCode.ACCESS_DENIED,
+								"Invalid User");
+					}
+				} else {
+					log.debug("getSolution :  Revison Id is null for the solution Id :" + mlpSolution.getSolutionId());
+				}
+			}
+		} catch (ArithmeticException e) {
+			throw new AcumosServiceException(AcumosServiceException.ErrorCode.ARITHMATIC_EXCEPTION, e.getMessage());
+		} catch (IllegalArgumentException e) {
+			throw new AcumosServiceException(AcumosServiceException.ErrorCode.INVALID_PARAMETER, e.getMessage());
+		} catch (HttpClientErrorException e) {
+			throw new AcumosServiceException(AcumosServiceException.ErrorCode.INTERNAL_SERVER_ERROR, e.getMessage());
+		}
+		return mlSolution;
 	}
 
 }

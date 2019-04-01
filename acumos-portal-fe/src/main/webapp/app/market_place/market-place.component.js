@@ -74,6 +74,7 @@ angular
 						$scope.sortBy = $scope.mktPlaceStorage.sortBy;
 						$scope.selectedPage = 0;
 						$scope.solutionSize = $scope.mktPlaceStorage.solutionSize;
+						$scope.selected = [];	
 						$element.find('input').on('keydown', function(ev) {
 							ev.stopPropagation();
 						});
@@ -121,40 +122,16 @@ angular
 						$scope.modelCount = 0;
 						$scope.categoryFilter = $scope.mktPlaceStorage.categoryFilter;
 						console.log("market-place-component");
-						$scope.actions = [ {
-							name : "Most Liked",
-							value : "ML"
-						}, {
-							name : "Fewest Liked",
-							value : "FL"
-						}, {
-							name : "Most Downloaded",
-							value : "MD"
-						}, {
-							name : "Fewest Downloaded",
-							value : "FD"
-						}, {
-							name : "Highest Reach",
-							value : "HR"
-						}, {
-							name : "Lowest Reach",
-							value : "LR"
-						}, {
-							name : "Most Recent",
-							value : "MR"
-						}, {
-							name : "Older",
-							value : "OLD"
-						},{
-		                    name : "Name",
-		                    value : "name"
-		                },{
-		                    name : "Created Date",
-		                    value : "created"
-		                },{
-		                    name : "Author",
-		                    value : "ownerName"
-		                }];
+						$scope.actions = [ {name: "Most Liked", value: "ML"},
+						                   {name: "Fewest Liked", value: "FL"},
+						                   {name: "Most Downloaded", value: "MD"},
+						                   {name: "Fewest Downloaded", value: "FD"},
+						                   {name: "Highest Reach", value: "HR"},
+						                   {name: "Lowest Reach", value: "LR"},
+						                   {name: "Most Recent", value: "MR"},
+						                   {name: "Older", value: "OLD"},
+						                   {name: "Name", value: "name"},
+						                   {name: "Created Date", value: "created"} ];
 
 						$scope.checkBox = [ "Private", "Shared", "Company",
 								"Public" ];
@@ -264,21 +241,37 @@ angular
 
 							var fieldToSort = {};
 							
-							if( $scope.sortBy == 'MR' )
+							if( $scope.sortBy == 'ML' ) {
+								fieldToSort = { "ratingAverageTenths" : "DESC" };
+							} else if( $scope.sortBy == 'FL' ) {
+								fieldToSort = { "ratingAverageTenths" : "ASC" };
+							} else if( $scope.sortBy == 'MD' ) {
+								fieldToSort = { "downloadCount" : "DESC" };
+							} else if( $scope.sortBy == 'FD' ) {
+								fieldToSort = { "downloadCount" : "ASC" };
+							} else if( $scope.sortBy == 'HR' ) {
+								fieldToSort = { "viewCount" : "DESC" };
+							} else if( $scope.sortBy == 'LR' ) {
+								fieldToSort = { "viewCount" : "ASC" };
+							} else if( $scope.sortBy == 'MR' ) {
 								fieldToSort = { "modified" : "DESC" };
-							if( $scope.sortBy == 'name' ){
-                                                                fieldToSort = { "name" : "ASC" };
-                                                   	}
-                                                	if( $scope.sortBy == 'created' ){
-                                                                fieldToSort = { "created" : "DESC" };
-                                                        }
-                                                	if( $scope.sortBy == 'author' ){
-                                                               fieldToSort = { "ownerName" : "ASC" };
-                                                   	}
+							} else if( $scope.sortBy == 'OLD' ) {
+								fieldToSort = { "modified" : "ASC" };
+							} else if( $scope.sortBy == 'name' ) {
+								fieldToSort = { "name" : "ASC" };
+			                } else if( $scope.sortBy == 'created' ) {
+								fieldToSort = { "created" : "DESC" };
+			                }
 
 							if ($rootScope.relatedModelType) {
 								$scope.categoryFilter.push($rootScope.relatedModelType);
 							}
+							
+							for(var i = 0 ;i < $scope.selected.length; i++)
+                            {
+								if($scope.tagFilter.indexOf($scope.selected[i].tagName) == -1)
++                                  $scope.tagFilter.push($scope.selected[i].tagName)
+                            }
 							
 							dataObj = {
 								"request_body" : {
@@ -316,7 +309,7 @@ angular
 											console.log(error);
 											
 										})
-							} else{
+							} else {
 								apiService.insertSolutionDetail(dataObj).then(
 										function(response) {
 											$scope.totalPages = response.data.response_body.pageCount;
@@ -334,9 +327,8 @@ angular
 											$rootScope.setLoader = false;
 											console.log(error);
 											
-										})
+										});
 							}
-
 						}
 
 						$scope.loadMore($scope.mktPlaceStorage.pageNumber);
@@ -361,9 +353,6 @@ angular
 
 							$scope.dataLoading = false;
 							if (response.data.response_body.content.length >= 0) {
-								angular.forEach($scope.mlsolutions, function(value,key) {
-									$scope.getSolutionImages(value.solutionId);
-								});
 								if ($scope.loginUserID) {
 									apiService
 											.getFavoriteSolutions(
@@ -487,7 +476,7 @@ angular
 							$scope.tagFilter = tagArr;
 							$scope.mktPlaceStorage.tagFilter = $scope.tagFilter;
 							if (type == 'sortBy') {
-//								$scope.sortBy = checkbox.value;
+								$scope.sortBy = checkbox.value;
 								$scope.mktPlaceStorage.sortBy = checkbox.value;
 								$scope.selectedAction = checkbox.name;
 							} else if (type == 'sortById')
@@ -595,11 +584,13 @@ angular
                      	}
 						
 						 $scope.$on("loadMarketplace",function(event, data) {
+							 $scope.tagFilter.length = 0;
 							 $scope.loadMore(0);
 							 $scope.getalltags();
 						 });
 						 $scope.getalltags = function() {
-						  $scope.selected = [];		 
+						  $scope.selected = [];
+						  $scope.tagFilter.length = 0;						  
 						  if (JSON.parse(browserStorageService.getUserDetail())) {
 							  $scope.loginUserID = JSON.parse(browserStorageService
 										.getUserDetail())[1];
@@ -618,7 +609,8 @@ angular
 									.getPreferredTag($scope.loginUserID, dataObj)
 									.then(
 											function(response) {												
-												$scope.siteConfigTag = response.data.response_body.prefTags;																										
+												$scope.siteConfigTag = response.data.response_body.prefTags;
+
 												for(var i = 0; i < 2 ; i++)
 												 {					 
 													 if ($scope.siteConfigTag[i].preferred == "Yes") {
@@ -664,27 +656,6 @@ angular
 						};
 
 						$scope.imageUrls = {};
-						$scope.getSolutionImages = function(solutionId) {
-
-							apiService
-									.getSolutionImage(solutionId)
-									.then(
-											function(response) {
-												
-												if (response.data.response_body.length > 0)
-													$scope.imageUrls[solutionId] = "/site/binaries/content/gallery/acumoscms/solution/"
-															+ solutionId
-															+ "/"
-															+ response.data.response_body[0];
-												else
-													$scope.imageUrls[solutionId] = "images/default-model.png";
-											},
-											function(data) {
-												$scope.imageUrls[solutionId] = "images/default-model.png";
-											});
-						}
-						
-
 					}
 
 				}).config([ '$compileProvider', function($compileProvider) {

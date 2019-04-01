@@ -21,17 +21,17 @@ package org.acumos.be.test.service.impl;
 
 import static org.mockito.Mockito.mock;
 
-import java.util.Date;
+import java.lang.invoke.MethodHandles;
+import java.time.Instant;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.acumos.cds.domain.MLPNotification;
-import org.acumos.cds.domain.MLPStepResult;
+import org.acumos.cds.domain.MLPTaskStepResult;
 import org.acumos.portal.be.service.impl.AsyncServicesImpl;
 import org.acumos.portal.be.transport.MLNotification;
 import org.acumos.portal.be.transport.UploadSolution;
-import org.acumos.portal.be.util.EELFLoggerDelegate;
 import org.acumos.portal.be.util.PortalUtils;
 import org.junit.Assert;
 import org.junit.Test;
@@ -39,56 +39,57 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 
 @RunWith(MockitoJUnitRunner.class)
-public class AsyncServiceImplTest { 
+public class AsyncServiceImplTest {
 
-	private static final EELFLoggerDelegate logger = EELFLoggerDelegate.getLogger(AsyncServiceImplTest.class);
+	private static final Logger logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());	
 
 	final HttpServletResponse response = new MockHttpServletResponse();
 	final HttpServletRequest request = new MockHttpServletRequest();
 
 	@Mock
 	AsyncServicesImpl impl = new AsyncServicesImpl();
-	
+
 	@Test
-	public void initiateAsyncProcess(){
-		try{
+	public void initiateAsyncProcess() {
+		try {
 			AsyncServicesImpl mockimpl = mock(AsyncServicesImpl.class);
 			mockimpl.initiateAsyncProcess();
 			Assert.assertNotNull(mockimpl);
 			logger.debug("Initialized process");
 		} catch (Exception e) {
-			logger.error("Exception occured while initiateAsyncProcess: " + e);	
+			logger.error("Exception occured while initiateAsyncProcess: " + e);
 		}
 	}
-	
+
 	@Test
-	public void callOnboarding(){
-		try{
+	public void callOnboarding() {
+		try {
 			String userId = "1810f833-8698-4233-add4-091e34b8703c";
 			UploadSolution solution = new UploadSolution();
 			solution.setName("Test Solution");
 			solution.setVersion("1.0.0");
-			String provider = "FB"; 
+			String provider = "FB";
 			String access_token = "PB";
 			AsyncServicesImpl mockimpl = mock(AsyncServicesImpl.class);
-			//mockimpl.callOnboarding(userId, solution, provider, access_token);
+			// mockimpl.callOnboarding(userId, solution, provider,
+			// access_token);
 			Assert.assertEquals(userId, userId);
 			Assert.assertNotNull(userId);
 			Assert.assertNotNull(solution);
 			Assert.assertNotNull(provider);
 			Assert.assertNotNull(access_token);
-			
+
 		} catch (Exception e) {
-			logger.error("Exception occured while callOnboarding: " + e);	
+			logger.error("Exception occured while callOnboarding: " + e);
 		}
 	}
-	
 
-	
 	@Test
 	public void sendBellNotification() {
 		String userId = "1810f833-8698-4233-add4-091e34b8703c";
@@ -96,48 +97,48 @@ public class AsyncServiceImplTest {
 		solution.setName("Test Solution");
 		solution.setVersion("1.0.0");
 		AsyncServicesImpl mockAsync = mock(AsyncServicesImpl.class);
-		
+
+		String reason = "Test case";
+		String message = "On-boarding failed: " + reason + " Please restart the process again to upload the solution.";
 		MLPNotification mlpNotification = new MLPNotification();
-		Date created = new Date();
+		Instant created = Instant.now();
 		mlpNotification.setCreated(created);
-		mlpNotification.setMessage("Add To Catalog Failed for solution " + solution.getName()
-			+ ". Please restart the process again to upload the solution.");
-		Date modified = new Date();
+		mlpNotification.setMessage(message);
+		Instant modified = Instant.now();
 		mlpNotification.setModified(modified);
 		mlpNotification.setTitle("Web Based Onboarding");
 		mlpNotification.setUrl("http://notify.com");
-		Date end = new Date();
+		Instant end = Instant.now();
 		mlpNotification.setEnd(end);
-		Date start = new Date();
+		Instant start = Instant.now();
 		mlpNotification.setStart(start);
 		MLNotification notf = PortalUtils.convertToMLNotification(mlpNotification);
 
-		Mockito.when(mockAsync.sendBellNotification(userId, solution)).thenReturn(notf);
+		Mockito.when(mockAsync.sendBellNotification(userId, reason)).thenReturn(notf);
 		logger.info("Successfully created notification " + notf);
 		Assert.assertNotNull(notf);
-		Assert.assertEquals(notf, notf);
-		
+		Assert.assertEquals(notf.getMessage(), message);
+
 	}
-	
+
 	@Test
-	public void sendTrackerNotification() {
+	public void sendTrackerErrorNotification() {
 		String uuid = "f43898dc-2d3e-4680-afef-f2a93884c52a";
 		String userId = "1810f833-8698-4233-add4-091e34b8703c";
+		String message = "Failed to connect to onboarding";
 		AsyncServicesImpl mockAsync = mock(AsyncServicesImpl.class);
-		
-		MLPStepResult step = new MLPStepResult();
-		step.setTrackingId(uuid);
-		step.setUserId(userId);
-		step.setStepCode("OB");
+
+		MLPTaskStepResult step = new MLPTaskStepResult();
+		step.setTaskId(new Long(1));
 		step.setStatusCode("FA");
-		step.setName("CreateMicroservice");
-		step.setResult("Disconnected from onboarding");
-		
-		Mockito.when(mockAsync.sendTrackerNotification(uuid, userId)).thenReturn(step);
+		step.setName("CreateSolution");
+		step.setResult(message);
+
+		Mockito.when(mockAsync.sendTrackerErrorNotification(uuid, userId, message)).thenReturn(step);
 		logger.info("Successfully created step " + step);
 		Assert.assertNotNull(step);
-		Assert.assertEquals(step, step);
-		
+		Assert.assertEquals(message, step.getResult());
+
 	}
-		
+
 }

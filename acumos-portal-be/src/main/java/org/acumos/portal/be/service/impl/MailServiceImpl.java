@@ -18,11 +18,9 @@
  * ===============LICENSE_END=========================================================
  */
 
-/**
- * 
- */
 package org.acumos.portal.be.service.impl;
 
+import java.lang.invoke.MethodHandles;
 import java.util.Map;
 
 import javax.mail.Address;
@@ -32,7 +30,8 @@ import javax.mail.internet.MimeMessage.RecipientType;
 
 import org.acumos.portal.be.service.MailService;
 import org.acumos.portal.be.transport.MailData;
-import org.acumos.portal.be.util.EELFLoggerDelegate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.MailException;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -41,76 +40,73 @@ import org.springframework.mail.javamail.MimeMessagePreparator;
 import org.springframework.stereotype.Service;
 import org.springframework.ui.freemarker.FreeMarkerTemplateUtils;
 
-
 import freemarker.template.Configuration;
-
-
 
 @Service
 public class MailServiceImpl implements MailService {
 
-    private static final EELFLoggerDelegate log = EELFLoggerDelegate.getLogger(MailServiceImpl.class);
-    
-    @Autowired
-    Configuration freemarkerConfiguration;
-    
-    @Autowired
-    JavaMailSender mailSender;
+	private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());	
 
-    @Override
-    public void sendMail(final MailData mailData) {
-        MimeMessagePreparator preparator = getMessagePreparator(mailData);
-        try {
-            mailSender.send(preparator);
-            log.debug(EELFLoggerDelegate.debugLogger, "Message has been sent...");
-        }
-        catch (MailException ex) {
-            log.error(EELFLoggerDelegate.errorLogger, "Exception Occurred while Sending Mail to user ={}", ex);
-        }
-    }
+	@Autowired
+	private Configuration freemarkerConfiguration;
 
+	@Autowired
+	private JavaMailSender mailSender;
 
-    private MimeMessagePreparator getMessagePreparator(final MailData mailData){
+	@Override
+	public void sendMail(final MailData mailData) {
+		MimeMessagePreparator preparator = getMessagePreparator(mailData);
+		try {
+			log.debug("sendMail: sending mail with subject: " + mailData.getSubject());
+			mailSender.send(preparator);
+			log.debug("sendMail: sent mail with subject: " + mailData.getSubject());
+		} catch (MailException ex) {
+			log.error(
+					"sendMail: failed to send mail with subject: " + mailData.getSubject(), ex);
+		}
+	}
 
-        MimeMessagePreparator preparator = new MimeMessagePreparator() {
- 
-            public void prepare(MimeMessage mimeMessage) throws Exception {
-                MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true);
+	private MimeMessagePreparator getMessagePreparator(final MailData mailData) {
 
-                helper.setSubject(mailData.getSubject());
-                helper.setFrom(mailData.getFrom());
+		MimeMessagePreparator preparator = new MimeMessagePreparator() {
 
-                Address[] internetAddress = new InternetAddress[mailData.getTo().size()];
-                int i = 0;
-                for (String address : mailData.getTo()) {
-                    internetAddress[i] = new InternetAddress(address);
-                    i++;
-                }
-                mimeMessage.addRecipients(RecipientType.TO, internetAddress);
+			public void prepare(MimeMessage mimeMessage) throws Exception {
+				MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true);
 
-                String text = geFreeMarkerTemplateContent(mailData.getTemplate(), mailData.getModel());
-                log.debug(EELFLoggerDelegate.debugLogger, "Template content : " + text);
+				helper.setSubject(mailData.getSubject());
+				helper.setFrom(mailData.getFrom());
 
-                // use the true flag to indicate you need a multipart message
-                helper.setText(text, true);
+				Address[] internetAddress = new InternetAddress[mailData.getTo().size()];
+				int i = 0;
+				for (String address : mailData.getTo()) {
+					internetAddress[i] = new InternetAddress(address);
+					i++;
+				}
+				mimeMessage.addRecipients(RecipientType.TO, internetAddress);
 
-                //Additionally, can add a resource as an attachment as well.
-                //helper.addAttachment("cutie.png", new ClassPathResource("linux-icon.png"));
+				String text = getFreeMarkerTemplateContent(mailData.getTemplate(), mailData.getModel());
+				log.debug("getMessagePreparator: template content : " + text);
 
-            }
-        };
-        return preparator;
-    }
+				// use the true flag to indicate you need a multipart message
+				helper.setText(text, true);
 
-    private String geFreeMarkerTemplateContent(String template, final Map<String, Object> model){
-        StringBuffer content = new StringBuffer();
-        try{
-           content.append(FreeMarkerTemplateUtils.processTemplateIntoString( 
-                   freemarkerConfiguration.getTemplate(template),model));
-           return content.toString();
-        }catch(Exception e){
-            log.error(EELFLoggerDelegate.errorLogger, "Exception Occurred while Sending Mail to user ={}", e);
-        }
-        return "";
-    }
+				// Additionally, can add a resource as an attachment as well.
+				// helper.addAttachment("cutie.png", new ClassPathResource("linux-icon.png"));
+
+			}
+		};
+		return preparator;
+	}
+
+	private String getFreeMarkerTemplateContent(String template, final Map<String, Object> model) {
+		StringBuffer content = new StringBuffer();
+		try {
+			content.append(FreeMarkerTemplateUtils
+					.processTemplateIntoString(freemarkerConfiguration.getTemplate(template), model));
+			return content.toString();
+		} catch (Exception e) {
+			log.error("getFreeMarkerTemplateContent: failed to get content", e);
+		}
+		return "";
+	}
 }

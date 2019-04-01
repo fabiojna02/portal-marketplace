@@ -36,6 +36,7 @@ angular.module('manageModule')
 						$scope.hideDelete = true;
 						$scope.defaultSize = 4;
 						$scope.seeAllSelected = false;
+						$scope.Loadcheck = false;
 						$scope.selectedChip = [];
 						$scope.mlsolutions = [];
 						$scope.fieldToSort = { "modified" : "DESC" };
@@ -54,14 +55,17 @@ angular.module('manageModule')
 						}
 						
 						localStorage.setItem('HeaderNameVar','manageModule');
-						$scope.actions = [ 	{name:"Most Liked",value:"ML"}, 
-						                	{name:"Fewest Liked",value:"FL"},
-						                	{name:"Most Downloaded",value:"MD"},
-						                	{name:"Fewest Downloaded",value:"LD"}, 
-						                	{name:"Highest Reach",value:"HR"},
-						                	{name:"Name",value:"name"},
-                                            {name:"Created Date",value:"created"},
-                                            {name:"Author",value:"ownerName"}];
+						$scope.actions = [ {name: "Most Liked", value: "ML"}, 
+						                   {name: "Fewest Liked", value: "FL"},
+						                   {name: "Most Downloaded", value: "MD"},
+						                   {name: "Fewest Downloaded", value: "LD"}, 
+						                   {name: "Highest Reach", value: "HR"},
+						                   {name: "Lowest Reach", value: "LR"},
+						                   {name: "Most Recent", value: "MR"},
+						                   {name: "Older", value: "OLD"},
+						                   {name: "Name", value: "name"},
+						                   {name: "Created Date", value: "created"} ];
+						
 						$scope.filterids = [ "001", "002", "003", "004", "005",
 								"006" ];
 
@@ -119,6 +123,57 @@ angular.module('manageModule')
 						var companyPrevTotal = 0;
 						var deletedPrevTotal = 0;
 						
+						
+						
+  
+                        
+                        $scope.setPageStart = 0;
+                        $scope.selectedPage = 0;
+                        $scope.setStartCount = function(val){
+                              if(val == "preBunch"){$scope.setPageStart = $scope.setPageStart-5}
+                              if(val == "nextBunch"){$scope.setPageStart = $scope.setPageStart+5}
+                              if(val == "pre"){ 
+                                    if($scope.selectedPage == $scope.setPageStart)
+                                    {
+                                    	$scope.setPageStart = $scope.setPageStart - 1;
+                                    	$scope.selectedPage = $scope.selectedPage - 1;
+                                    }
+                                    else
+                                    	$scope.selectedPage = $scope.selectedPage - 1;
+                                    }
+                              if(val == "next"){
+                                    if($scope.selectedPage == $scope.setPageStart + 4)
+                                          {
+                                          	$scope.setPageStart = $scope.setPageStart + 1;
+                                          	$scope.selectedPage = $scope.selectedPage + 1;
+                                          }
+                                    else
+                                    	$scope.selectedPage = $scope.selectedPage + 1;                                                
+                                    }
+                        }
+						
+						
+						
+						
+						
+						
+						//added functionality for deleted model category filter starts
+						$scope.delete1=true;
+						$scope.get = function(){
+							 if($scope.checked)
+                            {
+								 
+								 $scope.removeFilter();
+                            }
+                        else
+                            {
+                        	$scope.delete1=false;
+                       	     $scope.Navigation(0,'N');
+                            }
+						}
+						
+						//added functionality for deleted model category filter ends
+						
 						$scope.favouriteList = function() {
 							if ($scope.loginUserID) {
 								apiService
@@ -133,7 +188,10 @@ angular.module('manageModule')
 						$scope.favouriteList();
 						
 						$scope.getPrivateModels=function(){
-							if($scope.sortBy == "ML" || $scope.sortBy == "FL" || $scope.sortBy == "HR" )
+							
+							
+							$scope.mlsolutions = [];
+							if($scope.sortBy == "ML" || $scope.sortBy == "FL" || $scope.sortBy == "HR" || $scope.sortBy == "LR" )
 							 {
 								$scope.mlSolutionPrivate =[];
 								$scope.msg = "No Data";
@@ -164,14 +222,38 @@ angular.module('manageModule')
 										  }
 										};
 							
+							
+							if($scope.Loadcheck){
+								$scope.SetDataLoaded = true;
+								$rootScope.setLoader = true;
+							}
+							else{
+								$scope.SetDataLoaded = false;
+								$rootScope.setLoader = false;
+							}
 							apiService.fetchUserSolutions(dataObj).then(function(response) {
+								$scope.SetDataLoaded = false;
+								$rootScope.setLoader = false;
 								var data = response.data;
 								privatePrevTotal = privatePrevCounter;
 								$scope.privateDataLoaded = false;
 								
 								$scope.mlSolutionPrivate = $scope.getUniqueSolutions(data.response_body.content);
 								$scope.totalPrivateSolCount = data.response_body.totalElements;
-
+    
+								$scope.totalPages = data.response_body.pageCount;
+								
+								if($scope.mlSolutionPrivate == 0){
+									$scope.startPageSizePR = 0;
+									$scope.endPageSizePR = 0;
+								}
+								else {
+								
+								$scope.loadpagePR =  $scope.pageNumPrivate;
+								$scope.startPageSizePR = $scope.loadpagePR *  $scope.defaultSize + 1;
+								$scope.endPageSizePR =(($scope.loadpagePR + 1) * $scope.defaultSize) < $scope.totalPrivateSolCount ? (($scope.loadpagePR + 1) * $scope.defaultSize) : $scope.totalPrivateSolCount; 
+								}
+								
 								if($scope.mlSolutionPrivate.length != 0){
 									privatePrevCounter = $scope.mlSolutionPrivate.length;
 								}
@@ -186,7 +268,6 @@ angular.module('manageModule')
 								}
 								
 								angular.forEach($scope.mlSolutionPrivate, function(value,key) {
-									$scope.getSolutionImages(value.solutionId);
 									angular.forEach($scope.favouriteSolutions,
 											function(mlsolutionValue,mlsolutionKey) {
 												if (mlsolutionValue.solutionId == value.solutionId) {
@@ -220,8 +301,10 @@ angular.module('manageModule')
 											
 						
 						$scope.getCompanyModels=function(){
+							$scope.startPageSize = 0;
+							$scope.endPageSize = 0;
 							$scope.companyDataLoaded = true;
-
+							$scope.mlsolutions = [];
 							dataObj = {
 									  "request_body": {
 										    "accessTypeCodes": [
@@ -241,14 +324,43 @@ angular.module('manageModule')
 										  }
 										};
 							
+							
+							if($scope.Loadcheck){
+								$scope.SetDataLoaded = true;
+								$rootScope.setLoader = true;
+							}
+							else{
+								$scope.SetDataLoaded = false;
+								$rootScope.setLoader = false;
+							}
+							
 							apiService.fetchUserSolutions(dataObj).then(function(response) {
+								$scope.SetDataLoaded = false;
+								$rootScope.setLoader = false;
 								var data = response.data;
 								companyPrevTotal = companyPrevCounter;
 								$scope.companyDataLoaded = false;
 
 								
+								
+								
 								$scope.mlSolutionCompany = $scope.getUniqueSolutions(data.response_body.content);
 								$scope.totalCompanySolCount = data.response_body.totalElements;
+								$scope.totalPages = data.response_body.pageCount;
+								
+                             if($scope.mlSolutionCompany == 0){
+									
+									$scope.startPageSizeOR = 0;
+									$scope.endPageSizeOR = 0;
+								 }
+                             else {
+	                            $scope.loadpageOR =  $scope.pageNumCompany;
+                                $scope.startPageSizeOR = $scope.loadpageOR *  $scope.defaultSize + 1;
+								$scope.endPageSizeOR = (($scope.loadpageOR + 1) * $scope.defaultSize) < $scope.totalCompanySolCount ? (($scope.loadpageOR + 1) * $scope.defaultSize) : $scope.totalCompanySolCount; 
+                             }
+								
+								
+								
 								if($scope.mlSolutionCompany.length != 0){
 									companyPrevCounter = $scope.mlSolutionCompany.length;
 								}
@@ -263,7 +375,6 @@ angular.module('manageModule')
 								}
 								
 								angular.forEach($scope.mlSolutionCompany, function(value,key) {
-									$scope.getSolutionImages(value.solutionId);
 									angular.forEach($scope.favouriteSolutions,
 											function(mlsolutionValue,mlsolutionKey) {
 												if (mlsolutionValue.solutionId == value.solutionId) {
@@ -298,7 +409,8 @@ angular.module('manageModule')
 						$scope.getPublicModels=function(){
 							$scope.dataLoading = true;
 							$scope.publicDataLoaded = true;
-		
+							$scope.mlsolutions = [];
+							
 							dataObj = {
 									  "request_body": {
 										    "accessTypeCodes": [
@@ -318,7 +430,21 @@ angular.module('manageModule')
 										  }
 										};
 							
+							
+							
+							if($scope.Loadcheck){
+								$scope.SetDataLoaded = true;
+								$rootScope.setLoader = true;
+							}
+							else{
+								$scope.SetDataLoaded = false;
+								$rootScope.setLoader = false;
+							}
+							
 							apiService.fetchUserSolutions(dataObj).then(function(response) {
+								$scope.SetDataLoaded = false;
+								$rootScope.setLoader = false;
+								
 								var data = response.data;
 							
 								publicPrevTotal = publicPrevCounter;
@@ -326,6 +452,24 @@ angular.module('manageModule')
 								
 								$scope.mlSolutionPublic = $scope.getUniqueSolutions(data.response_body.content);
 								$scope.totalPublicSolCount = data.response_body.totalElements;
+								$scope.totalPages = data.response_body.pageCount;
+								
+								
+								 if($scope.mlSolutionPublic == 0){
+										
+										$scope.startPageSizePB = 0;
+										$scope.endPageSizePB = 0;
+									 }
+								 else{
+								
+							    $scope.loadpagePB = $scope.pageNumPublic;
+							    $scope.startPageSizePB = $scope.loadpagePB *  $scope.defaultSize + 1;
+								$scope.endPageSizePB =  (($scope.loadpagePB + 1) * $scope.defaultSize) < $scope.totalPublicSolCount ?  (($scope.loadpagePB + 1) * $scope.defaultSize) : $scope.totalPublicSolCount
+								 }
+								
+								
+								
+								
 								if($scope.mlSolutionPublic.length != 0){
 									publicPrevCounter = $scope.mlSolutionPublic.length;
 								}
@@ -340,7 +484,6 @@ angular.module('manageModule')
 								}
 								
 								angular.forEach($scope.mlSolutionPublic, function(value,key) {
-									$scope.getSolutionImages(value.solutionId);
 									angular.forEach($scope.favouriteSolutions,
 											function(mlsolutionValue,mlsolutionKey) {
 												if (mlsolutionValue.solutionId == value.solutionId) {
@@ -369,9 +512,9 @@ angular.module('manageModule')
 								});
 						};
 						$scope.getDeleteModels=function(){
-							
-							if($scope.sortBy == "ML" || $scope.sortBy == "FL" || $scope.sortBy == "HR" ||
-							   $scope.sortBy == "name" || $scope.sortBy == "created" || $scope.sortBy == "ownerName")
+							$scope.mlsolutions = [];
+							if($scope.sortBy == "ML" || $scope.sortBy == "FL" || $scope.sortBy == "HR" || $scope.sortBy == "LR" ||
+							   $scope.sortBy == "name" || $scope.sortBy == "created" || $scope.sortBy == "ownerName" || $scope.sortBy == "OLD" || $scope.sortBy == "MR")
 							 {
 								$scope.mlSolutionDelete =[];
 								$scope.totalDeletedSolCount = 0;
@@ -396,14 +539,39 @@ angular.module('manageModule')
 										  }
 										};
 							
+							if($scope.Loadcheck){
+								$scope.SetDataLoaded = true;
+								$rootScope.setLoader = true;
+							}
+							else{
+								$scope.SetDataLoaded = false;
+								$rootScope.setLoader = false;
+							}
+							
 							apiService.fetchUserSolutions(dataObj).then(function(response) {
+								$scope.SetDataLoaded = false;
+								$rootScope.setLoader = false;
+								
 								publicPrevTotal = deletedPrevCounter;
 								var data = response.data;
 
 								$scope.deleteDataLoaded = false;
 								$scope.mlSolutionDelete = $scope.getUniqueSolutions(data.response_body.content);
 								$scope.totalDeletedSolCount = data.response_body.totalElements;
-
+								$scope.totalPages = data.response_body.pageCount;
+								
+								
+								 if($scope.mlSolutionDelete == 0){
+										
+										$scope.startPageSizeN = 0;
+										$scope.endPageSizeN = 0;
+									 }
+								 else {
+								$scope.loadpageN = $scope.pageNumDelete;
+							    $scope.startPageSizeN = $scope.loadpageN *  $scope.defaultSize + 1;
+								$scope.endPageSizeN = (($scope.loadpageN + 1) * $scope.defaultSize) < $scope.totalDeletedSolCount ? (($scope.loadpageN + 1) * $scope.defaultSize) : $scope.totalDeletedSolCount; 
+								 }
+								 
 								if($scope.mlSolutionDelete.length != 0){
 									deletedPrevCounter = $scope.mlSolutionDelete.length;
 								}
@@ -418,7 +586,6 @@ angular.module('manageModule')
 								}
 								
 								angular.forEach($scope.mlSolutionDelete, function(value,key) {
-									$scope.getSolutionImages(value.solutionId);
 									angular.forEach($scope.favouriteSolutions,
 											function(mlsolutionValue,mlsolutionKey) {
 												if (mlsolutionValue.solutionId == value.solutionId) {
@@ -455,6 +622,73 @@ angular.module('manageModule')
 						}
 						getModels();
 						
+                 ///Pagination Starts for counting navigation
+						
+						$scope.Navigation = function( selectedPage,Type ){
+							   
+							   if($scope.defaultSize <= 10)
+								   $scope.defaultSize = 10;
+							   else
+								   $scope.defaultSize;
+									   
+							   $scope.mlsolutions = [];
+							   $scope.pageNumber = selectedPage ;
+							   $scope.selectedPage = selectedPage;
+							   
+							if(Type == 'PR'){
+								$scope.seeAllSelected = true;
+								$scope.hidePrivate = true;
+								$scope.hidePublic = false;
+								$scope.hideCompany = false;
+								$scope.hideDelete = false;
+								$scope.filterOptions = ['MY UNPUBLISHED MODELS'];
+								$scope.privacyFilter = 'PR';
+								$scope.activeType = true;
+								
+								$scope.loadMore('PR');	
+							}
+							
+                         if(Type == 'PB'){
+                        	 $scope.seeAllSelected = true;
+								$scope.hidePrivate = false;
+								$scope.hidePublic = true;
+								$scope.hideCompany = false;
+								$scope.hideDelete = false;
+								$scope.filterOptions = ['PUBLISHED TO PUBLIC MARKETPLACE'];
+								$scope.privacyFilter = 'PB';
+								$scope.activeType = true;
+								
+								$scope.loadMore('PB');	
+						}
+							
+                         if(Type == 'OR'){
+                        	 $scope.seeAllSelected = true;
+								$scope.hidePrivate = false;
+								$scope.hidePublic = false;
+								$scope.hideCompany = true;
+								$scope.hideDelete = false;
+								$scope.filterOptions = ['PUBLISHED TO COMPANY MARKETPLACE'];
+								$scope.privacyFilter = 'OR';
+								$scope.activeType = true;
+								
+								$scope.loadMore('OR');
+							}
+							
+                         if(Type == 'N'){
+                        	 $scope.seeAllSelected = true;
+								$scope.hidePrivate = false;
+								$scope.hidePublic = false;
+								$scope.hideCompany = false;
+								$scope.hideDelete = true;
+								$scope.filterOptions = ['MY DELETED MODELS'];
+								$scope.activeType = false;
+								
+								$scope.loadMore('N');
+							}
+							
+						}
+						///Pagination ends for counting navigation
+						
                         $scope.publicNav=function(NavName, loadmore){
 
 							if(NavName=='Next'){
@@ -467,27 +701,10 @@ angular.module('manageModule')
 									$scope.pbOperator = 'Subtract';
 								}
 								$scope.getPublicModels();
-							}else if(NavName=='SeeAll'){
-								$scope.defaultSize = '9';
-								$scope.seeAllSelected = true;
-								$scope.hidePrivate = false;
-								$scope.hidePublic = true;
-								$scope.hideCompany = false;
-								$scope.hideDelete = false;
-								$scope.filterOptions = ['PUBLISHED TO PUBLIC MARKETPLACE'];
-								$scope.privacyFilter = 'PB';
-								if(!loadmore){
-									$scope.mlsolutions.length = 0;
-									$scope.pageNumber = 0;
-								}else {
-									$scope.pageNumPublic += 1;
-									$scope.pageNumber++;
-								}
-								$scope.activeType = true;
-								$scope.loadMore('PB');	
 							}
 						}
                         
+                
                         $scope.CompanyNav=function(NavName, loadmore){
 
 							if(NavName=='Next'){
@@ -500,28 +717,10 @@ angular.module('manageModule')
 									$scope.cpOperator = 'Subtract';
 								}
 								$scope.getCompanyModels();
-							}else if(NavName=='SeeAll'){
-								$scope.defaultSize = '9';
-								$scope.seeAllSelected = true;
-								$scope.hidePrivate = false;
-								$scope.hidePublic = false;
-								$scope.hideCompany = true;
-								$scope.hideDelete = false;
-								$scope.filterOptions = ['PUBLISHED TO COMPANY MARKETPLACE'];
-								$scope.privacyFilter = 'OR';
-								$scope.activeType = true;
-								if(!loadmore){
-									$scope.mlsolutions.length = 0;
-									$scope.pageNumber = 0;
-								}else {
-									$scope.pageNumCompany += 1;
-									$scope.pageNumber++;
-								}
-								$scope.loadMore('OR');	
 							}
 						} 
-                        
-						$scope.privateNav=function(NavName, loadmore){
+                      
+						$scope.privateNav=function(NavName,loadmore){
 
 							if(NavName=='Next'){
 								$scope.pageNumPrivate = $scope.pageNumPrivate+1;
@@ -533,27 +732,7 @@ angular.module('manageModule')
 									$scope.prOperator = 'Subtract';
 								}
 								$scope.getPrivateModels();		
-							}else if(NavName=='SeeAll'){
-								$scope.defaultSize = '9';
-								$scope.seeAllSelected = true;
-								$scope.hidePrivate = true;
-								$scope.hidePublic = false;
-								$scope.hideCompany = false;
-								$scope.hideDelete = false;
-								$scope.filterOptions = ['MY UNPUBLISHED MODELS'];
-								$scope.privacyFilter = 'PR';
-								$scope.activeType = true;
-								if(!loadmore){
-									$scope.mlsolutions.length = 0;
-									$scope.pageNumber = 0;
-								} else {
-									$scope.pageNumPrivate += 1;
-									$scope.pageNumber++; 
-								}
-								
-								$scope.loadMore('PR');	
 							}
-												
 						}
 						
                         $scope.deleteNav=function(NavName, loadmore){
@@ -568,23 +747,6 @@ angular.module('manageModule')
 									$scope.dlOperator = 'Subtract';									
 								}
 								$scope.getDeleteModels();	
-							}else if(NavName=='SeeAll'){
-								$scope.defaultSize = '9';
-								$scope.seeAllSelected = true;
-								$scope.hidePrivate = false;
-								$scope.hidePublic = false;
-								$scope.hideCompany = false;
-								$scope.hideDelete = true;
-								$scope.filterOptions = ['MY DELETED MODELS'];
-								$scope.activeType = false;
-								if(!loadmore){
-									$scope.mlsolutions.length = 0;
-									$scope.pageNumber = 0;
-								}else {
-									$scope.pageNumDelete += 1;
-									$scope.pageNumber++;
-								}
-								$scope.loadMore('N');
 							}
 						}
 
@@ -595,6 +757,7 @@ angular.module('manageModule')
 							$scope.hideCompany = true;
 							$scope.hideDelete = true;
 							$scope.seeAllSelected = false;
+							$scope.Loadcheck = false;
 							$scope.defaultSize = 4;
 							$scope.pageNumPrivate = 0;
 							$scope.pageNumPublic = 0;
@@ -610,6 +773,7 @@ angular.module('manageModule')
 							$scope.cpOperator = 'Add';
 							$scope.pbOperator = 'Add';
 							$scope.dlOperator = 'Add';
+							$scope.filterOptions = [];
 							$scope.mlSolutionPrivate=[];
 							$scope.mlSolutionCompany=[];
 							$scope.mlSolutionPublic=[];
@@ -618,7 +782,10 @@ angular.module('manageModule')
 							$scope.getCompanyModels();
 							$scope.getPublicModels();
 							$scope.getDeleteModels();
+							$scope.selectedPage = 0;
+							
 						}
+						
 						$scope.imgURL = "https://www.extremetech.com/wp-content/uploads/2015/10/AI.jpg";
 						$scope.isBusy = false;
 						 
@@ -647,6 +814,32 @@ angular.module('manageModule')
 						}).error(function(data, status, headers, config) {
 						});
 						 
+						
+						//Change pagination Size starts 
+						$scope.paginationSize = function(size, accessType){
+							$scope.Loadcheck = true;
+							$scope.selectedPage = 0;
+							$scope.defaultSize = size;
+							if(accessType == 'PR'){
+								$scope.getPrivateModels();
+							}else if(accessType == 'PB'){
+								
+								$scope.getPublicModels();
+							}
+							else if(accessType == 'OR'){
+								$scope.getCompanyModels();
+							}
+							else if(accessType == 'N'){
+								$scope.getDeleteModels();
+							}
+							
+							
+						
+						}
+						//Change pagination Size ends
+						
+						
+						
 						// filter functionlity
 						var privacyArr = [];
 						var caegoryArr = [];
@@ -765,6 +958,30 @@ angular.module('manageModule')
                         	if( $scope.sortBy == 'ownerName' ){
                                $scope.fieldToSort = { "ownerName" : "ASC" };
                             }
+							if( $scope.sortBy == 'OLD' ){
+                                $scope.fieldToSort = { "modified" : "ASC" };
+                             }
+                        	if( $scope.sortBy == 'MR' ){
+                                $scope.fieldToSort = { "modified" : "DESC" };
+                             }
+                        	if( $scope.sortBy == 'HR' ){
+                                $scope.fieldToSort = { "viewCount" : "DESC" };
+                             }
+                        	if( $scope.sortBy == 'LR' ){
+                                $scope.fieldToSort = { "viewCount" : "ASC" };
+                             }
+                        	if( $scope.sortBy == 'ML' ){
+                                $scope.fieldToSort = { "ratingAverageTenths" : "DESC" };
+                             }
+                        	if( $scope.sortBy == 'FL' ){
+                                $scope.fieldToSort = { "ratingAverageTenths" : "ASC" };
+                             }
+                        	if( $scope.sortBy == 'MD' ){
+                                $scope.fieldToSort = { "downloadCount" : "DESC" };
+                             }
+                        	if( $scope.sortBy == 'FD' ){
+                                $scope.fieldToSort = { "downloadCount" : "ASC" };
+                             }
 							getModels();
 						}
 						
@@ -790,7 +1007,7 @@ angular.module('manageModule')
 													$state.go('marketSolutions', {solutionId : id, revisionId : revisionId, parentUrl:'mymodel'});
 												});
 
-							}
+							};
 							$scope.updateViewCount();
 						}
 						
@@ -834,18 +1051,6 @@ angular.module('manageModule')
 						var duplicate = false;
 						$scope.imageUrls = {};
 						
-						$scope.getSolutionImages = function(solutionId) {
-							apiService.getSolutionImage(solutionId)
-							.then(function(response) {
-								if(response.data.response_body.length > 0)
-									  $scope.imageUrls[solutionId] = "/site/binaries/content/gallery/acumoscms/solution/" + solutionId + "/" + response.data.response_body[0];
-								  else
-									  $scope.imageUrls[solutionId] = "images/default-model.png";
-								}, function(data) {
-									$scope.imageUrls[solutionId] = "images/default-model.png";
-								});
-						}
-						
 						$scope.loadMore = function(type) {
 							if ($scope.isBusy)
 								return;
@@ -867,15 +1072,19 @@ angular.module('manageModule')
 										    "pageRequest": {
 										      "fieldToDirectionMap": $scope.fieldToSort,
 										      "page" : $scope.pageNumber,
-										      "size" : 9
+										      "size" : $scope.defaultSize
 										    }
 										  }
 										};
 							if($scope.activeType == false){
 								delete(dataObj.request_body.accessTypeCodes);
 							}
+							$scope.SetDataLoaded = true;
+							$rootScope.setLoader = true;
 							apiService.fetchUserSolutions(dataObj).then(function(response) {
-
+								$scope.SetDataLoaded = false;
+								$rootScope.setLoader = false;
+								$scope.totalPages = response.data.response_body.pageCount;
 											angular.forEach(response.data.response_body.content,function(value,key) {
 												if(response.data.response_body.content[key].active){$scope.modelCount = $scope.modelCount+1;}
 											});
@@ -883,7 +1092,6 @@ angular.module('manageModule')
 												if($scope.pageNumber==0){
 													$scope.mlsolutions = response.data.response_body.content;
 													angular.forEach($scope.mlsolutions, function(value,key) {
-														$scope.getSolutionImages(value.solutionId);
 														angular.forEach($scope.favouriteSolutions,
 																function(mlsolutionValue,mlsolutionKey) {
 																	if (mlsolutionValue.solutionId == value.solutionId) {
@@ -924,7 +1132,6 @@ angular.module('manageModule')
 																			}
 																		});
 														if (!duplicate) {
-															//$scope.getSolutionImages(response.data.response_body.content[i].solutionId);
 															$scope.mlsolutions
 																	.push({
 																		// id:$scope.mlsolutions[i].id,
@@ -942,7 +1149,6 @@ angular.module('manageModule')
 																		ownerName: response.data.response_body.content[i].ownerName,
 																		modelType : response.data.response_body.content[i].modelType,
 																		ratingCount: response.data.response_body.content[i].ratingCount,
-																		picture: response.data.response_body.content[i].picture,
 																		onboardingStatusFailed: response.data.response_body.content[i].onboardingStatusFailed,
 																		pendingApproval: response.data.response_body.content[i].pendingApproval,
 																		latestRevisionId: response.data.response_body.content[i].latestRevisionId
@@ -1000,16 +1206,54 @@ angular.module('manageModule')
 												
 												if(type == 'PB') {
 													$scope.mlSolutionPublic =  $scope.getUniqueSolutions($scope.mlsolutions);
-													$scope.mlSolutionPublicCount = $scope.mlSolutionPublic.length;
+													$scope.totalPages = response.data.response_body.pageCount;
+													if($scope.mlsolutions == 0){
+														$scope.startPageSizePB = 0;
+														$scope.endPageSizePB = 0;
+													}
+													else{
+													$scope.loadpagePB = $scope.pageNumber;
+													$scope.startPageSizePB = $scope.loadpagePB *  $scope.defaultSize + 1;
+													$scope.endPageSizePB =  (($scope.loadpagePB + 1) * $scope.defaultSize) < $scope.totalPublicSolCount ?  (($scope.loadpagePB + 1) * $scope.defaultSize) : $scope.totalPublicSolCount
+													}
 												} else if(type == 'PR') {
 													$scope.mlSolutionPrivate =  $scope.getUniqueSolutions($scope.mlsolutions);
-													$scope.mlSolutionPrivateCount = $scope.mlSolutionPrivate.length;
+													$scope.totalPages = response.data.response_body.pageCount;
+													if($scope.mlsolutions == 0){
+														$scope.startPageSizePR = 0;
+														$scope.endPageSizePR = 0;
+													}
+													else{
+														$scope.loadpagePR = $scope.pageNumber;
+														$scope.startPageSizePR = $scope.loadpagePR *  $scope.defaultSize + 1;
+														$scope.endPageSizePR =  (($scope.loadpagePR + 1) * $scope.defaultSize) < $scope.totalPrivateSolCount ?  (($scope.loadpagePR + 1) * $scope.defaultSize) : $scope.totalPrivateSolCount
+														}
+				
 												} else if(type == 'OR') {
 													$scope.mlSolutionCompany =  $scope.getUniqueSolutions($scope.mlsolutions);
-													$scope.mlSolutionCompanyCount = $scope.mlSolutionCompany.length;
+													$scope.totalPages = response.data.response_body.pageCount;
+													if($scope.mlsolutions == 0){
+														$scope.startPageSizeOR = 0;
+														$scope.endPageSizeOR = 0;
+													}
+													else {
+						                            $scope.loadpageOR =  $scope.pageNumber;
+					                                $scope.startPageSizeOR = $scope.loadpageOR *  $scope.defaultSize + 1;
+													$scope.endPageSizeOR =  (($scope.loadpageOR + 1) * $scope.defaultSize) < $scope.totalCompanySolCount ? (($scope.loadpageOR + 1) * $scope.defaultSize) : $scope.totalCompanySolCount; 
+													}
+													
 												} else if(type == 'N') {
 													$scope.mlSolutionDelete =  $scope.getUniqueSolutions($scope.mlsolutions);
-													$scope.mlSolutionDeletedCount = $scope.mlSolutionDelete.length;
+													$scope.totalPages = response.data.response_body.pageCount;
+													if($scope.mlsolutions == 0){
+														$scope.startPageSizeN = 0;
+														$scope.endPageSizeN = 0;
+													}
+													else {
+													$scope.loadpageN = $scope.pageNumber;
+												    $scope.startPageSizeN = $scope.loadpageN *  $scope.defaultSize + 1;
+													$scope.endPageSizeN = (($scope.loadpageN + 1) * $scope.defaultSize) < $scope.totalDeletedSolCount ? (($scope.loadpageN + 1) * $scope.defaultSize) : $scope.totalDeletedSolCount; 
+												}
 												}
 
 											},function(error) {

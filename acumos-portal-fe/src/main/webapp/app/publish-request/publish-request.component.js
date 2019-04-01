@@ -64,12 +64,23 @@ angular
                                     }
                         }
 						
+						//Comments Popover starts
+                        $scope.activeComment = null;
+                        $scope.isActiveComment = function (reqId) {
+                        	return $scope.activeComment == reqId;
+                        }
+                        $scope.setActiveComment = function(reqId) {
+                        	$scope.activeComment = ($scope.isActiveComment(reqId)) ? null : reqId;
+                        }
+						//Popover Ends
+						
 						//Open popup 
 			            $scope.showModalPublishReq = function(index, req, modelName, publishRequestId){
 			            	$scope.requestIndex = index;
 			            	$scope.pbReqId = publishRequestId;
 			            	$scope.requestApprovalModal = req;
 			            	$scope.requestedModelName = modelName;
+			            	$scope.descriptionPop = '';
 			        	  $mdDialog.show({
 			        		  contentElement: '#publishRequestModal',
 			        		  parent: angular.element(document.body),
@@ -116,9 +127,9 @@ angular
 									.then(
 											function successCallback(response) {
 												$scope.allPublishRequest = response.data.response_body;
-												$scope.allPublishRequest.forEach(function(element) {
+													/*$scope.allPublishRequest.forEach(function(element) {
 													element.textDate = $filter('date')(element.creationDate, 'MM/dd/yyyy');
-												});
+												});*/
 												$scope.totalPages = response.data.totalPages;
 												$scope.totalElements = response.data.totalElements;
 												$scope.allPublishRequestLength = response.data.totalElements;

@@ -25,3 +25,7 @@ Portal Marketplace
 
        release-notes
        developer-guide
+       user-guides/portal-admin/index
+       user-guides/portal-user/index
+       user-guides/portal-publisher/index
+       
